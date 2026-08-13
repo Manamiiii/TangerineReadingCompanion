@@ -1,0 +1,40 @@
+{
+  "name": "tangerine-reading-companion",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "oxlint",
+    "preview": "vite preview",
+    "check:packages": "node scripts/reading-companion/validate-packages.mjs",
+    "audit:quality": "node scripts/reading-companion/audit-quality.mjs",
+    "audit:links": "node scripts/reading-companion/audit-quality.mjs --check-links",
+    "preview:data": "node scripts/reading-companion/build-preview.mjs",
+    "check:preset": "node scripts/reading-companion/apply-preview.mjs",
+    "apply:preset": "node scripts/reading-companion/apply-preview.mjs --write",
+    "test": "node --test scripts/reading-companion/tests/*.test.mjs scripts/tests/*.test.mjs"
+  },
+  "dependencies": {
+    "@tesseract.js-data/chi_sim": "^1.0.0",
+    "@tesseract.js-data/eng": "^1.0.0",
+    "dexie": "^4.4.4",
+    "dexie-react-hooks": "^4.4.0",
+    "leaflet": "^1.9.4",
+    "lucide-react": "^1.25.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.3",
+    "fake-indexeddb": "^6.2.4",
+    "oxlint": "^1.74.0",
+    "sharp": "^0.35.3",
+    "vite": "^8.1.5"
+  }
+}

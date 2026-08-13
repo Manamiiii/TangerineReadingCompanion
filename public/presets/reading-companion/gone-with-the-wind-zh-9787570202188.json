@@ -1,0 +1,1610 @@
+{
+  "schemaVersion": 1,
+  "packageVersion": "1.11.0",
+  "id": "reader-package-gone-with-the-wind-zh-9787570202188",
+  "book": {
+    "id": "gone-with-the-wind",
+    "title": "飘",
+    "originalTitle": "Gone with the Wind",
+    "author": "玛格丽特·米切尔",
+    "originalLanguage": "en"
+  },
+  "edition": {
+    "id": "gone-with-the-wind-zh-9787570202188",
+    "isbn": "9787570202188",
+    "language": "zh-CN",
+    "translators": [
+      "范纯海",
+      "夏旻"
+    ],
+    "publisher": "长江文艺出版社",
+    "publishedAt": "2018-05",
+    "digitalProvider": "微信读书",
+    "chapterCount": 63
+  },
+  "chapters": [
+    {
+      "id": "chapter-01",
+      "number": 1,
+      "label": "第 1 章"
+    },
+    {
+      "id": "chapter-02",
+      "number": 2,
+      "label": "第 2 章"
+    },
+    {
+      "id": "chapter-03",
+      "number": 3,
+      "label": "第 3 章"
+    },
+    {
+      "id": "chapter-04",
+      "number": 4,
+      "label": "第 4 章"
+    },
+    {
+      "id": "chapter-05",
+      "number": 5,
+      "label": "第 5 章"
+    },
+    {
+      "id": "chapter-06",
+      "number": 6,
+      "label": "第 6 章"
+    },
+    {
+      "id": "chapter-07",
+      "number": 7,
+      "label": "第 7 章"
+    },
+    {
+      "id": "chapter-08",
+      "number": 8,
+      "label": "第 8 章"
+    },
+    {
+      "id": "chapter-09",
+      "number": 9,
+      "label": "第 9 章"
+    },
+    {
+      "id": "chapter-10",
+      "number": 10,
+      "label": "第 10 章"
+    },
+    {
+      "id": "chapter-11",
+      "number": 11,
+      "label": "第 11 章"
+    },
+    {
+      "id": "chapter-12",
+      "number": 12,
+      "label": "第 12 章"
+    },
+    {
+      "id": "chapter-13",
+      "number": 13,
+      "label": "第 13 章"
+    },
+    {
+      "id": "chapter-14",
+      "number": 14,
+      "label": "第 14 章"
+    },
+    {
+      "id": "chapter-15",
+      "number": 15,
+      "label": "第 15 章"
+    },
+    {
+      "id": "chapter-16",
+      "number": 16,
+      "label": "第 16 章"
+    },
+    {
+      "id": "chapter-17",
+      "number": 17,
+      "label": "第 17 章"
+    },
+    {
+      "id": "chapter-18",
+      "number": 18,
+      "label": "第 18 章"
+    },
+    {
+      "id": "chapter-19",
+      "number": 19,
+      "label": "第 19 章"
+    },
+    {
+      "id": "chapter-20",
+      "number": 20,
+      "label": "第 20 章"
+    },
+    {
+      "id": "chapter-21",
+      "number": 21,
+      "label": "第 21 章"
+    },
+    {
+      "id": "chapter-22",
+      "number": 22,
+      "label": "第 22 章"
+    },
+    {
+      "id": "chapter-23",
+      "number": 23,
+      "label": "第 23 章"
+    },
+    {
+      "id": "chapter-24",
+      "number": 24,
+      "label": "第 24 章"
+    },
+    {
+      "id": "chapter-25",
+      "number": 25,
+      "label": "第 25 章"
+    },
+    {
+      "id": "chapter-26",
+      "number": 26,
+      "label": "第 26 章"
+    },
+    {
+      "id": "chapter-27",
+      "number": 27,
+      "label": "第 27 章"
+    },
+    {
+      "id": "chapter-28",
+      "number": 28,
+      "label": "第 28 章"
+    },
+    {
+      "id": "chapter-29",
+      "number": 29,
+      "label": "第 29 章"
+    },
+    {
+      "id": "chapter-30",
+      "number": 30,
+      "label": "第 30 章"
+    },
+    {
+      "id": "chapter-31",
+      "number": 31,
+      "label": "第 31 章"
+    },
+    {
+      "id": "chapter-32",
+      "number": 32,
+      "label": "第 32 章"
+    },
+    {
+      "id": "chapter-33",
+      "number": 33,
+      "label": "第 33 章"
+    },
+    {
+      "id": "chapter-34",
+      "number": 34,
+      "label": "第 34 章"
+    },
+    {
+      "id": "chapter-35",
+      "number": 35,
+      "label": "第 35 章"
+    },
+    {
+      "id": "chapter-36",
+      "number": 36,
+      "label": "第 36 章"
+    },
+    {
+      "id": "chapter-37",
+      "number": 37,
+      "label": "第 37 章"
+    },
+    {
+      "id": "chapter-38",
+      "number": 38,
+      "label": "第 38 章"
+    },
+    {
+      "id": "chapter-39",
+      "number": 39,
+      "label": "第 39 章"
+    },
+    {
+      "id": "chapter-40",
+      "number": 40,
+      "label": "第 40 章"
+    },
+    {
+      "id": "chapter-41",
+      "number": 41,
+      "label": "第 41 章"
+    },
+    {
+      "id": "chapter-42",
+      "number": 42,
+      "label": "第 42 章"
+    },
+    {
+      "id": "chapter-43",
+      "number": 43,
+      "label": "第 43 章"
+    },
+    {
+      "id": "chapter-44",
+      "number": 44,
+      "label": "第 44 章"
+    },
+    {
+      "id": "chapter-45",
+      "number": 45,
+      "label": "第 45 章"
+    },
+    {
+      "id": "chapter-46",
+      "number": 46,
+      "label": "第 46 章"
+    },
+    {
+      "id": "chapter-47",
+      "number": 47,
+      "label": "第 47 章"
+    },
+    {
+      "id": "chapter-48",
+      "number": 48,
+      "label": "第 48 章"
+    },
+    {
+      "id": "chapter-49",
+      "number": 49,
+      "label": "第 49 章"
+    },
+    {
+      "id": "chapter-50",
+      "number": 50,
+      "label": "第 50 章"
+    },
+    {
+      "id": "chapter-51",
+      "number": 51,
+      "label": "第 51 章"
+    },
+    {
+      "id": "chapter-52",
+      "number": 52,
+      "label": "第 52 章"
+    },
+    {
+      "id": "chapter-53",
+      "number": 53,
+      "label": "第 53 章"
+    },
+    {
+      "id": "chapter-54",
+      "number": 54,
+      "label": "第 54 章"
+    },
+    {
+      "id": "chapter-55",
+      "number": 55,
+      "label": "第 55 章"
+    },
+    {
+      "id": "chapter-56",
+      "number": 56,
+      "label": "第 56 章"
+    },
+    {
+      "id": "chapter-57",
+      "number": 57,
+      "label": "第 57 章"
+    },
+    {
+      "id": "chapter-58",
+      "number": 58,
+      "label": "第 58 章"
+    },
+    {
+      "id": "chapter-59",
+      "number": 59,
+      "label": "第 59 章"
+    },
+    {
+      "id": "chapter-60",
+      "number": 60,
+      "label": "第 60 章"
+    },
+    {
+      "id": "chapter-61",
+      "number": 61,
+      "label": "第 61 章"
+    },
+    {
+      "id": "chapter-62",
+      "number": 62,
+      "label": "第 62 章"
+    },
+    {
+      "id": "chapter-63",
+      "number": 63,
+      "label": "第 63 章"
+    }
+  ],
+  "entities": [],
+  "facts": [],
+  "sources": [
+    {
+      "id": "source-weread-edition-metadata",
+      "kind": "user-provided-edition-metadata",
+      "label": "微信读书版本详情与版权信息",
+      "accessedAt": "2026-07-24",
+      "useFor": [
+        "edition",
+        "chapter_structure",
+        "book_description_names",
+        "book_description_context"
+      ],
+      "notes": "用于确认 ISBN、译者、出版社、出版时间、连续 1–63 章结构，以及详情页简介中出现的斯佳丽、瑞德、艾希礼、梅兰妮四个短名和“美国南方”“种植园”“林肯”“南北战争”四个无剧情背景词；不包含正文，不能用于确认首次出现章节。"
+    },
+    {
+      "id": "source-reader-excerpt-early-institutions",
+      "kind": "user-provided-edition-evidence",
+      "label": "读者提供的当前译本早期片段 · 学校名称",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "edition_name",
+        "book_relevance",
+        "exact_match"
+      ],
+      "rightsStatus": "minimal-user-provided-evidence",
+      "notes": "读者曾提供包含“弗吉尼亚大学、亚拉巴马大学和南卡罗来纳大学”的当前译本文字，并单独确认同一早期阅读内容使用“费耶特维尔女子学院”；只用于确认四个中文名称确实属于该版本，不保存上下文、不推断客观首次出现章节。"
+    },
+    {
+      "id": "source-nps-colonial-plantation-system",
+      "kind": "public-history",
+      "label": "U.S. National Park Service · Rise of the Colonial Plantation System",
+      "organization": "U.S. National Park Service",
+      "url": "https://home.nps.gov/articles/plantationsystem.htm",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "safe_concept_note",
+        "plantation_definition"
+      ],
+      "rightsStatus": "public-government-reference",
+      "notes": "用于概括 plantation 作为大面积农业用地及其劳动制度背景；不采用页面内容推断作品情节、具体庄园或章节位置。"
+    },
+    {
+      "id": "source-loc-abraham-lincoln-biography",
+      "kind": "public-history",
+      "label": "Library of Congress · Abraham Lincoln Biography",
+      "organization": "Library of Congress",
+      "url": "https://www.loc.gov/exhibits/civil-war-in-america/biographies/abraham-lincoln.html",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "safe_person_note",
+        "historical_identity"
+      ],
+      "rightsStatus": "public-government-reference",
+      "notes": "用于确认林肯的生卒年、总统身份和任内经历美国内战；不把历史人物资料与作品人物或后续剧情关联。"
+    },
+    {
+      "id": "source-nps-civil-war-overview",
+      "kind": "public-history",
+      "label": "U.S. National Park Service · The Civil War Overview",
+      "organization": "U.S. National Park Service",
+      "url": "https://www.nps.gov/civilwar/index.htm",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "safe_event_note",
+        "historical_dates"
+      ],
+      "rightsStatus": "public-government-reference",
+      "notes": "用于确认美国内战发生于 1861–1865 年及其涉及联邦存续、奴隶制和公民权的广义历史背景；不用于作品章节或剧情解释。"
+    },
+    {
+      "id": "source-nps-enslavement-abolition",
+      "kind": "public-history",
+      "label": "U.S. National Park Service · Enslavement & Abolition",
+      "organization": "U.S. National Park Service",
+      "url": "https://www.nps.gov/subjects/enslavement/about.htm",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "safe_concept_note",
+        "enslavement",
+        "abolition",
+        "emancipation"
+      ],
+      "rightsStatus": "public-government-reference",
+      "notes": "用于解释美国奴隶制、废奴与解放的基础历史语境；不把制度背景与作品人物、行动或后续命运关联。"
+    },
+    {
+      "id": "source-nps-reconstruction-overview",
+      "kind": "public-history",
+      "label": "U.S. National Park Service · Reconstruction Era Overview",
+      "organization": "U.S. National Park Service",
+      "url": "https://home.nps.gov/articles/000/a-short-overview-of-the-reconstruction-era-and-ulysses-s-grant-s-presidency.htm",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "safe_concept_note",
+        "reconstruction_definition",
+        "historical_dates"
+      ],
+      "rightsStatus": "public-government-reference",
+      "notes": "用于说明重建时期的常见 1865–1877 口径和更宽的历史解释；不用于推断作品跨越的具体年份、章节或人物经历。"
+    },
+    {
+      "id": "source-national-archives-civil-war-documents",
+      "kind": "public-archive",
+      "label": "U.S. National Archives · Civil War Documents",
+      "organization": "U.S. National Archives and Records Administration",
+      "url": "https://www.archives.gov/education/lessons/civil-war-docs",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "safe_concept_note",
+        "confederacy_definition",
+        "union_context"
+      ],
+      "rightsStatus": "public-government-reference",
+      "notes": "用于确认南方州脱离联邦并组成 Confederate States of America 的基础历史事实；不采用档案教学页解释作品立场或剧情。"
+    },
+    {
+      "id": "source-loc-confederate-states-records",
+      "kind": "public-archive",
+      "label": "Library of Congress · Confederate States of America Records",
+      "organization": "Library of Congress",
+      "url": "https://www.loc.gov/collections/confederate-states-of-america-records/about-this-collection/",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "safe_concept_note",
+        "confederacy_name",
+        "historical_dates"
+      ],
+      "rightsStatus": "public-government-reference",
+      "notes": "用于确认 Confederate States of America 的政府记录主要集中于 1861–1865 年及其机构性质；不用于指定译本名称或章节定位。"
+    },
+    {
+      "id": "source-zgbk-american-civil-war",
+      "kind": "chinese-encyclopedia",
+      "label": "《中国大百科全书》第三版网络版 · 美国内战",
+      "organization": "中国大百科全书出版社",
+      "url": "https://www.zgbk.com/ecph/words?Name=%E7%BE%8E%E5%9B%BD%E5%86%85%E6%88%98&SiteID=1&SourceID=557288&Type=bkzyb&subSourceType=000003000012000007",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "chinese_term",
+        "safe_event_note",
+        "historical_dates"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "用于确认“美国内战”“美国南北战争”等中文名称和 1861–1865 年日期；不用于作品章节或剧情解释。"
+    },
+    {
+      "id": "source-zgbk-emancipation-proclamation",
+      "kind": "chinese-encyclopedia",
+      "label": "《中国大百科全书》第三版网络版 · 《解放奴隶宣言》",
+      "organization": "中国大百科全书出版社",
+      "url": "https://www.zgbk.com/ecph/words?ID=27218&SiteID=1&SubID=51422&Type=bkzyb",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "chinese_term",
+        "safe_event_note",
+        "historical_date"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "用于确认《解放奴隶宣言》的通行中文名、英文名和 1863 年 1 月 1 日颁布日期；不用于解释作品中的影响或人物行动。"
+    },
+    {
+      "id": "source-zgbk-abolitionist-movement",
+      "kind": "chinese-encyclopedia",
+      "label": "《中国大百科全书》第三版网络版 · 美国废奴运动",
+      "organization": "中国大百科全书出版社",
+      "url": "https://www.zgbk.com/ecph/words?ID=394450&SiteID=1&SubID=51422&Type=bkzyb",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "chinese_term",
+        "safe_concept_note",
+        "abolition_definition"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "用于确认“美国废奴运动”指以废除奴隶制度为宗旨的社会运动；不用于作品人物立场或剧情解释。"
+    },
+    {
+      "id": "source-cssn-civil-war-slave-trade",
+      "kind": "chinese-academic-news",
+      "label": "中国社会科学网 · 内战时期美国南方的奴隶贸易",
+      "organization": "中国社会科学网 / 中国社会科学报",
+      "url": "https://www.cssn.cn/skwxsdt/gjhy/202407/t20240726_5767090.shtml",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "chinese_term",
+        "confederacy_alias",
+        "historical_context"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "用于确认“美利坚联盟国”“南方联邦”作为 Confederate States of America 的中文称呼，并辅助说明奴隶制与其历史背景；不把书评内容用于作品剧情或章节定位。"
+    },
+    {
+      "id": "source-university-of-virginia-official",
+      "kind": "institution-official",
+      "label": "University of Virginia · About UVA",
+      "organization": "University of Virginia",
+      "url": "https://www.virginia.edu/about-uva/",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "modern_institution_name",
+        "institution_history",
+        "modern_location"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "用于确认 University of Virginia 由 Thomas Jefferson 创建、1819 年获弗吉尼亚州议会特许并位于 Charlottesville；地图点采用校内 Rotunda 作为清楚标注的校园参考点，不表示校园边界。"
+    },
+    {
+      "id": "source-university-of-alabama-official",
+      "kind": "institution-official",
+      "label": "The University of Alabama · History",
+      "organization": "The University of Alabama",
+      "url": "https://www.ua.edu/about/history/",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "modern_institution_name",
+        "institution_history",
+        "modern_location"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "用于确认 The University of Alabama 的名称、Tuscaloosa 地址和 1831 年开课历史；不能单独证明指定译本的章节位置。"
+    },
+    {
+      "id": "source-university-of-south-carolina-official",
+      "kind": "institution-official",
+      "label": "University of South Carolina · University History",
+      "organization": "University of South Carolina",
+      "url": "https://www.sc.edu/about/our_history/university_history/timeline/index.php",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "modern_institution_name",
+        "historical_institution_name",
+        "modern_location"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "用于确认现代机构位于 Columbia，并说明其 1801 年创立时名为 South Carolina College、1906 年后固定使用现名；当前译本使用“南卡罗来纳大学”，系统不把现代名称倒推为故事年代正式校名。"
+    },
+    {
+      "id": "source-dlg-fayetteville-academy",
+      "kind": "digital-library-record",
+      "label": "Digital Library of Georgia · Fayetteville Academy",
+      "organization": "Digital Library of Georgia / New Georgia Encyclopedia",
+      "url": "https://dlg.usg.edu/record/nge_ngen_m-9272",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "fictional_place_classification",
+        "prototype_location",
+        "modern_reference_coordinate"
+      ],
+      "rightsStatus": "metadata-reference-only",
+      "notes": "馆藏记录明确说明现实 Fayetteville Academy 是小说中虚构 Fayetteville Female Academy 的原型，并提供馆藏地点坐标；运行时标记为原型参考点，不声称虚构学校存在精确现实坐标。"
+    },
+    {
+      "id": "source-openstreetmap-nominatim-research",
+      "kind": "modern-geography",
+      "label": "OpenStreetMap Nominatim · Institution Search Results",
+      "organization": "OpenStreetMap contributors",
+      "url": "https://nominatim.openstreetmap.org/",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "modern_representative_coordinates",
+        "campus_reference_points"
+      ],
+      "rightsStatus": "ODbL-1.0-attribution-required",
+      "notes": "用于核对三所现实大学的现代校园代表位置；界面底图持续显示 OpenStreetMap 署名。代表点不是校园边界，也不表示故事年代的机构范围。"
+    },
+    {
+      "id": "source-atlanta-history-center-peachtree-street",
+      "kind": "museum-research",
+      "label": "Atlanta History Center · Peachtree Street",
+      "organization": "Atlanta History Center",
+      "url": "https://www.atlantahistorycenter.com/exhibitions/atlanta-in-50-objects/peachtree-street/",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "book_relevance",
+        "real_place_classification",
+        "historical_name"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "页面明确说明 Peachtree Street 因小说而广为人知，并确认其为亚特兰大现实街道；指定译本中文名称和可用线形几何仍需核对。"
+    },
+    {
+      "id": "source-atlanta-history-center-civil-war",
+      "kind": "museum-research",
+      "label": "Atlanta History Center · Turning Point: The American Civil War",
+      "organization": "Atlanta History Center",
+      "url": "https://www.atlantahistorycenter.com/exhibitions/turning-point-the-american-civil-war/",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "safe_place_note",
+        "atlanta_historical_context"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "用于确认美国内战时期亚特兰大是交通、工业和军需储运中心；不用于解释作品情节、人物行动或指定译本章节。"
+    },
+    {
+      "id": "source-census-2025-gazetteer",
+      "kind": "modern-geography",
+      "label": "U.S. Census Bureau · 2025 Gazetteer Files",
+      "organization": "United States Census Bureau",
+      "url": "https://www.census.gov/geographies/reference-files/time-series/geo/gazetteer-files.2025.html",
+      "accessedAt": "2026-07-24",
+      "useFor": [
+        "modern_place_names",
+        "administrative_hierarchy",
+        "representative_coordinates"
+      ],
+      "rightsStatus": "public-government-data",
+      "notes": "用于现代真实地点的名称、GEOID、行政层级和代表坐标；代表坐标不是边界，历史边界仍需另行核对。"
+    },
+    {
+      "id": "source-census-regions-and-divisions",
+      "kind": "modern-geography",
+      "label": "U.S. Census Bureau · Geographic Levels · Regions and Divisions",
+      "organization": "United States Census Bureau",
+      "url": "https://www.census.gov/programs-surveys/economic-census/guidance-geographies/levels.html",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "safe_place_note",
+        "statistical_south_region"
+      ],
+      "rightsStatus": "public-government-data",
+      "notes": "用于说明人口普查局把 South Region 作为统计分区，并进一步分成 South Atlantic、East South Central 和 West South Central；该统计口径不替代历史语境中的美国南方边界。"
+    },
+    {
+      "id": "source-new-georgia-encyclopedia-quick-facts",
+      "kind": "state-encyclopedia",
+      "label": "New Georgia Encyclopedia · Georgia Quick Facts",
+      "organization": "New Georgia Encyclopedia",
+      "url": "https://www.georgiaencyclopedia.org/quick-facts/",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "safe_place_note",
+        "statehood",
+        "state_capital"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "用于确认佐治亚于 1788 年成为美国第 4 个州，亚特兰大自 1868 年起为州府；不用于作品章节或剧情解释。"
+    },
+    {
+      "id": "source-census-2025-georgia-incorporated-places",
+      "kind": "modern-geography",
+      "label": "U.S. Census Bureau · 2025 ACS Georgia Incorporated Places",
+      "organization": "United States Census Bureau",
+      "url": "https://tigerweb.geo.census.gov/tigerwebmain/Files/acs25/tigerweb_acs25_incplace_ga.html",
+      "accessedAt": "2026-07-24",
+      "useFor": [
+        "modern_place_names",
+        "geoid",
+        "representative_coordinates"
+      ],
+      "rightsStatus": "public-government-data",
+      "notes": "可核对 Atlanta 与 Jonesboro 的现代行政地名、GEOID 和代表坐标；不能证明作品年代的边界或地点在本译本中的首次出现。"
+    },
+    {
+      "id": "source-atlanta-history-center-so-red-the-rose",
+      "kind": "museum-research",
+      "label": "Atlanta History Center · So Red the Rose: The Gone With the Wind That Never Was",
+      "organization": "Atlanta History Center",
+      "url": "https://www.atlantahistorycenter.com/blog/so-red-the-rose-the-gone-with-the-wind-that-never-was/",
+      "accessedAt": "2026-07-24",
+      "useFor": [
+        "fictional_place_classification",
+        "atlanta_setting",
+        "architectural_context"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "可支持作品同时涉及虚构的佐治亚种植园与真实的亚特兰大地点，也说明塔拉没有可直接采用的单一精确原型坐标；不能用于本译本章节定位。"
+    },
+    {
+      "id": "source-atlanta-history-center-telling-stories-citations",
+      "kind": "museum-citation-document",
+      "label": "Atlanta History Center · Telling Stories Citation Document",
+      "organization": "Atlanta History Center",
+      "url": "https://www.atlantahistorycenter.com/app/uploads/2025/08/Telling-Stories-Citation-Document-Public_Final.pdf",
+      "accessedAt": "2026-07-24",
+      "useFor": [
+        "fictional_place_classification",
+        "research_provenance"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "该馆的引用文件明确区分真实历史地点与作品中的虚构地点；只作为候选分类依据，不作为中文译本章节证据。"
+    },
+    {
+      "id": "source-new-georgia-encyclopedia-gwtw",
+      "kind": "state-encyclopedia",
+      "label": "New Georgia Encyclopedia · Gone With the Wind (Novel)",
+      "organization": "New Georgia Encyclopedia",
+      "url": "https://www.georgiaencyclopedia.org/articles/arts-culture/gone-with-the-wind-novel/",
+      "accessedAt": "2026-07-24",
+      "useFor": [
+        "historical_scope",
+        "place_candidates",
+        "work_context"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "页面包含剧情概述；运行时只采用经人工摘出的地点名称与虚构分类，并且只在读者精确输入同名内容后显示，不复制剧情概述，也不能代替本译本 revealAt 证据。"
+    },
+    {
+      "id": "source-zh-wikipedia-gwtw-name-index",
+      "kind": "chinese-encyclopedia",
+      "label": "中文维基百科 · 《飘》人物与地点名称索引",
+      "organization": "维基百科编者",
+      "url": "https://zh.wikipedia.org/wiki/%E9%A3%84",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "original_character_name",
+        "cross_translation_alias",
+        "place_name"
+      ],
+      "rightsStatus": "CC-BY-SA-4.0-reference-only",
+      "notes": "页面明确说明人物表采用其他中译本译名。运行时只取原文姓名及常见中文译名作为精确匹配别名，不采用人物关系、命运、情节概述或章节信息；当前版本主名称仍优先使用范纯海、夏旻译本已有证据。"
+    },
+    {
+      "id": "source-dangdang-fan-chunhai-edition-description",
+      "kind": "edition-bookseller-metadata",
+      "label": "当当 · 范纯海、夏旻译《飘》书目介绍",
+      "organization": "当当",
+      "url": "https://category.dangdang.com/cp01.03.56.03.00.00-as4294967296%3A4294977597.html",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "translator_edition_name",
+        "core_character_name"
+      ],
+      "rightsStatus": "metadata-reference-only",
+      "notes": "同一译者版本的书目介绍明确使用“斯佳丽”“艾伦”“杰拉尔德”；只用于确认三个人名写法，不采用介绍中的人物关系和剧情信息，也不推断当前 2018 电子版的首次出现章节。"
+    },
+    {
+      "id": "source-new-georgia-encyclopedia-gwtw-film",
+      "kind": "state-encyclopedia",
+      "label": "New Georgia Encyclopedia · Gone With the Wind (Film)",
+      "organization": "New Georgia Encyclopedia",
+      "url": "https://www.georgiaencyclopedia.org/articles/arts-culture/gone-with-the-wind-film/",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "original_character_candidates",
+        "adaptation_comparison"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "页面区分小说与电影改编，并明确提到 Gerald、Ellen、Jonas Wilkerson、Mammy、Prissy 和 Uncle Peter 等名称；只用于形成原文人物候选，不用于指定译本中文名或章节定位。"
+    },
+    {
+      "id": "source-new-georgia-encyclopedia-wind-done-gone",
+      "kind": "state-encyclopedia",
+      "label": "New Georgia Encyclopedia · The Wind Done Gone",
+      "organization": "New Georgia Encyclopedia",
+      "url": "https://www.georgiaencyclopedia.org/articles/arts-culture/the-wind-done-gone/",
+      "accessedAt": "2026-07-28",
+      "useFor": [
+        "original_character_candidates"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "页面在说明改写名称时明确提到 Gone With the Wind 中的 Pork；只用于形成原文人物候选，不采用该改写作品的关系或剧情。"
+    },
+    {
+      "id": "source-new-georgia-encyclopedia-clayton-county",
+      "kind": "state-encyclopedia",
+      "label": "New Georgia Encyclopedia · Clayton County",
+      "organization": "New Georgia Encyclopedia",
+      "url": "https://www.georgiaencyclopedia.org/articles/counties-cities-neighborhoods/clayton-county/",
+      "accessedAt": "2026-07-24",
+      "useFor": [
+        "regional_background",
+        "jonesboro_context"
+      ],
+      "rightsStatus": "reference-only",
+      "notes": "可支持琼斯伯勒与克莱顿县是作者创作背景来源；仍需确认作品是否直接命名该地点以及指定译本中的出现章节。"
+    }
+  ],
+  "onDemandEntities": [
+    {
+      "id": "person-scarlett-ohara",
+      "name": "斯佳丽",
+      "originalName": "Scarlett O'Hara",
+      "aliases": [
+        "Scarlett",
+        "Scarlett O'Hara"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-weread-edition-metadata",
+        "source-new-georgia-encyclopedia-gwtw"
+      ],
+      "scopeNote": "详情页简介只确认该版本使用短名“斯佳丽”；系统不预置人物关系、命运或未读剧情。"
+    },
+    {
+      "id": "person-rhett-butler",
+      "name": "瑞德",
+      "originalName": "Rhett Butler",
+      "aliases": [
+        "Rhett",
+        "Rhett Butler"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-weread-edition-metadata",
+        "source-new-georgia-encyclopedia-gwtw"
+      ],
+      "scopeNote": "详情页简介只确认该版本使用短名“瑞德”；系统不预置人物关系、命运或未读剧情。"
+    },
+    {
+      "id": "person-ashley-wilkes",
+      "name": "艾希礼",
+      "originalName": "Ashley Wilkes",
+      "aliases": [
+        "Ashley",
+        "Ashley Wilkes"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-weread-edition-metadata",
+        "source-new-georgia-encyclopedia-gwtw"
+      ],
+      "scopeNote": "详情页简介只确认该版本使用短名“艾希礼”；系统不预置人物关系、命运或未读剧情。"
+    },
+    {
+      "id": "person-melanie-hamilton",
+      "name": "梅兰妮",
+      "originalName": "Melanie Hamilton",
+      "aliases": [
+        "Melanie",
+        "Melanie Hamilton"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-weread-edition-metadata",
+        "source-new-georgia-encyclopedia-gwtw"
+      ],
+      "scopeNote": "详情页简介只确认该版本使用短名“梅兰妮”；系统不预置人物关系、命运或未读剧情。"
+    },
+    {
+      "id": "place-georgia-state",
+      "name": "佐治亚州",
+      "originalName": "Georgia",
+      "aliases": [
+        "Georgia"
+      ],
+      "kind": "place",
+      "placeKind": "real",
+      "activation": "exact-reader-input",
+      "parentLabel": "美国",
+      "geometry": {
+        "type": "point",
+        "latitude": 32.629579,
+        "longitude": -83.423511
+      },
+      "sourceIds": [
+        "source-census-2025-gazetteer",
+        "source-new-georgia-encyclopedia-gwtw",
+        "source-new-georgia-encyclopedia-quick-facts"
+      ],
+      "safeNote": "佐治亚于 1788 年成为美国第 4 个州；亚特兰大自 1868 年起为州府。",
+      "safeNoteSourceIds": [
+        "source-new-georgia-encyclopedia-quick-facts"
+      ],
+      "scopeNote": "坐标是现代州级代表坐标，不表示州界，也不表示作品年代的行政边界。"
+    },
+    {
+      "id": "place-american-south",
+      "name": "美国南方",
+      "originalName": "Southern United States",
+      "aliases": [],
+      "kind": "place",
+      "placeKind": "approximate",
+      "activation": "exact-reader-input",
+      "parentLabel": "美国（范围随历史语境变化）",
+      "sourceIds": [
+        "source-weread-edition-metadata",
+        "source-census-regions-and-divisions"
+      ],
+      "safeNote": "“美国南方”不是单一行政区。美国人口普查局在统计上设置 South Region，并分为南大西洋、东南中部和西南中部三个分区；历史语境中的范围不一定与这一统计口径相同。",
+      "safeNoteSourceIds": [
+        "source-census-regions-and-divisions"
+      ],
+      "scopeNote": "详情页简介确认该背景词；系统只标记为模糊区域，不提供中心点、边界或剧情意义。"
+    },
+    {
+      "id": "concept-plantation",
+      "name": "种植园",
+      "originalName": "Plantation",
+      "aliases": [],
+      "kind": "concept",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-weread-edition-metadata",
+        "source-nps-colonial-plantation-system"
+      ],
+      "safeNote": "在美国历史语境中，种植园通常指大规模农业用地；其生产体系常依赖契约劳工和被奴役者，具体作物与劳动方式因地区和时期而异。",
+      "safeNoteSourceIds": [
+        "source-nps-colonial-plantation-system"
+      ],
+      "scopeNote": "详情页简介确认该背景词；系统只提供概念名称，不预置制度说明或剧情解释。"
+    },
+    {
+      "id": "person-abraham-lincoln",
+      "name": "林肯",
+      "originalName": "Abraham Lincoln",
+      "aliases": [],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-weread-edition-metadata",
+        "source-loc-abraham-lincoln-biography"
+      ],
+      "safeNote": "亚伯拉罕·林肯（1809–1865）是美国第 16 任总统；他于 1860 年当选，并在任内经历了 1861–1865 年的美国内战。",
+      "safeNoteSourceIds": [
+        "source-loc-abraham-lincoln-biography"
+      ],
+      "scopeNote": "详情页简介确认该历史人物短名；系统不预置作品人物关系、历史评价或剧情联系。"
+    },
+    {
+      "id": "event-american-civil-war",
+      "name": "南北战争",
+      "originalName": "American Civil War",
+      "aliases": [
+        "美国内战",
+        "美国南北战争",
+        "American Civil War"
+      ],
+      "kind": "event",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-weread-edition-metadata",
+        "source-nps-civil-war-overview",
+        "source-zgbk-american-civil-war"
+      ],
+      "safeNote": "美国南北战争发生于 1861–1865 年；其历史背景涉及联邦存续、奴隶制以及此后持续发展的公民权问题。",
+      "safeNoteSourceIds": [
+        "source-nps-civil-war-overview",
+        "source-zgbk-american-civil-war"
+      ],
+      "scopeNote": "详情页简介确认“南北战争”属于本书背景词；注释只解释独立历史背景，不建立它与作品剧情的联系。"
+    },
+    {
+      "id": "concept-enslavement",
+      "name": "奴隶制",
+      "originalName": "Slavery",
+      "aliases": [
+        "奴隶制度",
+        "蓄奴制",
+        "Slavery",
+        "Enslavement"
+      ],
+      "kind": "concept",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-nps-enslavement-abolition",
+        "source-nps-civil-war-overview"
+      ],
+      "safeNote": "美国历史中的奴隶制把被奴役者置于强制劳动和被剥夺自由的制度中。到美国内战时期，奴隶制已成为长期政治冲突的核心议题之一。",
+      "safeNoteSourceIds": [
+        "source-nps-enslavement-abolition",
+        "source-nps-civil-war-overview"
+      ],
+      "scopeNote": "只解释制度背景，不把它与书中任何人物的身份、立场、行动或命运关联。"
+    },
+    {
+      "id": "concept-american-abolitionist-movement",
+      "name": "废奴运动",
+      "originalName": "Abolitionist Movement",
+      "aliases": [
+        "美国废奴运动",
+        "Abolitionist Movement",
+        "Abolitionism"
+      ],
+      "kind": "concept",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-nps-enslavement-abolition",
+        "source-zgbk-abolitionist-movement"
+      ],
+      "safeNote": "美国废奴运动是以结束奴隶制度为目标的社会运动，延续时间早于美国内战，并与奴隶制问题的公共争论相伴发展。",
+      "safeNoteSourceIds": [
+        "source-nps-enslavement-abolition",
+        "source-zgbk-abolitionist-movement"
+      ],
+      "scopeNote": "只提供历史概念定义，不据此判断作品人物是否属于、支持或反对某一运动。"
+    },
+    {
+      "id": "event-emancipation-proclamation",
+      "name": "《解放奴隶宣言》",
+      "originalName": "Emancipation Proclamation",
+      "aliases": [
+        "解放奴隶宣言",
+        "解放黑人奴隶宣言",
+        "Emancipation Proclamation"
+      ],
+      "kind": "event",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-nps-enslavement-abolition",
+        "source-zgbk-emancipation-proclamation"
+      ],
+      "safeNote": "《解放奴隶宣言》由美国总统林肯于 1863 年 1 月 1 日颁布，宣布南部叛乱州受奴役者获得自由；它没有在颁布当天直接覆盖美国所有受奴役者。",
+      "safeNoteSourceIds": [
+        "source-nps-enslavement-abolition",
+        "source-zgbk-emancipation-proclamation"
+      ],
+      "scopeNote": "只说明历史文件的基本范围，不解释它在作品中的出现方式、影响或后续情节。"
+    },
+    {
+      "id": "concept-reconstruction-era",
+      "name": "重建时期",
+      "originalName": "Reconstruction Era",
+      "aliases": [
+        "战后重建",
+        "美国重建时期",
+        "南方重建",
+        "Reconstruction",
+        "Reconstruction Era"
+      ],
+      "kind": "concept",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-nps-reconstruction-overview"
+      ],
+      "safeNote": "“重建时期”通常指美国内战结束后重组南方政治与社会秩序、重新定义公民权的阶段，常见年代口径是 1865–1877 年；部分研究采用从 1861 年延伸到 20 世纪初的更宽范围。",
+      "safeNoteSourceIds": [
+        "source-nps-reconstruction-overview"
+      ],
+      "scopeNote": "只解释历史术语及不同年代口径，不据此推断本书剧情跨越的具体时间。"
+    },
+    {
+      "id": "concept-confederate-states-of-america",
+      "name": "美利坚联盟国",
+      "originalName": "Confederate States of America",
+      "aliases": [
+        "南方联邦",
+        "邦联",
+        "南部邦联",
+        "Confederacy",
+        "Confederate States of America",
+        "CSA"
+      ],
+      "kind": "concept",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-national-archives-civil-war-documents",
+        "source-loc-confederate-states-records",
+        "source-cssn-civil-war-slave-trade"
+      ],
+      "safeNote": "美利坚联盟国是美国南部脱离联邦的州在 1861 年组成的政权，通常也称南方联邦或邦联；其政府和军事活动延续至 1865 年美国内战结束。",
+      "safeNoteSourceIds": [
+        "source-national-archives-civil-war-documents",
+        "source-loc-confederate-states-records",
+        "source-cssn-civil-war-slave-trade"
+      ],
+      "scopeNote": "只解释历史名称，不据此判断作品人物的阵营、立场或命运。"
+    },
+    {
+      "id": "place-clayton-county-georgia",
+      "name": "克莱顿县",
+      "originalName": "Clayton County",
+      "aliases": [
+        "Clayton County"
+      ],
+      "kind": "place",
+      "placeKind": "real",
+      "activation": "exact-reader-input",
+      "parentLabel": "佐治亚州，美国",
+      "geometry": {
+        "type": "point",
+        "latitude": 33.552242,
+        "longitude": -84.412973
+      },
+      "sourceIds": [
+        "source-census-2025-gazetteer",
+        "source-new-georgia-encyclopedia-clayton-county"
+      ],
+      "safeNote": "克莱顿县位于亚特兰大以南，1858 年由佐治亚州议会设立；县治是琼斯伯勒。",
+      "safeNoteSourceIds": [
+        "source-new-georgia-encyclopedia-clayton-county"
+      ],
+      "scopeNote": "坐标是现代县级代表坐标；公开资料确认其与作品创作背景有关，但不能据此断言正文直接出现该名称。"
+    },
+    {
+      "id": "place-atlanta",
+      "name": "亚特兰大",
+      "originalName": "Atlanta",
+      "aliases": [
+        "Atlanta"
+      ],
+      "kind": "place",
+      "placeKind": "real",
+      "activation": "exact-reader-input",
+      "parentLabel": "佐治亚州，美国",
+      "geometry": {
+        "type": "point",
+        "latitude": 33.7628947,
+        "longitude": -84.4220844
+      },
+      "sourceIds": [
+        "source-census-2025-georgia-incorporated-places",
+        "source-atlanta-history-center-so-red-the-rose",
+        "source-atlanta-history-center-civil-war"
+      ],
+      "safeNote": "美国内战时期，亚特兰大是美国南方重要的交通、工业和军需储运中心。",
+      "safeNoteSourceIds": [
+        "source-atlanta-history-center-civil-war"
+      ],
+      "scopeNote": "坐标是现代行政地点的代表坐标，不表示作品年代的城市边界。"
+    },
+    {
+      "id": "place-jonesboro-georgia",
+      "name": "琼斯伯勒",
+      "originalName": "Jonesboro",
+      "aliases": [
+        "Jonesboro"
+      ],
+      "kind": "place",
+      "placeKind": "real",
+      "activation": "exact-reader-input",
+      "parentLabel": "克莱顿县，佐治亚州，美国",
+      "geometry": {
+        "type": "point",
+        "latitude": 33.5211498,
+        "longitude": -84.3546835
+      },
+      "sourceIds": [
+        "source-census-2025-georgia-incorporated-places",
+        "source-new-georgia-encyclopedia-clayton-county"
+      ],
+      "safeNote": "琼斯伯勒是克莱顿县县治，早期名为 Leaksville，1845 年以铁路工程师 Samuel Goode Jones 的姓氏重新命名。",
+      "safeNoteSourceIds": [
+        "source-new-georgia-encyclopedia-clayton-county"
+      ],
+      "scopeNote": "公开资料确认其现代位置和创作背景联系，不代表已经证明正文直接出现该地名。"
+    },
+    {
+      "id": "place-tara",
+      "name": "塔拉庄园",
+      "originalName": "Tara",
+      "aliases": [
+        "塔拉",
+        "Tara"
+      ],
+      "kind": "place",
+      "placeKind": "fictional",
+      "activation": "exact-reader-input",
+      "parentLabel": "佐治亚州（虚构地点）",
+      "sourceIds": [
+        "source-atlanta-history-center-so-red-the-rose",
+        "source-atlanta-history-center-telling-stories-citations"
+      ],
+      "scopeNote": "公开研究支持其虚构地点分类；系统不会把建筑灵感伪装成精确坐标。"
+    },
+    {
+      "id": "place-twelve-oaks",
+      "name": "十二橡树庄园",
+      "originalName": "Twelve Oaks",
+      "aliases": [
+        "十二橡树",
+        "Twelve Oaks"
+      ],
+      "kind": "place",
+      "placeKind": "fictional",
+      "activation": "exact-reader-input",
+      "parentLabel": "佐治亚州（虚构地点）",
+      "sourceIds": [
+        "source-new-georgia-encyclopedia-gwtw",
+        "source-atlanta-history-center-telling-stories-citations"
+      ],
+      "scopeNote": "只提供虚构地点分类，不包含外部资料页面中的剧情概述。"
+    },
+    {
+      "id": "place-university-of-virginia",
+      "name": "弗吉尼亚大学",
+      "originalName": "University of Virginia",
+      "aliases": [
+        "University of Virginia"
+      ],
+      "kind": "place",
+      "placeKind": "real",
+      "activation": "exact-reader-input",
+      "parentLabel": "夏洛茨维尔，弗吉尼亚州，美国",
+      "geometry": {
+        "type": "point",
+        "latitude": 38.0356372,
+        "longitude": -78.5033905
+      },
+      "sourceIds": [
+        "source-reader-excerpt-early-institutions",
+        "source-university-of-virginia-official",
+        "source-openstreetmap-nominatim-research"
+      ],
+      "safeNote": "弗吉尼亚大学由托马斯·杰斐逊创建，1819 年获弗吉尼亚州议会特许，位于夏洛茨维尔。",
+      "safeNoteSourceIds": [
+        "source-university-of-virginia-official"
+      ],
+      "scopeNote": "当前译本片段确认中文名称；地图使用校内 Rotunda 作为现代校园参考点，不表示校园边界或故事年代范围。"
+    },
+    {
+      "id": "place-university-of-alabama",
+      "name": "亚拉巴马大学",
+      "originalName": "University of Alabama",
+      "aliases": [
+        "University of Alabama"
+      ],
+      "kind": "place",
+      "placeKind": "real",
+      "activation": "exact-reader-input",
+      "parentLabel": "塔斯卡卢萨，亚拉巴马州，美国",
+      "geometry": {
+        "type": "point",
+        "latitude": 33.2120822,
+        "longitude": -87.5396735
+      },
+      "sourceIds": [
+        "source-reader-excerpt-early-institutions",
+        "source-university-of-alabama-official",
+        "source-openstreetmap-nominatim-research"
+      ],
+      "safeNote": "阿拉巴马州议会于 1820 年设立这所公立大学；学校 1831 年首次开课，到 19 世纪 60 年代已使用 The University of Alabama 这一名称。",
+      "safeNoteSourceIds": [
+        "source-university-of-alabama-official"
+      ],
+      "scopeNote": "当前译本片段确认中文名称；坐标是现代校园代表点，不表示校园边界或故事年代范围。"
+    },
+    {
+      "id": "place-university-of-south-carolina",
+      "name": "南卡罗来纳大学",
+      "originalName": "University of South Carolina",
+      "aliases": [
+        "University of South Carolina"
+      ],
+      "kind": "place",
+      "placeKind": "real",
+      "activation": "exact-reader-input",
+      "parentLabel": "哥伦比亚，南卡罗来纳州，美国",
+      "geometry": {
+        "type": "point",
+        "latitude": 33.9928841,
+        "longitude": -81.0268676
+      },
+      "sourceIds": [
+        "source-reader-excerpt-early-institutions",
+        "source-university-of-south-carolina-official",
+        "source-openstreetmap-nominatim-research"
+      ],
+      "safeNote": "学校于 1801 年以 South Carolina College 之名创立，1906 年起固定使用 University of South Carolina 这一名称。",
+      "safeNoteSourceIds": [
+        "source-university-of-south-carolina-official"
+      ],
+      "scopeNote": "当前译本片段使用现代中文校名；官方校史说明故事年代机构名不同，坐标仅表示现代校园代表点。"
+    },
+    {
+      "id": "place-fayetteville-female-academy",
+      "name": "费耶特维尔女子学院",
+      "originalName": "Fayetteville Female Academy",
+      "aliases": [
+        "Fayetteville Female Academy"
+      ],
+      "kind": "place",
+      "placeKind": "prototype",
+      "activation": "exact-reader-input",
+      "parentLabel": "佐治亚州费耶特维尔（虚构学校及现实原型）",
+      "geometry": {
+        "type": "point",
+        "latitude": 33.44873,
+        "longitude": -84.45493
+      },
+      "sourceIds": [
+        "source-reader-excerpt-early-institutions",
+        "source-dlg-fayetteville-academy"
+      ],
+      "safeNote": "现实中的 Fayetteville Academy 曾设在建于 1855 年的 Holliday-Dorsey-Fife 宅邸；Digital Library of Georgia 将其说明为小说中虚构学校的原型。",
+      "safeNoteSourceIds": [
+        "source-dlg-fayetteville-academy"
+      ],
+      "scopeNote": "当前译本片段确认中文名称；地图点来自现实 Fayetteville Academy 原型资料，不表示虚构学校存在精确现实坐标。"
+    },
+    {
+      "id": "person-gerald-ohara",
+      "name": "杰拉尔德",
+      "originalName": "Gerald O'Hara",
+      "aliases": [
+        "杰拉尔德·奥哈拉",
+        "杰拉尔德·欧哈拉",
+        "杰拉德",
+        "Gerald O'Hara"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-new-georgia-encyclopedia-gwtw",
+        "source-dangdang-fan-chunhai-edition-description"
+      ],
+      "scopeNote": "同一译者版本确认短名“杰拉尔德”；只预置名称，不展示人物关系、经历或命运。"
+    },
+    {
+      "id": "person-ellen-ohara",
+      "name": "艾伦",
+      "originalName": "Ellen O'Hara",
+      "aliases": [
+        "艾伦·奥哈拉",
+        "艾伦·欧哈拉",
+        "埃伦",
+        "Ellen O'Hara"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-new-georgia-encyclopedia-gwtw",
+        "source-dangdang-fan-chunhai-edition-description"
+      ],
+      "scopeNote": "同一译者版本确认短名“艾伦”；只预置名称，不展示人物关系、经历或命运。"
+    },
+    {
+      "id": "person-suellen-ohara",
+      "name": "苏伦",
+      "originalName": "Suellen O'Hara",
+      "aliases": [
+        "苏伦·奥哈拉",
+        "苏伦·欧哈拉",
+        "郝苏伦",
+        "Suellen O'Hara"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-zh-wikipedia-gwtw-name-index"
+      ],
+      "scopeNote": "中文写法来自跨译本名称索引，仅用于精确匹配；不展示人物关系、经历或命运。"
+    },
+    {
+      "id": "person-carreen-ohara",
+      "name": "凯伦",
+      "originalName": "Carreen O'Hara",
+      "aliases": [
+        "卡琳",
+        "恺琳",
+        "凯伦·奥哈拉",
+        "卡琳·奥哈拉",
+        "Carreen O'Hara"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-zh-wikipedia-gwtw-name-index"
+      ],
+      "scopeNote": "中文写法来自跨译本名称索引，仅用于精确匹配；不展示人物关系、经历或命运。"
+    },
+    {
+      "id": "person-mammy",
+      "name": "黑妈妈",
+      "originalName": "Mammy",
+      "aliases": [
+        "黑嬷嬷",
+        "嬷嬷",
+        "Mammy"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-new-georgia-encyclopedia-gwtw-film",
+        "source-zh-wikipedia-gwtw-name-index"
+      ],
+      "scopeNote": "包含不同译本的常见称呼，仅用于原文精确命中；不展示身份、关系或剧情说明。"
+    },
+    {
+      "id": "person-charles-hamilton",
+      "name": "查尔斯",
+      "originalName": "Charles Hamilton",
+      "aliases": [
+        "查尔斯·汉密尔顿",
+        "查理斯",
+        "韩查理",
+        "Charles Hamilton"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-zh-wikipedia-gwtw-name-index"
+      ],
+      "scopeNote": "包含不同译本的常见称呼，仅用于原文精确命中；不展示人物关系、经历或命运。"
+    },
+    {
+      "id": "person-frank-kennedy",
+      "name": "弗兰克",
+      "originalName": "Frank Kennedy",
+      "aliases": [
+        "弗兰克·肯尼迪",
+        "富兰克",
+        "甘福隆",
+        "甘弗朗",
+        "Frank Kennedy"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-zh-wikipedia-gwtw-name-index"
+      ],
+      "scopeNote": "包含不同译本的常见称呼，仅用于原文精确命中；不展示人物关系、经历或命运。"
+    },
+    {
+      "id": "person-pitty-hamilton",
+      "name": "皮蒂姑妈",
+      "originalName": "Pitty Hamilton",
+      "aliases": [
+        "皮蒂帕特姑妈",
+        "贝蒂帕特姑妈",
+        "贝蒂·汉密尔顿",
+        "韩白蝶",
+        "Pitty Hamilton"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-zh-wikipedia-gwtw-name-index"
+      ],
+      "scopeNote": "包含不同译本的常见称呼，仅用于原文精确命中；不展示人物关系、经历或命运。"
+    },
+    {
+      "id": "person-belle-watling",
+      "name": "贝尔",
+      "originalName": "Belle Watling",
+      "aliases": [
+        "贝尔·沃特琳",
+        "贝尔·沃特林",
+        "华贝儿",
+        "Belle Watling"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-zh-wikipedia-gwtw-name-index"
+      ],
+      "scopeNote": "包含不同译本的常见称呼，仅用于原文精确命中；不展示身份、关系或剧情说明。"
+    },
+    {
+      "id": "person-will-benteen",
+      "name": "威尔",
+      "originalName": "Will Benteen",
+      "aliases": [
+        "威尔·本特恩",
+        "威尔·本廷",
+        "班威尔",
+        "Will Benteen"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-zh-wikipedia-gwtw-name-index"
+      ],
+      "scopeNote": "包含不同译本的常见称呼，仅用于原文精确命中；不展示人物关系、经历或命运。"
+    },
+    {
+      "id": "person-wade-hampton-hamilton",
+      "name": "韦德",
+      "originalName": "Wade Hampton Hamilton",
+      "aliases": [
+        "韦德·汉普顿·汉密尔顿",
+        "韩韦德",
+        "Wade Hampton Hamilton"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-zh-wikipedia-gwtw-name-index"
+      ],
+      "scopeNote": "包含不同译本的常见称呼，仅用于原文精确命中；不展示人物关系、经历或命运。"
+    },
+    {
+      "id": "person-ella-lorena-kennedy",
+      "name": "埃拉",
+      "originalName": "Ella Lorena Kennedy",
+      "aliases": [
+        "埃拉·洛丽娜·肯尼迪",
+        "埃拉·洛雷娜·肯尼迪",
+        "甘爱雅",
+        "Ella Lorena Kennedy"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-zh-wikipedia-gwtw-name-index"
+      ],
+      "scopeNote": "包含不同译本的常见称呼，仅用于原文精确命中；不展示人物关系、经历或命运。"
+    },
+    {
+      "id": "person-bonnie-blue-butler",
+      "name": "邦妮",
+      "originalName": "Eugenie Victoria \"Bonnie\" Butler",
+      "aliases": [
+        "邦尼",
+        "邦妮·巴特勒",
+        "邦尼·巴特勒",
+        "白美蓝",
+        "Bonnie Butler",
+        "Bonnie Blue Butler"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-zh-wikipedia-gwtw-name-index"
+      ],
+      "scopeNote": "包含不同译本的常见称呼，仅用于原文精确命中；不展示人物关系、经历或命运。"
+    },
+    {
+      "id": "person-prissy",
+      "name": "普莉西",
+      "originalName": "Prissy",
+      "aliases": [
+        "普里西",
+        "普莉斯",
+        "Prissy"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-new-georgia-encyclopedia-gwtw-film"
+      ],
+      "scopeNote": "公开资料确认原文人物；中文写法作为跨译本匹配候选，不展示身份、关系或剧情说明。"
+    },
+    {
+      "id": "person-pork",
+      "name": "波克",
+      "originalName": "Pork",
+      "aliases": [
+        "Pork"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-new-georgia-encyclopedia-wind-done-gone"
+      ],
+      "scopeNote": "公开资料确认原文人物；中文写法只用于精确匹配，不展示身份、关系或剧情说明。"
+    },
+    {
+      "id": "person-uncle-peter",
+      "name": "彼得大叔",
+      "originalName": "Uncle Peter",
+      "aliases": [
+        "彼得叔叔",
+        "Uncle Peter"
+      ],
+      "kind": "person",
+      "activation": "exact-reader-input",
+      "sourceIds": [
+        "source-new-georgia-encyclopedia-gwtw-film",
+        "source-zh-wikipedia-gwtw-name-index"
+      ],
+      "scopeNote": "包含不同译本的常见称呼，仅用于原文精确命中；不展示身份、关系或剧情说明。"
+    },
+    {
+      "id": "place-peachtree-street",
+      "name": "桃树街",
+      "originalName": "Peachtree Street",
+      "aliases": [
+        "桃树大街",
+        "桃树街道",
+        "Peachtree Street"
+      ],
+      "kind": "place",
+      "placeKind": "real",
+      "activation": "exact-reader-input",
+      "parentLabel": "亚特兰大，佐治亚州，美国",
+      "sourceIds": [
+        "source-atlanta-history-center-peachtree-street",
+        "source-zh-wikipedia-gwtw-name-index"
+      ],
+      "scopeNote": "现实街道名称已确认；未用单个坐标替代街道路段，地图位置由读者按需搜索确认。"
+    }
+  ]
+}
