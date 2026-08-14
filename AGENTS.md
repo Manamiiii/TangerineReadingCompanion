@@ -13,6 +13,14 @@ Before code changes, inspect the current branch, working tree and latest commit,
 - `docs/product-and-architecture.md` before changing books, progress, maps, OCR or spoiler controls.
 - `docs/model-prompts.md` before changing prompts or model data permissions.
 
+## Main branch workflow
+
+- New sessions work directly on `main` by default. Before changes, inspect the working tree, run `git switch main`, and synchronize with `git pull --ff-only origin main`.
+- Preserve any existing user changes. If the working tree is dirty, `main` cannot be selected safely, or the pull is not a fast-forward, stop and report the condition instead of discarding or rewriting work.
+- Do not create feature branches, worktrees or pull requests unless the user explicitly requests them.
+- After a verified development batch, stage only the scoped files, create an intentional commit on `main`, and push with `git push origin main`.
+- Never force-push `main`, rewrite published history or bypass branch protection. If direct push is rejected, report the protection or permission requirement and wait for user direction.
+
 ## Hard boundaries
 
 - Do not change the Dexie schema version unless the user explicitly requests it.
@@ -42,4 +50,4 @@ For package work also run `npm run check:packages`; use `npm run check:preset` b
 - Topic documents describe current behavior, provenance, active constraints and unresolved decisions.
 - Generated reports belong in ignored `artifacts/`.
 - Avoid transition diaries; Git history records implementation history.
-- After a verified development batch, commit and push the scoped branch, report branch, commit and PR status, and include a short next step.
+- After a verified development batch, commit and push `main`, report the commit and push status, and include a short next step.
