@@ -18,6 +18,7 @@ Before code changes, inspect the current branch, working tree and latest commit,
 - New sessions work directly on `main` by default. Before changes, inspect the working tree, run `git switch main`, and synchronize with `git pull --ff-only origin main`.
 - Preserve any existing user changes. If the working tree is dirty, `main` cannot be selected safely, or the pull is not a fast-forward, stop and report the condition instead of discarding or rewriting work.
 - Do not create feature branches, worktrees or pull requests unless the user explicitly requests them.
+- In multi-agent work, only the manager/root agent may stage files, create commits, push branches or otherwise change Git history and remote state. Subagents may inspect, edit and verify their assigned scope, then report their results to the manager for delivery.
 - After a verified development batch, stage only the scoped files, create an intentional commit on `main`, and push with `git push origin main`.
 - Never force-push `main`, rewrite published history or bypass branch protection. If direct push is rejected, report the protection or permission requirement and wait for user direction.
 
