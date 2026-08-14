@@ -12,7 +12,7 @@
 
 运行时提示词的可执行源位于 `src/features/reading-companion/model/promptCatalog.js`。修改其标识、消息或输出契约时必须同步更新本文和领域测试。缓存键包含提示词标识，升级标识会自然避开旧页面缓存。
 
-供应商连接、HTTPS / localhost 校验、45 秒超时、JSON 解析和页面内临时缓存位于 `src/features/model/`，可由其他场景的受限模型任务复用。阅读提示词、输出权限和资料落库契约仍只属于阅读伴侣，不能被其他场景任务替换或放宽。
+供应商连接、HTTPS / localhost 校验、45 秒超时、JSON 解析和页面内临时缓存位于 `src/features/model/`。阅读提示词、输出权限和资料落库契约只属于阅读伴侣，不能被通用连接层替换或放宽。
 
 ## 当前段落名称配对
 

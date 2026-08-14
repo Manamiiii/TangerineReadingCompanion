@@ -1,5 +1,5 @@
 {
-  "name": "TangerineTools",
+  "name": "Tangerine Reading Companion",
   "image": "mcr.microsoft.com/devcontainers/universal:5",
   "customizations": {
     "vscode": {
@@ -9,15 +9,15 @@
     }
   },
   "mounts": [
-    "source=tangerine-tools-codex-home,target=/home/codespace/.codex,type=volume"
+    "source=tangerine-reading-companion-codex-home,target=/home/codespace/.codex,type=volume"
   ],
   "remoteEnv": {
     "CODEX_HOME": "/home/codespace/.codex"
   },
-  "forwardPorts": [5173],
+  "forwardPorts": [5174],
   "portsAttributes": {
-    "5173": {
-      "label": "TangerineTools",
+    "5174": {
+      "label": "Tangerine Reading Companion",
       "onAutoForward": "openBrowser"
     }
   },

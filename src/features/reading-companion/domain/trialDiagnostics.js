@@ -1,4 +1,4 @@
-const READING_TRIAL_DIAGNOSTICS_STORAGE_KEY = 'tangerine.reader.trialDiagnostics.v1'
+const READING_TRIAL_DIAGNOSTICS_STORAGE_KEY = 'tangerine-reading-companion:trial-diagnostics:v1'
 const MAX_DIAGNOSTIC_EVENTS = 30
 
 const VALID_AREAS = new Set([

@@ -116,32 +116,10 @@ img {
   letter-spacing: 0.2px;
 }
 
-.scene-context {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-}
-
-.scene-context-name {
-  font-weight: 600;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
 .app-main {
   flex: 1 1 auto;
   overflow: auto;
   padding: 20px;
-}
-
-.scene-workbench-empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 100%;
-  color: var(--text-muted);
 }
 
 .global-data-actions {

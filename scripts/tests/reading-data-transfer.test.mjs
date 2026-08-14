@@ -21,20 +21,22 @@ test('extracts reading records from a TangerineTools backup and normalizes scene
   const result = readingRecordsFromPayload({
     schemaVersion: 1,
     data: {
+      scenes: [],
+      catalogTables: [],
+      catalogFields: [],
+      catalogRows: [],
       meta: [
         { key: 'seededRockKingdom', value: true },
         {
           key: 'readerState:custom-scene:edition-1',
           value: { sceneId: 'custom-scene', editionId: 'edition-1', currentChapterId: 'chapter-2' },
         },
-        { key: 'readerPersonalPackage:book-1', value: { package: { id: 'book-1' } } },
       ],
     },
   })
 
   assert.equal(result.source, 'tangerine-tools')
   assert.deepEqual(result.records.map((record) => record.key).sort(), [
-    'readerPersonalPackage:book-1',
     'readerState:scene-reading-companion:edition-1',
   ])
   assert.equal(result.records.find((record) => record.key.startsWith('readerState:')).value.sceneId, 'scene-reading-companion')
@@ -62,7 +64,47 @@ test('imports by key and exports only reading records', async () => {
 
 test('rejects backups without reading data', () => {
   assert.throws(
-    () => readingRecordsFromPayload({ data: { meta: [{ key: 'seededRockKingdom', value: true }] } }),
+    () => readingRecordsFromPayload({
+      schemaVersion: 1,
+      data: {
+        scenes: [],
+        catalogTables: [],
+        catalogFields: [],
+        catalogRows: [],
+        meta: [{ key: 'seededRockKingdom', value: true }],
+      },
+    }),
     /没有可导入的阅读记录/u,
+  )
+})
+
+test('rejects unknown formats and malformed reading records', () => {
+  assert.throws(
+    () => readingRecordsFromPayload({
+      format: 'tangerine-reading-companion-backup-v2',
+      schemaVersion: 1,
+      data: { meta: [] },
+    }),
+    /不支持的备份格式/u,
+  )
+  assert.throws(
+    () => readingRecordsFromPayload({
+      schemaVersion: 1,
+      data: { meta: [{ key: 'readerState:old:edition-1', value: null }] },
+    }),
+    /不是受支持/u,
+  )
+  assert.throws(
+    () => readingRecordsFromPayload({
+      format: READING_BACKUP_FORMAT,
+      schemaVersion: 1,
+      data: {
+        meta: [{
+          key: 'readerState:scene-reading-companion:edition-1',
+          value: { editionId: 'edition-1', observedEntities: {} },
+        }],
+      },
+    }),
+    /已遇到记录无效/u,
   )
 })

@@ -22,6 +22,8 @@ npm install
 npm run dev
 ```
 
+开发服务器固定使用 `http://localhost:5174/`；端口被占用时会直接报错，不会自动切换到其他端口。
+
 ## 常用命令
 
 | 命令 | 用途 |
@@ -38,7 +40,7 @@ npm run dev
 
 ## 数据与隐私
 
-运行时数据保存在浏览器数据库 `tangerine-reading-companion` 的 `meta` 表中。粘贴段落、截图、OCR 原文和剧透授权不会持久化。模型 Key 只保存在当前浏览器会话中；模型、地图与瓦片服务的外发边界见 [产品与架构](docs/product-and-architecture.md) 和 [模型提示词契约](docs/model-prompts.md)。
+运行时数据保存在浏览器数据库 `tangerine-reading-companion` 的 `meta` 表中。粘贴段落、截图、OCR 原文和剧透授权不会持久化。模型与地图配置使用 `tangerine-reading-companion:*` 独立浏览器存储命名空间；升级后会复制旧阅读配置但不删除旧键。模型 Key 只保存在当前浏览器会话中；模型、地图与瓦片服务的外发边界见 [产品与架构](docs/product-and-architecture.md) 和 [模型提示词契约](docs/model-prompts.md)。
 
 完整备份采用同 key 覆盖、本地其他记录保留的合并语义。导入旧 TangerineTools 备份时，只读取 `readerState:` 和 `readerPersonalPackage:` 记录，忽略游戏及其他数据，并将旧场景下的同版本进度归一到独立阅读场景。
 

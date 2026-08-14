@@ -50,7 +50,6 @@ import {
 } from '../model/modelProviders.js'
 import {
   loadStoredModelConfig,
-  MODEL_CONFIG_SCOPE,
   saveStoredModelConfig,
 } from '../../model/modelConfig.js'
 import {
@@ -73,8 +72,9 @@ const EMPTY_OBSERVED_ENTITIES = Object.freeze([])
 import {
   READING_MAP_PROVIDER,
   READING_MAP_PROVIDERS,
-  READING_MAP_STORAGE_KEYS,
+  loadStoredReadingMapConfig,
   normalizeReadingMapProvider,
+  saveStoredReadingMapConfig,
 } from '../map/mapConfig.js'
 import {
   SPOILER_GATE_ACTION,
@@ -207,7 +207,7 @@ function observedRecordAction(
 }
 
 function loadStoredReadingModelConfig(providerId = '', allowLegacy = true) {
-  return loadStoredModelConfig(providerId, allowLegacy, MODEL_CONFIG_SCOPE.READING)
+  return loadStoredModelConfig(providerId, allowLegacy)
 }
 
 function LoadingPanel({ message }) {
@@ -930,7 +930,7 @@ function ReadingServiceSettings({
           <div><span>地图确认</span><strong>{feedbackSummary.mappedPlaceCount}</strong></div>
         </div>
         <p className="reader-settings-intro">
-          只导出当前书的版本、进度、已遇到记录、备注、地图确认和脱敏运行诊断。不包含 API Key、段落、搜索词、截图、模型内容或其他场景数据。
+          只导出当前书的版本、进度、已遇到记录、备注、地图确认和脱敏运行诊断。不包含 API Key、段落、搜索词、截图或模型内容。
         </p>
         <button type="button" className="btn reader-feedback-export" onClick={exportReadingFeedback}>
           <Download size={14} />
@@ -2458,13 +2458,7 @@ export function ReaderTool({ scene }) {
   const [activeTab, setActiveTab] = useState(READER_TAB.INPUT)
   const [mapMounted, setMapMounted] = useState(false)
   const [modelConfig, setModelConfig] = useState(() => loadStoredReadingModelConfig())
-  const [mapConfig, setMapConfig] = useState(() => ({
-    providerId: normalizeReadingMapProvider(
-      window.localStorage.getItem(READING_MAP_STORAGE_KEYS.provider),
-    ),
-    tiandituToken:
-      window.localStorage.getItem(READING_MAP_STORAGE_KEYS.tiandituToken) || '',
-  }))
+  const [mapConfig, setMapConfig] = useState(() => loadStoredReadingMapConfig())
 
   useEffect(() => {
     let active = true
@@ -2722,7 +2716,7 @@ export function ReaderTool({ scene }) {
 
   async function deletePersonalBook(entry) {
     const confirmed = window.confirm(
-      `删除个人书籍“${entry.title}”？这会同时删除它在所有阅读场景中的进度、已遇到名称和个人地图位置，且无法撤销。`,
+      `删除个人书籍“${entry.title}”？这会同时删除该版本的进度、已遇到名称和个人地图位置，且无法撤销。`,
     )
     if (!confirmed) return
     await deletePersonalReadingPackage(entry.id)
@@ -2743,25 +2737,12 @@ export function ReaderTool({ scene }) {
   }
 
   function saveModelConfig(nextConfig) {
-    const normalized = saveStoredModelConfig(nextConfig, MODEL_CONFIG_SCOPE.READING)
+    const normalized = saveStoredModelConfig(nextConfig)
     setModelConfig(normalized)
   }
 
   function saveMapConfig(nextConfig) {
-    const normalized = {
-      providerId: normalizeReadingMapProvider(nextConfig.providerId),
-      tiandituToken: nextConfig.tiandituToken.trim(),
-    }
-    window.localStorage.setItem(READING_MAP_STORAGE_KEYS.provider, normalized.providerId)
-    if (normalized.tiandituToken) {
-      window.localStorage.setItem(
-        READING_MAP_STORAGE_KEYS.tiandituToken,
-        normalized.tiandituToken,
-      )
-    } else {
-      window.localStorage.removeItem(READING_MAP_STORAGE_KEYS.tiandituToken)
-    }
-    setMapConfig(normalized)
+    setMapConfig(saveStoredReadingMapConfig(nextConfig))
   }
 
   function changeExcerpt(value) {
