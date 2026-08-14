@@ -30,7 +30,7 @@
 数据库名为 `tangerine-reading-companion`，Dexie schema v1 只包含 `meta: 'key'`。持久化键包括：
 
 - `readerPersonalPackage:{packageId}`：个人书籍资料包。
-- `readerState:{sceneId}:{editionId}`：阅读进度与个人已读记忆。
+- `readerState:{editionId}`：按阅读版本隔离的进度与个人已读记忆。旧工具遗留的带场景 key 会在首次读取时按版本懒复制到该规范 key，旧记录保留，不修改 Dexie schema。
 
 备份只包含这两类记录。导入按 key 合并，不删除备份中缺少的本地记录。
 

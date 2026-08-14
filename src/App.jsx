@@ -4,7 +4,6 @@ import { ReaderTool } from './features/reading-companion/index.js'
 import {
   exportReadingData,
   importReadingData,
-  READING_COMPANION_SCENE,
 } from './readingDataTransfer.js'
 
 export default function App() {
@@ -69,7 +68,7 @@ export default function App() {
         </div>
       )}
       <main className="app-main reader-app-main">
-        <ReaderTool scene={READING_COMPANION_SCENE} />
+        <ReaderTool />
       </main>
     </div>
   )

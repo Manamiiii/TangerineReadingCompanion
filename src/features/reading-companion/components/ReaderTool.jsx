@@ -1,14 +1,9 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
-  AlertTriangle,
   ArrowLeft,
   BookOpen,
   ClipboardPaste,
-  Download,
-  ExternalLink,
-  Eye,
-  EyeOff,
   Image,
   Map as MapIcon,
   MapPin,
@@ -32,7 +27,6 @@ import {
 import { loadReadingPackage, loadReadingPackageCatalog } from '../data/readingPackages.js'
 import { generateId } from '../../../utils.js'
 import { Modal } from '../../../components/common.jsx'
-import packageMetadata from '../../../../package.json'
 import { searchReadingPlaces } from '../map/geocoding.js'
 import {
   recognizeImageText,
@@ -44,10 +38,6 @@ import {
   suggestReadingPlaceQueries,
 } from '../model/modelAdapter.js'
 import {
-  READING_MODEL_PROVIDER,
-  READING_MODEL_PROVIDERS,
-} from '../model/modelProviders.js'
-import {
   loadStoredModelConfig,
   saveStoredModelConfig,
 } from '../../model/modelConfig.js'
@@ -56,27 +46,22 @@ import {
   mergePersonalBookKnowledge,
   personalCatalogEntry,
 } from '../domain/personalBooks.js'
-import {
-  createReadingFeedbackBundle,
-  summarizeReadingFeedback,
-} from '../domain/feedbackBundle.js'
-import {
-  readingTrialDiagnosticsSnapshot,
-  recordReadingTrialDiagnostic,
-} from '../domain/trialDiagnostics.js'
+import { recordReadingTrialDiagnostic } from '../domain/trialDiagnostics.js'
 import { ReadingLibrary } from './ReadingLibrary.jsx'
+import { ReadingSafeNote } from './ReadingSafeNote.jsx'
+import {
+  loadLastReadingPackageId,
+  parseReaderLocation,
+  saveLastReadingPackageId,
+  writeReaderLocation,
+} from '../navigation/readerLocation.js'
 import {
   READING_MAP_PROVIDER,
   READING_MAP_PROVIDERS,
   loadStoredReadingMapConfig,
-  normalizeReadingMapProvider,
   saveStoredReadingMapConfig,
 } from '../map/mapConfig.js'
 import {
-  SPOILER_GATE_ACTION,
-  SPOILER_CATEGORY_LABELS,
-  SPOILER_RISK,
-  canRevealRisk,
   clearObservedPlaceLocation,
   confirmObservedPlaceApproximateArea,
   confirmObservedPlaceLocation,
@@ -86,12 +71,10 @@ import {
   matchOnDemandEntity,
   normalizeObservedEntityName,
   observedEntityEncounterChapterIds,
-  readingEntitySafeNoteSources,
   readingPlaceRelations,
   readerConfirmedMapEntities,
   scanOnDemandEntities,
   scanObservedEntities,
-  spoilerGateAction,
   unlockedOnDemandEntities,
   upsertObservedEntity,
   updateObservedEntityNote,
@@ -105,7 +88,14 @@ const ReadingGeoMap = lazy(() => import('./ReadingGeoMap.jsx').then((module) => 
   default: module.ReadingGeoMap,
 })))
 
-const APP_BUILD = String(import.meta.env.VITE_APP_BUILD || 'local').slice(0, 7)
+const ReadingServiceSettings = lazy(() => import('./ReadingServiceSettings.jsx').then((module) => ({
+  default: module.ReadingServiceSettings,
+})))
+
+const ReadingFactsPanel = lazy(() => import('./ReadingFactsPanel.jsx').then((module) => ({
+  default: module.ReadingFactsPanel,
+})))
+
 const EMPTY_OBSERVED_ENTITIES = Object.freeze([])
 
 const PLACE_KIND_LABELS = {
@@ -656,297 +646,6 @@ function ReadingQuestionPanel({
   )
 }
 
-function ReadingServiceSettings({
-  modelConfig,
-  mapConfig,
-  scene,
-  readingPackage,
-  readingState,
-  currentChapterId,
-  onLoadModelProvider,
-  onSaveModel,
-  onSaveMap,
-}) {
-  const [modelDraft, setModelDraft] = useState(modelConfig)
-  const [mapDraft, setMapDraft] = useState(mapConfig)
-  const [message, setMessage] = useState('')
-
-  useEffect(() => setModelDraft(modelConfig), [modelConfig])
-  useEffect(() => setMapDraft(mapConfig), [mapConfig])
-
-  const selectedModelProvider = READING_MODEL_PROVIDERS[modelDraft.providerId]
-    || READING_MODEL_PROVIDERS[READING_MODEL_PROVIDER.CUSTOM]
-  const feedbackSummary = summarizeReadingFeedback(readingState?.observedEntities)
-  const feedbackChapter = readingPackage?.chapters
-    ?.find((chapter) => chapter.id === currentChapterId)
-
-  function exportReadingFeedback() {
-    try {
-      const payload = createReadingFeedbackBundle({
-        appVersion: packageMetadata.version,
-        appBuild: APP_BUILD,
-        scene,
-        readingPackage,
-        readingState,
-        currentChapterId,
-        diagnostics: readingTrialDiagnosticsSnapshot(),
-      })
-      const blob = new Blob([JSON.stringify(payload, null, 2)], {
-        type: 'application/json',
-      })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      const editionKey = readingPackage.edition.isbn || readingPackage.edition.id
-      link.href = url
-      link.download = `reading-feedback-${editionKey}-${payload.exportedAt.slice(0, 10)}.json`
-      link.click()
-      URL.revokeObjectURL(url)
-      setMessage('阅读反馈包已导出。')
-      recordReadingTrialDiagnostic({
-        area: 'feedback',
-        action: 'feedback-export',
-        outcome: 'success',
-        providerId: 'local',
-      })
-    } catch (error) {
-      setMessage(error?.message || '阅读反馈包导出失败。')
-      recordReadingTrialDiagnostic({
-        area: 'feedback',
-        action: 'feedback-export',
-        outcome: 'error',
-        providerId: 'local',
-        error,
-      })
-    }
-  }
-
-  function changeModelProvider(providerId) {
-    setModelDraft(onLoadModelProvider(providerId))
-    setMessage('')
-  }
-
-  function saveModel(event) {
-    event.preventDefault()
-    onSaveModel(modelDraft)
-    setMessage(
-      modelDraft.apiKey.trim()
-        ? `已切换到${selectedModelProvider.label}，请回到“阅读输入”用当前段落验证。`
-        : '模型地址和名称已保存，API Key 已清除。',
-    )
-  }
-
-  function saveMap(event) {
-    event.preventDefault()
-    onSaveMap(mapDraft)
-    setMessage(
-      mapDraft.providerId === READING_MAP_PROVIDER.DOMESTIC
-        ? (mapDraft.tiandituToken.trim()
-          ? '国内地图配置已保存，可以回到地图验证底图和搜索。'
-          : '已切换到国内地图，但还需要填写天地图浏览器端 Key。')
-        : '已切换到国际地图；底图免 Key，国内网络不可用时可使用 VPN。',
-    )
-  }
-
-  return (
-    <div className="reader-settings-grid">
-      <section className="reader-panel reader-settings-card">
-        <div className="reader-panel-heading">
-          <div><Sparkles size={20} /><h3>模型服务</h3></div>
-          <span className="reader-system-chip">可选</span>
-        </div>
-        <p className="reader-settings-intro">
-          用于准备个人书的隐藏名称、发现当前段落里的新名称、解释当前内容，以及整理书目和地图搜索词。
-          模型不能直接写入正式资料或生成坐标。
-        </p>
-        <form className="reader-settings-form" onSubmit={saveModel}>
-          <label>
-            <span>模型供应商</span>
-            <select
-              value={modelDraft.providerId}
-              onChange={(event) => changeModelProvider(event.target.value)}
-            >
-              {Object.values(READING_MODEL_PROVIDERS).map((provider) => (
-                <option key={provider.id} value={provider.id}>{provider.label}</option>
-              ))}
-            </select>
-            <small>{selectedModelProvider.description}</small>
-          </label>
-          <label>
-            <span>Chat Completions 兼容地址</span>
-            <input
-              value={modelDraft.endpoint}
-              onChange={(event) => setModelDraft((current) => ({
-                ...current,
-                endpoint: event.target.value,
-              }))}
-              placeholder="https://api.openai.com/v1/chat/completions"
-            />
-          </label>
-          <label>
-            <span>模型 ID</span>
-            <input
-              list="reader-model-options"
-              value={modelDraft.model}
-              onChange={(event) => setModelDraft((current) => ({
-                ...current,
-                model: event.target.value,
-              }))}
-              placeholder="按服务商文档填写"
-            />
-            <datalist id="reader-model-options">
-              {selectedModelProvider.models.map((model) => (
-                <option key={model.id} value={model.id}>{model.label}</option>
-              ))}
-            </datalist>
-            {selectedModelProvider.models.length > 0 && (
-              <small>可从建议模型中选择，也可以手动填写服务商当前支持的模型 ID。</small>
-            )}
-          </label>
-          <label>
-            <span>API Key</span>
-            <input
-              type="password"
-              value={modelDraft.apiKey}
-              onChange={(event) => setModelDraft((current) => ({
-                ...current,
-                apiKey: event.target.value,
-              }))}
-              placeholder="粘贴 API Key"
-              autoComplete="off"
-            />
-          </label>
-          <div className="reader-settings-actions">
-            <button type="submit" className="btn">保存并切换到此模型</button>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => setModelDraft((current) => ({ ...current, apiKey: '' }))}
-            >
-              清除 Key
-            </button>
-          </div>
-          <small>供应商地址和模型 ID 保存在本机，API Key 仅保存在当前浏览器会话。</small>
-        </form>
-        <details className="reader-service-guide">
-          <summary>{selectedModelProvider.label}配置提示</summary>
-          <ol>
-            <li>在服务商控制台创建 API Key；网页会员或聊天订阅通常不等于 API 额度。</li>
-            <li>确认完整接口地址以 <code>/chat/completions</code> 结尾，并核对模型 ID。</li>
-            <li>保存后回到“阅读输入”，只放入不敏感的短段落进行测试。</li>
-          </ol>
-          {(selectedModelProvider.consoleUrl || selectedModelProvider.docsUrl) && (
-            <div className="reader-guide-links">
-              {selectedModelProvider.consoleUrl && (
-                <a href={selectedModelProvider.consoleUrl} target="_blank" rel="noreferrer">
-                  打开服务商控制台 <ExternalLink size={12} />
-                </a>
-              )}
-              {selectedModelProvider.docsUrl && (
-                <a href={selectedModelProvider.docsUrl} target="_blank" rel="noreferrer">
-                  查看官方文档 <ExternalLink size={12} />
-                </a>
-              )}
-            </div>
-          )}
-        </details>
-        <p className="reader-settings-storage">
-          阅读伴侣配置独立保存。每个供应商的地址和模型名分别保存在本机 localStorage；各家 Key 分别存在 sessionStorage，关闭浏览器会话后失效。
-          不同功能会发送书目信息，或当前问题、段落、书名和章节标签；只有点击功能或创建时保留 AI 准备选项才会调用。
-        </p>
-      </section>
-
-      <section className="reader-panel reader-settings-card">
-        <div className="reader-panel-heading">
-          <div><MapIcon size={20} /><h3>地图服务</h3></div>
-          <span className="reader-system-chip">国内 / 国外</span>
-        </div>
-        <p className="reader-settings-intro">地图只检索标记为现实的地点。</p>
-        <form className="reader-settings-form" onSubmit={saveMap}>
-          <label>
-            <span>地图网络</span>
-            <select
-              value={mapDraft.providerId}
-              onChange={(event) => setMapDraft((current) => ({
-                ...current,
-                providerId: normalizeReadingMapProvider(event.target.value),
-              }))}
-            >
-              {Object.values(READING_MAP_PROVIDERS).map((provider) => (
-                <option key={provider.id} value={provider.id}>{provider.label}</option>
-              ))}
-            </select>
-            <small>{READING_MAP_PROVIDERS[mapDraft.providerId].description}</small>
-          </label>
-          {mapDraft.providerId === READING_MAP_PROVIDER.DOMESTIC && (
-            <label>
-              <span>天地图浏览器端 Key</span>
-              <input
-                type="password"
-                value={mapDraft.tiandituToken}
-                onChange={(event) => setMapDraft((current) => ({
-                  ...current,
-                  tiandituToken: event.target.value,
-                }))}
-                placeholder="在天地图控制台创建浏览器端应用"
-                autoComplete="off"
-              />
-            </label>
-          )}
-          <div className="reader-settings-actions">
-            <button type="submit" className="btn">保存地图配置</button>
-            <button
-              type="button"
-              className="btn"
-              onClick={() => setMapDraft((current) => ({ ...current, tiandituToken: '' }))}
-            >
-              清除天地图 Key
-            </button>
-          </div>
-        </form>
-        <details className="reader-service-guide">
-          <summary>天地图配置教程</summary>
-          <ol>
-            <li>注册并登录天地图，进入控制台的应用管理。</li>
-            <li>创建应用并选择“浏览器端”，复制生成的 Key。</li>
-            <li>切换为“国内地图”，粘贴 Key 并保存，再到地图页验证。</li>
-          </ol>
-          <div className="reader-guide-links">
-            <a href="https://console.tianditu.gov.cn/api/key" target="_blank" rel="noreferrer">
-              打开天地图控制台 <ExternalLink size={12} />
-            </a>
-            <a href="https://www.tianditu.gov.cn/" target="_blank" rel="noreferrer">
-              天地图官网 <ExternalLink size={12} />
-            </a>
-          </div>
-        </details>
-        <p className="reader-settings-storage">天地图 Key 保存在当前浏览器。</p>
-      </section>
-      <section className="reader-panel reader-settings-card reader-feedback-card">
-        <div className="reader-panel-heading">
-          <div><Download size={20} /><h3>试用反馈</h3></div>
-          <span className="reader-system-chip">单书</span>
-        </div>
-        <div className="reader-feedback-summary">
-          <div><span>当前进度</span><strong>{feedbackChapter?.label || '尚未记录'}</strong></div>
-          <div><span>已遇到</span><strong>{feedbackSummary.observedCount}</strong></div>
-          <div><span>个人备注</span><strong>{feedbackSummary.noteCount}</strong></div>
-          <div><span>地图确认</span><strong>{feedbackSummary.mappedPlaceCount}</strong></div>
-        </div>
-        <p className="reader-settings-intro">
-          只导出当前书的版本、进度、已遇到记录、备注、地图确认和脱敏运行诊断。不包含 API Key、段落、搜索词、截图或模型内容。
-        </p>
-        <button type="button" className="btn reader-feedback-export" onClick={exportReadingFeedback}>
-          <Download size={14} />
-          导出当前书反馈
-        </button>
-        <p className="reader-settings-storage">
-          应用 {packageMetadata.version} ({APP_BUILD}) · 资料包 {readingPackage?.packageVersion || '未知'}
-        </p>
-      </section>
-      {message && <p className="reader-settings-message" role="status">{message}</p>}
-    </div>
-  )
-}
 
 function ObservedPagination({
   page,
@@ -985,33 +684,6 @@ function ObservedPagination({
   )
 }
 
-function ReadingSafeNote({ entity, sources, className }) {
-  if (!entity?.safeNote) return null
-  const noteSources = readingEntitySafeNoteSources(entity, sources)
-  return (
-    <div className={className}>
-      <p>{entity.safeNote}</p>
-      {noteSources.length > 0 && (
-        <details className="reader-safe-note-sources">
-          <summary>资料来源 {noteSources.length}</summary>
-          <div>
-            {noteSources.map((source) => (
-              <a
-                href={source.url}
-                key={source.id}
-                target="_blank"
-                rel="noreferrer"
-              >
-                {source.label}
-                <ExternalLink size={12} aria-hidden="true" />
-              </a>
-            ))}
-          </div>
-        </details>
-      )}
-    </div>
-  )
-}
 
 function ObservedEntitiesPanel({
   observedEntities,
@@ -2263,188 +1935,12 @@ function ReadingMapPanel({
   )
 }
 
-function ReadingFactContent({ fact, entities, onHide }) {
-  const entityNames = fact.entityIds
-    .map((entityId) => entities.find((entity) => entity.id === entityId)?.name)
-    .filter(Boolean)
-  return (
-    <div className={`reader-fact-content ${fact.riskLevel}`}>
-      <p>{fact.content}</p>
-      {entityNames.length > 0 && <small>相关实体：{entityNames.join('、')}</small>}
-      {fact.riskLevel !== SPOILER_RISK.SAFE && (
-        <button type="button" className="btn btn-sm" onClick={onHide}>
-          <EyeOff size={13} /> 收起并撤销本次授权
-        </button>
-      )}
-    </div>
-  )
-}
 
-function ReadingFactsPanel({
-  facts,
-  entities,
-  backgroundEntities,
-  sources,
-  currentChapterId,
-  currentChapter,
-  chapters,
-}) {
-  const visibleFacts = useMemo(
-    () => visibleReadingFacts(facts, currentChapterId, chapters),
-    [facts, currentChapterId, chapters],
-  )
-  const safeBackgrounds = backgroundEntities.filter((entity) => entity.safeNote)
-  const [gateStates, setGateStates] = useState({})
-
-  function setGateState(factId, state) {
-    setGateStates((current) => ({ ...current, [factId]: state }))
-  }
-
-  function riskCategories(fact) {
-    return fact.riskCategories.map(
-      (category) => SPOILER_CATEGORY_LABELS[category] || '未分类风险',
-    )
-  }
-
-  return (
-    <section className="reader-panel">
-      <div className="reader-panel-heading">
-        <div>
-          <ShieldCheck size={20} />
-          <h3>背景资料</h3>
-        </div>
-        <span className="reader-system-chip"><ShieldCheck size={13} /> 随阅读进度解锁</span>
-      </div>
-      {safeBackgrounds.length === 0 && visibleFacts.length === 0 ? (
-        <div className="reader-facts-empty">
-          <ShieldCheck size={24} />
-          <strong>当前还没有已解锁的背景资料</strong>
-          <p>阅读中确认带背景注释的名称后，资料会在这里汇总，并随章节进度隐藏或显示。</p>
-        </div>
-      ) : null}
-      {safeBackgrounds.length > 0 && (
-        <section className="reader-background-section">
-          <div className="reader-content-section-heading">
-            <div>
-              <strong>名称背景</strong>
-              <span>只包含当前进度已解锁的简短说明</span>
-            </div>
-            <b>{safeBackgrounds.length}</b>
-          </div>
-          <div className="reader-background-list">
-            {safeBackgrounds.map((entity) => (
-              <article className="reader-background-card" key={entity.id}>
-                <div className="reader-background-heading">
-                  <strong>{entity.name}</strong>
-                  <span>
-                    {entity.kind === OBSERVED_ENTITY_KIND.PLACE
-                      ? PLACE_KIND_LABELS[entity.placeKind]
-                      : OBSERVED_KIND_LABELS[entity.kind]}
-                  </span>
-                </div>
-                {entity.originalName && entity.originalName !== entity.name && (
-                  <p className="reader-background-original">{entity.originalName}</p>
-                )}
-                <ReadingSafeNote
-                  entity={entity}
-                  sources={sources}
-                  className="reader-background-safe-note"
-                />
-              </article>
-            ))}
-          </div>
-        </section>
-      )}
-      {visibleFacts.length > 0 && (
-        <section className="reader-background-section">
-          <div className="reader-content-section-heading">
-            <div>
-              <strong>阅读说明</strong>
-              <span>可能涉及剧情的信息会单独确认</span>
-            </div>
-            <b>{visibleFacts.length}</b>
-          </div>
-          <div className="reader-fact-list">
-          {visibleFacts.map((fact, index) => {
-            const gateState = gateStates[fact.id] || 'hidden'
-            const gateAction = spoilerGateAction(fact.riskLevel)
-            const isSafe = gateAction === SPOILER_GATE_ACTION.DISPLAY
-            const isRevealed = canRevealRisk(
-              fact.riskLevel,
-              gateState === 'revealed' ? fact.riskLevel : 'none',
-            )
-            return (
-              <article className={`reader-fact-card ${fact.riskLevel}`} key={fact.id}>
-                <div className="reader-fact-heading">
-                  <strong>已审计说明 {index + 1}</strong>
-                  <span>{isSafe ? '安全资料' : fact.riskLevel === SPOILER_RISK.HIGH ? '高风险' : '潜在剧透'}</span>
-                </div>
-                {isRevealed ? (
-                  <ReadingFactContent
-                    fact={fact}
-                    entities={entities}
-                    onHide={() => setGateState(fact.id, 'hidden')}
-                  />
-                ) : gateState === 'hidden' ? (
-                  <div className="reader-fact-locked">
-                    <EyeOff size={18} />
-                    <button
-                      type="button"
-                      className="btn btn-sm"
-                      onClick={() => setGateState(fact.id, 'warning')}
-                    >
-                      <Eye size={13} /> 请求查看
-                    </button>
-                  </div>
-                ) : (
-                  <div className={`reader-spoiler-warning ${gateState === 'confirming' ? 'high' : ''}`} role="alert">
-                    <AlertTriangle size={20} />
-                    <div>
-                      <strong>
-                        {gateState === 'confirming'
-                          ? '请再次确认显示高风险内容'
-                          : '以下内容可能涉及剧透'}
-                      </strong>
-                      <p>可能涉及：{riskCategories(fact).join('、')}。</p>
-                      <small>当前阅读进度：{currentChapter?.label || '未知'}。</small>
-                      <div className="reader-warning-actions">
-                        <button
-                          type="button"
-                          className="btn btn-sm"
-                          onClick={() => setGateState(fact.id, 'hidden')}
-                        >
-                          保持隐藏
-                        </button>
-                        <button
-                          type="button"
-                          className="btn btn-sm btn-danger"
-                          onClick={() => setGateState(
-                            fact.id,
-                            gateAction === SPOILER_GATE_ACTION.CONFIRM_TWICE
-                              && gateState !== 'confirming'
-                              ? 'confirming'
-                              : 'revealed',
-                          )}
-                        >
-                          {gateState === 'confirming' ? '确认显示' : '仍然查看'}
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </article>
-            )
-          })}
-          </div>
-        </section>
-      )}
-    </section>
-  )
-}
-
-export function ReaderTool({ scene }) {
+export function ReaderTool() {
   const [catalog, setCatalog] = useState(null)
-  const [selectedPackageId, setSelectedPackageId] = useState('')
+  const [selectedPackageId, setSelectedPackageId] = useState(
+    () => parseReaderLocation(window.location.hash).packageId,
+  )
   const [readingPackage, setReadingPackage] = useState(null)
   const [loadError, setLoadError] = useState('')
   const [pendingChapterId, setPendingChapterId] = useState('')
@@ -2460,8 +1956,11 @@ export function ReaderTool({ scene }) {
   const [inputStatus, setInputStatus] = useState('')
   const [ocrState, setOcrState] = useState('idle')
   const [ocrProgress, setOcrProgress] = useState(0)
-  const [activeTab, setActiveTab] = useState(READER_TAB.INPUT)
+  const [activeTab, setActiveTab] = useState(
+    () => parseReaderLocation(window.location.hash).tab,
+  )
   const [mapMounted, setMapMounted] = useState(false)
+  const [lastPackageId, setLastPackageId] = useState(() => loadLastReadingPackageId())
   const [modelConfig, setModelConfig] = useState(() => loadStoredReadingModelConfig())
   const [mapConfig, setMapConfig] = useState(() => loadStoredReadingMapConfig())
 
@@ -2479,6 +1978,33 @@ export function ReaderTool({ scene }) {
   }, [])
 
   useEffect(() => {
+    function applyBrowserLocation() {
+      const location = parseReaderLocation(window.location.hash)
+      setSelectedPackageId(location.packageId)
+      setReadingPackage((current) => (
+        current?.id === location.packageId ? current : null
+      ))
+      setActiveTab(location.tab)
+      if (location.tab === READER_TAB.MAP) setMapMounted(true)
+    }
+    window.addEventListener('popstate', applyBrowserLocation)
+    window.addEventListener('hashchange', applyBrowserLocation)
+    return () => {
+      window.removeEventListener('popstate', applyBrowserLocation)
+      window.removeEventListener('hashchange', applyBrowserLocation)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!catalog || !selectedPackageId) return
+    if (catalog.some((entry) => entry.id === selectedPackageId)) return
+    setSelectedPackageId('')
+    setReadingPackage(null)
+    setActiveTab(READER_TAB.INPUT)
+    writeReaderLocation({}, { replace: true })
+  }, [catalog, selectedPackageId])
+
+  useEffect(() => {
     const entry = catalog?.find((item) => item.id === selectedPackageId)
     if (!entry) return undefined
     let active = true
@@ -2493,6 +2019,11 @@ export function ReaderTool({ scene }) {
       })
     return () => { active = false }
   }, [catalog, selectedPackageId])
+
+  useEffect(() => {
+    if (!readingPackage) return
+    setLastPackageId(saveLastReadingPackageId(readingPackage.id))
+  }, [readingPackage])
 
   useEffect(() => () => {
     if (imageInput?.url) URL.revokeObjectURL(imageInput.url)
@@ -2513,8 +2044,8 @@ export function ReaderTool({ scene }) {
 
   const editionId = readingPackage?.edition.id || ''
   const savedState = useLiveQuery(
-    () => (editionId ? getReadingState(scene.id, editionId) : null),
-    [scene.id, editionId],
+    () => (editionId ? getReadingState(editionId) : null),
+    [editionId],
   )
   const defaultChapterId = readingPackage?.chapters[0]?.id || ''
   const currentChapterId = pendingChapterId || savedState?.currentChapterId || defaultChapterId
@@ -2572,6 +2103,15 @@ export function ReaderTool({ scene }) {
       currentChapterId,
     ],
   )
+
+  useEffect(() => {
+    if (!readingPackage || activeTab !== READER_TAB.FACTS) return
+    const hasVisibleBackground = readingPackage.facts.length > 0
+      || unlockedEntities.some((entity) => entity.safeNote)
+    if (hasVisibleBackground) return
+    setActiveTab(READER_TAB.INPUT)
+    writeReaderLocation({ packageId: readingPackage.id, tab: READER_TAB.INPUT }, { replace: true })
+  }, [activeTab, readingPackage, unlockedEntities])
   const personalMapEntities = useMemo(
     () => readerConfirmedMapEntities(
       observedEntities,
@@ -2607,7 +2147,7 @@ export function ReaderTool({ scene }) {
     setPendingChapterId(chapterId)
     setSaveState('saving')
     try {
-      await saveReadingState(scene.id, editionId, {
+      await saveReadingState(editionId, {
         packageId: readingPackage.id,
         bookId: readingPackage.book.id,
         currentChapterId: chapterId,
@@ -2623,7 +2163,7 @@ export function ReaderTool({ scene }) {
   async function changeObservedEntities(observedEntities) {
     setSaveState('saving')
     try {
-      await saveReadingState(scene.id, editionId, {
+      await saveReadingState(editionId, {
         packageId: readingPackage.id,
         bookId: readingPackage.book.id,
         observedEntities,
@@ -2635,8 +2175,15 @@ export function ReaderTool({ scene }) {
     }
   }
 
+  function openTab(tab) {
+    setActiveTab(tab)
+    if (tab === READER_TAB.MAP) setMapMounted(true)
+    writeReaderLocation({ packageId: selectedPackageId, tab }, { replace: true })
+  }
+
   function selectBook(packageId) {
     setSelectedPackageId(packageId)
+    setLastPackageId(saveLastReadingPackageId(packageId))
     setPendingChapterId('')
     setExcerpt('')
     setScanResults([])
@@ -2644,6 +2191,7 @@ export function ReaderTool({ scene }) {
     setScanStatus('')
     setActiveTab(READER_TAB.INPUT)
     setMapMounted(false)
+    writeReaderLocation({ packageId, tab: READER_TAB.INPUT })
     clearImage()
   }
 
@@ -2726,6 +2274,10 @@ export function ReaderTool({ scene }) {
     if (!confirmed) return
     await deletePersonalReadingPackage(entry.id)
     setCatalog((current) => (current || []).filter((item) => item.id !== entry.id))
+    if (lastPackageId === entry.id) {
+      saveLastReadingPackageId('')
+      setLastPackageId('')
+    }
   }
 
   function returnToLibrary() {
@@ -2738,6 +2290,7 @@ export function ReaderTool({ scene }) {
     setScanStatus('')
     setActiveTab(READER_TAB.INPUT)
     setMapMounted(false)
+    writeReaderLocation({})
     clearImage()
   }
 
@@ -2956,6 +2509,7 @@ export function ReaderTool({ scene }) {
     return (
       <ReadingLibrary
         catalog={catalog}
+        continuePackageId={lastPackageId}
         onSelect={selectBook}
         onCreate={createPersonalBook}
         onDelete={deletePersonalBook}
@@ -3052,7 +2606,7 @@ export function ReaderTool({ scene }) {
               aria-selected={activeTab === tab.id}
               aria-controls={`reader-panel-${tab.id}`}
               className={activeTab === tab.id ? 'active' : ''}
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => openTab(tab.id)}
             >
               <Icon size={17} />
               <span>{tab.label}</span>
@@ -3082,7 +2636,7 @@ export function ReaderTool({ scene }) {
                 readingPackage={readingPackage}
                 modelConfig={modelConfig}
                 onPrepared={preparePersonalBook}
-                onOpenSettings={() => setActiveTab(READER_TAB.SETTINGS)}
+                onOpenSettings={() => openTab(READER_TAB.SETTINGS)}
               />
             )}
             <div className="reader-input-sources" aria-label="选择内容输入方式">
@@ -3229,7 +2783,7 @@ export function ReaderTool({ scene }) {
                   bookTitle={readingPackage.book.title}
                   currentChapter={currentChapter}
                   modelConfig={modelConfig}
-                  onOpenSettings={() => setActiveTab(READER_TAB.SETTINGS)}
+                  onOpenSettings={() => openTab(READER_TAB.SETTINGS)}
                 />
               </div>
               <div className="reader-reading-lane reader-recording-lane">
@@ -3285,7 +2839,7 @@ export function ReaderTool({ scene }) {
                   onConfirmCandidate={confirmModelCandidate}
                   actionFor={actionForObservedName}
                   modelConfig={modelConfig}
-                  onOpenSettings={() => setActiveTab(READER_TAB.SETTINGS)}
+                  onOpenSettings={() => openTab(READER_TAB.SETTINGS)}
                 />
               </div>
             </div>
@@ -3320,37 +2874,40 @@ export function ReaderTool({ scene }) {
               modelConfig={modelConfig}
               bookTitle={readingPackage.book.title}
               currentChapter={currentChapter}
-              onOpenSettings={() => setActiveTab(READER_TAB.SETTINGS)}
+              onOpenSettings={() => openTab(READER_TAB.SETTINGS)}
               isActive={activeTab === READER_TAB.MAP}
             />
           </div>
         )}
 
         {activeTab === READER_TAB.FACTS && (
-          <ReadingFactsPanel
-            key={`${readingPackage.id}:${currentChapterId}`}
-            facts={readingPackage.facts}
-            entities={readingPackage.entities}
-            backgroundEntities={unlockedEntities}
-            sources={readingPackage.sources || []}
-            currentChapterId={currentChapterId}
-            currentChapter={currentChapter}
-            chapters={readingPackage.chapters}
-          />
+          <Suspense fallback={<div className="reader-empty-state">正在加载背景资料…</div>}>
+            <ReadingFactsPanel
+              key={`${readingPackage.id}:${currentChapterId}`}
+              facts={readingPackage.facts}
+              entities={readingPackage.entities}
+              backgroundEntities={unlockedEntities}
+              sources={readingPackage.sources || []}
+              currentChapterId={currentChapterId}
+              currentChapter={currentChapter}
+              chapters={readingPackage.chapters}
+            />
+          </Suspense>
         )}
 
         {activeTab === READER_TAB.SETTINGS && (
-          <ReadingServiceSettings
-            modelConfig={modelConfig}
-            mapConfig={mapConfig}
-            scene={scene}
-            readingPackage={readingPackage}
-            readingState={savedState}
-            currentChapterId={currentChapterId}
-            onLoadModelProvider={(providerId) => loadStoredReadingModelConfig(providerId, false)}
-            onSaveModel={saveModelConfig}
-            onSaveMap={saveMapConfig}
-          />
+          <Suspense fallback={<div className="reader-empty-state">正在加载设置…</div>}>
+            <ReadingServiceSettings
+              modelConfig={modelConfig}
+              mapConfig={mapConfig}
+              readingPackage={readingPackage}
+              readingState={savedState}
+              currentChapterId={currentChapterId}
+              onLoadModelProvider={(providerId) => loadStoredReadingModelConfig(providerId, false)}
+              onSaveModel={saveModelConfig}
+              onSaveMap={saveMapConfig}
+            />
+          </Suspense>
         )}
       </main>
     </div>

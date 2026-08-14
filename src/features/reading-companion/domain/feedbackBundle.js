@@ -1,7 +1,7 @@
 import { sanitizeReadingTrialDiagnostics } from './trialDiagnostics.js'
 
 export const READING_FEEDBACK_KIND = 'tangerine-reading-feedback'
-export const READING_FEEDBACK_SCHEMA_VERSION = 2
+export const READING_FEEDBACK_SCHEMA_VERSION = 3
 
 const OBSERVED_ENTITY_FIELDS = [
   'id',
@@ -62,7 +62,6 @@ export function summarizeReadingFeedback(observedEntities = []) {
 export function createReadingFeedbackBundle({
   appVersion,
   appBuild,
-  scene,
   readingPackage,
   readingState,
   currentChapterId,
@@ -87,10 +86,6 @@ export function createReadingFeedbackBundle({
       build: typeof appBuild === 'string' && appBuild.trim()
         ? appBuild.trim()
         : 'local',
-    },
-    scene: {
-      id: String(scene?.id || ''),
-      name: String(scene?.name || ''),
     },
     book: {
       packageId: readingPackage.id,

@@ -109,6 +109,14 @@ import {
   readingTrialDiagnosticsSnapshot,
   recordReadingTrialDiagnostic,
 } from '../../../src/features/reading-companion/domain/trialDiagnostics.js'
+import {
+  LAST_READING_PACKAGE_STORAGE_KEY,
+  loadLastReadingPackageId,
+  parseReaderLocation,
+  readerLocationHash,
+  saveLastReadingPackageId,
+  writeReaderLocation,
+} from '../../../src/features/reading-companion/navigation/readerLocation.js'
 
 const repoUrl = new URL('../../../', import.meta.url)
 const readingPackage = JSON.parse(
@@ -145,7 +153,10 @@ test('reading companion keeps feature code and maintenance files in dedicated di
   const dedicatedPaths = [
     'src/features/reading-companion/index.js',
     'src/features/reading-companion/components/ReaderTool.jsx',
+    'src/features/reading-companion/components/ReadingFactsPanel.jsx',
     'src/features/reading-companion/components/ReadingGeoMap.jsx',
+    'src/features/reading-companion/components/ReadingSafeNote.jsx',
+    'src/features/reading-companion/components/ReadingServiceSettings.jsx',
     'src/features/reading-companion/data/readingPackages.js',
     'src/features/reading-companion/db/personalBooks.js',
     'src/features/reading-companion/db/readingState.js',
@@ -157,6 +168,7 @@ test('reading companion keeps feature code and maintenance files in dedicated di
     'src/features/reading-companion/map/mapConfig.js',
     'src/features/reading-companion/model/modelAdapter.js',
     'src/features/reading-companion/model/modelProviders.js',
+    'src/features/reading-companion/navigation/readerLocation.js',
     'src/features/ocr/localOcr.js',
     'src/readingDataTransfer.js',
     'scripts/reading-companion/build-preview.mjs',
@@ -841,12 +853,12 @@ test('formal facts require sources, known categories, and stay unavailable befor
   assert.ok(errors.some((error) => error.includes('未知风险类别')))
 })
 
-test('reading state keys isolate scenes and editions without changing the Dexie schema', () => {
+test('reading state keys isolate editions without carrying the retired scene dimension', () => {
   assert.equal(
-    readingStateKey('scene-reading', 'gone-with-the-wind-zh-9787570202188'),
-    'readerState:scene-reading:gone-with-the-wind-zh-9787570202188',
+    readingStateKey('gone-with-the-wind-zh-9787570202188'),
+    'readerState:gone-with-the-wind-zh-9787570202188',
   )
-  assert.throws(() => readingStateKey('', 'edition'), /场景和版本/)
+  assert.throws(() => readingStateKey(''), /版本/)
 })
 
 test('reader-confirmed names use chapters without requiring book text or guessed facts', () => {
@@ -1182,6 +1194,47 @@ test('reading model presets support domestic switching without sharing session k
     readingModelProfileStorageKey(READING_MODEL_PROVIDER.ZHIPU, 'model'),
     /^tangerine-reading-companion:/u,
   )
+})
+
+test('reader locations preserve book and task while last-reading storage stays bounded', () => {
+  assert.deepEqual(
+    parseReaderLocation('#book=reader-package-1&tab=map'),
+    { packageId: 'reader-package-1', tab: 'map' },
+  )
+  assert.deepEqual(
+    parseReaderLocation('#book=reader-package-1&tab=unknown'),
+    { packageId: 'reader-package-1', tab: 'input' },
+  )
+  assert.deepEqual(parseReaderLocation('#tab=map'), { packageId: '', tab: 'input' })
+  assert.equal(
+    readerLocationHash({ packageId: 'reader package/中文', tab: 'records' }),
+    '#book=reader+package%2F%E4%B8%AD%E6%96%87&tab=records',
+  )
+
+  const written = []
+  const browserWindow = {
+    location: { pathname: '/reader/', search: '?mode=local' },
+    history: {
+      pushState(_state, _title, url) { written.push(['push', url]) },
+      replaceState(_state, _title, url) { written.push(['replace', url]) },
+    },
+  }
+  writeReaderLocation(
+    { packageId: 'reader-package-1', tab: 'settings' },
+    { browserWindow },
+  )
+  writeReaderLocation({}, { replace: true, browserWindow })
+  assert.deepEqual(written, [
+    ['push', '/reader/?mode=local#book=reader-package-1&tab=settings'],
+    ['replace', '/reader/?mode=local'],
+  ])
+
+  const storage = memoryStorage()
+  assert.equal(saveLastReadingPackageId('reader-package-1', storage), 'reader-package-1')
+  assert.equal(storage.getItem(LAST_READING_PACKAGE_STORAGE_KEY), 'reader-package-1')
+  assert.equal(loadLastReadingPackageId(storage), 'reader-package-1')
+  assert.equal(saveLastReadingPackageId('', storage), '')
+  assert.equal(loadLastReadingPackageId(storage), '')
 })
 
 test('standalone model and map settings migrate legacy keys without rewriting them', () => {
@@ -1835,12 +1888,6 @@ test('single-book feedback exports only whitelisted reading data', () => {
   const payload = createReadingFeedbackBundle({
     appVersion: '0.1.0',
     appBuild: 'abc1234',
-    scene: {
-      id: 'scene-reading',
-      name: '经典文学阅读',
-      tools: ['reader'],
-      unrelatedSecret: 'ignored',
-    },
     readingPackage,
     currentChapterId: 'chapter-04',
     readingState: {
@@ -1875,7 +1922,8 @@ test('single-book feedback exports only whitelisted reading data', () => {
   })
   assert.equal(payload.kind, READING_FEEDBACK_KIND)
   assert.equal(payload.schemaVersion, READING_FEEDBACK_SCHEMA_VERSION)
-  assert.equal(payload.schemaVersion, 2)
+  assert.equal(payload.schemaVersion, 3)
+  assert.equal(Object.hasOwn(payload, 'scene'), false)
   assert.deepEqual(payload.app, { version: '0.1.0', build: 'abc1234' })
   assert.equal(payload.book.packageVersion, readingPackage.packageVersion)
   assert.equal(payload.reading.currentChapterId, 'chapter-04')
@@ -1938,7 +1986,6 @@ test('reading diagnostics classify failures without retaining messages or arbitr
   const payload = createReadingFeedbackBundle({
     appVersion: '0.1.0',
     appBuild: 'local',
-    scene: { id: 'scene-reading', name: '经典文学阅读' },
     readingPackage,
     readingState: {},
     diagnostics: {

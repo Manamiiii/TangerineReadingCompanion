@@ -934,6 +934,41 @@ img {
   font-size: 32px;
 }
 
+.reader-library-continue {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 18px;
+  padding: 9px 13px;
+  border: 1px solid #c4b5fd;
+  border-radius: 12px;
+  background: rgb(255 255 255 / 82%);
+  color: #6d28d9;
+  cursor: pointer;
+  text-align: left;
+}
+
+.reader-library-continue span {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.reader-library-continue small {
+  color: var(--text-muted);
+  font-size: 10px;
+}
+
+.reader-library-continue strong {
+  color: #4c1d95;
+  font-size: 13px;
+}
+
+.reader-library-continue:hover {
+  border-color: #8b5cf6;
+  background: #fff;
+}
+
 .reader-library-hero p {
   margin: 8px 0 0;
   color: #6d28d9;

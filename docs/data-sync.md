@@ -32,6 +32,6 @@ meta: 'key'
 - `readerPersonalPackage:*`
 - `readerState:*`
 
-游戏场景、资料表、收集记录和其他 `meta` 项全部忽略。阅读状态与个人书籍在写入前执行结构校验。旧备份可能在多个场景保存阅读状态；导入时按 `editionId` 归一为 `scene-reading-companion`，同一版本存在多条记录时保留 `updatedAt` 较新的记录。
+游戏场景、资料表、收集记录和其他 `meta` 项全部忽略。阅读状态与个人书籍在写入前执行结构校验。阅读状态的规范 key 为 `readerState:{editionId}`。旧备份可能在多个场景保存同一版本的阅读状态；导入时移除场景维度并按 `editionId` 归一，同一版本存在多条记录时保留 `updatedAt` 较新的记录。浏览器中已有的旧场景记录也会在首次读取该版本时懒复制到规范 key，旧记录保留，后续只写规范 key。
 
 该兼容流程不读取或修改原 TangerineTools 数据库。用户先下载 JSON 文件，再在阅读伴侣中明确选择导入。

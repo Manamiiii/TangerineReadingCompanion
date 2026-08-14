@@ -94,7 +94,6 @@ test('reader trial flow scans, records, unlocks, maps, and exports one chapter s
   const payload = createReadingFeedbackBundle({
     appVersion: '0.1.0',
     appBuild: 'trial',
-    scene: { id: 'scene-reading-companion', name: '经典文学阅读' },
     readingPackage,
     readingState: {
       currentChapterId: 'chapter-04',

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import {
+  BookOpen,
   Image,
   Laptop,
   LibraryBig,
@@ -460,13 +461,31 @@ function WindowsInstallCard() {
   )
 }
 
-export function ReadingLibrary({ catalog, onSelect, onCreate, onDelete, modelConfig }) {
+export function ReadingLibrary({
+  catalog,
+  continuePackageId,
+  onSelect,
+  onCreate,
+  onDelete,
+  modelConfig,
+}) {
   const [creating, setCreating] = useState(false)
+  const continueEntry = catalog.find((entry) => entry.id === continuePackageId)
   return (
     <div className="reader-tool reader-library">
       <section className="reader-library-hero">
         <span className="reader-eyebrow"><LibraryBig size={15} /> 经典文学阅读伴侣</span>
         <h2>选择一本书</h2>
+        {continueEntry && (
+          <button
+            type="button"
+            className="reader-library-continue"
+            onClick={() => onSelect(continueEntry.id)}
+          >
+            <BookOpen size={16} />
+            <span><small>继续上次阅读</small><strong>{continueEntry.title}</strong></span>
+          </button>
+        )}
       </section>
       <WindowsInstallCard />
       <section className="reader-library-panel">
@@ -509,7 +528,7 @@ export function ReadingLibrary({ catalog, onSelect, onCreate, onDelete, modelCon
                   <span className="reader-book-copy">
                     <strong>{entry.title}</strong>
                     <small>{entry.editionLabel}</small>
-                    <b>开始阅读</b>
+                    <b>{entry.id === continuePackageId ? '继续阅读' : '开始阅读'}</b>
                   </span>
                 </button>
                 {entry.source === 'personal' && (

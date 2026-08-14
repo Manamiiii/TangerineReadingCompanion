@@ -1,12 +1,8 @@
 import { db } from './db/core.js'
-import { assertReadingPackage } from './features/reading-companion/domain/readingCompanion.js'
-
-export const READING_COMPANION_SCENE = {
-  id: 'scene-reading-companion',
-  name: '橘子阅读伴侣',
-  type: 'reading',
-  tools: ['reader'],
-}
+import {
+  assertReadingPackage,
+  readingStateKey,
+} from './features/reading-companion/domain/readingCompanion.js'
 
 export const READING_BACKUP_FORMAT = 'tangerine-reading-companion-backup'
 export const READING_BACKUP_SCHEMA_VERSION = 1
@@ -39,14 +35,9 @@ function normalizeStateRecord(record) {
     && !Array.isArray(record.value.observedEntities)) {
     throw new Error(`阅读状态已遇到记录无效：${record.key}`)
   }
-  return {
-    key: `readerState:${READING_COMPANION_SCENE.id}:${editionId}`,
-    value: {
-      ...record.value,
-      sceneId: READING_COMPANION_SCENE.id,
-      editionId,
-    },
-  }
+  const value = { ...record.value, editionId }
+  delete value.sceneId
+  return { key: readingStateKey(editionId), value }
 }
 
 function normalizePersonalPackageRecord(record) {
@@ -82,6 +73,16 @@ function newestRecord(left, right) {
   return rightTime >= leftTime ? right : left
 }
 
+function normalizeReadingRecords(meta) {
+  const records = new Map()
+  for (const candidate of meta) {
+    if (!isReadingMetaRecord(candidate)) continue
+    const normalized = normalizePersonalPackageRecord(normalizeStateRecord(candidate))
+    records.set(normalized.key, newestRecord(records.get(normalized.key), normalized))
+  }
+  return [...records.values()]
+}
+
 export function readingRecordsFromPayload(payload) {
   const meta = payload?.data?.meta
   if (!Array.isArray(meta)) throw new Error('备份中缺少有效的 data.meta 数组')
@@ -94,18 +95,13 @@ export function readingRecordsFromPayload(payload) {
     throw new Error(`不支持的${source === 'reading-companion' ? '阅读' : ' TangerineTools'}备份版本：${payload.schemaVersion}`)
   }
 
-  const records = new Map()
-  for (const candidate of meta) {
-    if (!isReadingMetaRecord(candidate)) continue
-    const normalized = normalizePersonalPackageRecord(normalizeStateRecord(candidate))
-    records.set(normalized.key, newestRecord(records.get(normalized.key), normalized))
-  }
-  if (records.size === 0) throw new Error('备份中没有可导入的阅读记录')
-  return { records: [...records.values()], source }
+  const records = normalizeReadingRecords(meta)
+  if (records.length === 0) throw new Error('备份中没有可导入的阅读记录')
+  return { records, source }
 }
 
 export async function exportReadingData() {
-  const meta = (await db.meta.toArray()).filter(isReadingMetaRecord)
+  const meta = normalizeReadingRecords(await db.meta.toArray())
   return {
     format: READING_BACKUP_FORMAT,
     schemaVersion: READING_BACKUP_SCHEMA_VERSION,

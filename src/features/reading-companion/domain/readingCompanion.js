@@ -86,11 +86,11 @@ export function summarizeReadingPackage(pkg) {
   }
 }
 
-export function readingStateKey(sceneId, editionId) {
-  if (!isNonEmptyString(sceneId) || !isNonEmptyString(editionId)) {
-    throw new Error('阅读状态需要有效的场景和版本 id')
+export function readingStateKey(editionId) {
+  if (!isNonEmptyString(editionId)) {
+    throw new Error('阅读状态需要有效的版本 id')
   }
-  return `readerState:${sceneId}:${editionId}`
+  return `readerState:${editionId}`
 }
 
 export function chapterIndex(chapters, chapterId) {
