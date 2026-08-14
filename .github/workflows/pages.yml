@@ -39,10 +39,16 @@ jobs:
       - name: Test
         run: npm test
 
+      - name: Validate reading packages
+        run: npm run check:packages
+
       - name: Build
         run: npm run build
         env:
           VITE_APP_BUILD: ${{ github.sha }}
+
+      - name: Check whitespace errors
+        run: git diff --check
 
       - name: Upload Pages artifact
         if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'

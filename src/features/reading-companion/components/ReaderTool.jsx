@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
   AlertTriangle,
@@ -30,7 +30,6 @@ import {
   savePersonalReadingPackage,
 } from '../db/personalBooks.js'
 import { loadReadingPackage, loadReadingPackageCatalog } from '../data/readingPackages.js'
-import { ReadingGeoMap } from './ReadingGeoMap.jsx'
 import { generateId } from '../../../utils.js'
 import { Modal } from '../../../components/common.jsx'
 import packageMetadata from '../../../../package.json'
@@ -66,9 +65,6 @@ import {
   recordReadingTrialDiagnostic,
 } from '../domain/trialDiagnostics.js'
 import { ReadingLibrary } from './ReadingLibrary.jsx'
-
-const APP_BUILD = String(import.meta.env.VITE_APP_BUILD || 'local').slice(0, 7)
-const EMPTY_OBSERVED_ENTITIES = Object.freeze([])
 import {
   READING_MAP_PROVIDER,
   READING_MAP_PROVIDERS,
@@ -104,6 +100,13 @@ import {
   visibleReadingFacts,
   visibleObservedEntities,
 } from '../domain/readingCompanion.js'
+
+const ReadingGeoMap = lazy(() => import('./ReadingGeoMap.jsx').then((module) => ({
+  default: module.ReadingGeoMap,
+})))
+
+const APP_BUILD = String(import.meta.env.VITE_APP_BUILD || 'local').slice(0, 7)
+const EMPTY_OBSERVED_ENTITIES = Object.freeze([])
 
 const PLACE_KIND_LABELS = {
   real: '真实地点',
@@ -2078,14 +2081,16 @@ function ReadingMapPanel({
         {lookupMessage && <p className="reader-place-lookup-message" role="status">{lookupMessage}</p>}
       </div>
       <div className="reader-map-layout">
-        <ReadingGeoMap
-          places={spatialPlaces}
-          selectedPlaceId={selectedPlaceId}
-          onSelectPlace={setSelectedPlaceId}
-          providerId={renderedMapConfig.providerId}
-          tiandituToken={renderedMapConfig.tiandituToken}
-          isActive={isActive}
-        />
+        <Suspense fallback={<div className="reader-map-loading">正在加载地图组件…</div>}>
+          <ReadingGeoMap
+            places={spatialPlaces}
+            selectedPlaceId={selectedPlaceId}
+            onSelectPlace={setSelectedPlaceId}
+            providerId={renderedMapConfig.providerId}
+            tiandituToken={renderedMapConfig.tiandituToken}
+            isActive={isActive}
+          />
+        </Suspense>
         {places.length === 0 ? (
           <div className="reader-map-background-card">
             <MapPin size={20} />

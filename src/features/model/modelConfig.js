@@ -24,12 +24,6 @@ const LEGACY_MODEL_STORAGE_KEYS = Object.freeze({
   apiKey: 'readerModelApiKey',
 })
 
-export const MODEL_CONFIG_SCOPE = Object.freeze({
-  READING: 'reading',
-})
-
-export const MODEL_CONFIG_CHANGED_EVENT = 'tangerine-reading-companion:model-config-changed'
-
 function readStoredValue(storage, key, legacyKey, allowLegacy) {
   const current = storage.getItem(key)
   if (current !== null) return current
@@ -146,9 +140,6 @@ export function saveStoredModelConfig(
     browserWindow.sessionStorage.removeItem(readingModelApiKeyStorageKey(providerId))
     browserWindow.sessionStorage.removeItem(MODEL_STORAGE_KEYS.apiKey)
   }
-  browserWindow.dispatchEvent(new browserWindow.CustomEvent(MODEL_CONFIG_CHANGED_EVENT, {
-    detail: { scope: MODEL_CONFIG_SCOPE.READING, config: normalized },
-  }))
   return normalized
 }
 

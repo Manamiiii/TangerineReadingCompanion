@@ -432,7 +432,7 @@ function WindowsInstallCard() {
   const standalone = window.matchMedia('(display-mode: standalone)').matches
 
   useEffect(() => subscribeInstallPrompt(setInstallable), [])
-  if (!isWindows) return null
+  if (!isWindows || standalone || (!installable && !status)) return null
 
   async function install() {
     const choice = await requestAppInstall()
@@ -447,18 +447,11 @@ function WindowsInstallCard() {
     <section className="reader-windows-install">
       <Laptop size={22} />
       <div>
-        <strong>{standalone ? '已作为 Windows 应用运行' : '安装到 Windows'}</strong>
-        <p>
-          {standalone
-            ? '可从开始菜单或桌面直接打开。'
-            : '用 Edge 或 Chrome 安装后可从开始菜单启动，并继续使用本机书架、剪贴板和 OCR。'}
-        </p>
-        {!standalone && !installable && (
-          <small>如果按钮尚未出现，请使用浏览器地址栏或“应用”菜单中的“安装 Tangerine Reading Companion”。</small>
-        )}
+        <strong>安装为 Windows 应用</strong>
+        <p>从开始菜单独立打开，并继续使用本机书架、剪贴板和 OCR。</p>
         {status && <small>{status}</small>}
       </div>
-      {!standalone && installable && (
+      {installable && (
         <button type="button" className="btn btn-sm" onClick={install}>
           <Laptop size={14} /> 安装应用
         </button>

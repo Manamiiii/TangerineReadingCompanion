@@ -1,5 +1,5 @@
 const STATIC_CACHE_PREFIX = 'tangerine-reading-companion-static-'
-const STATIC_CACHE = `${STATIC_CACHE_PREFIX}v7`
+const STATIC_CACHE = `${STATIC_CACHE_PREFIX}v8`
 const ENABLE_RUNTIME_CACHE = self.location.protocol === 'https:'
 
 self.addEventListener('install', () => {
@@ -20,7 +20,22 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (!ENABLE_RUNTIME_CACHE || event.request.method !== 'GET') return
   const url = new URL(event.request.url)
-  if (url.origin !== self.location.origin || url.pathname.includes('/presets/')) return
+  if (url.origin !== self.location.origin) return
+
+  if (url.pathname.includes('/presets/reading-companion/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then(async (response) => {
+          if (response.ok) {
+            const cache = await caches.open(STATIC_CACHE)
+            await cache.put(event.request, response.clone())
+          }
+          return response
+        })
+        .catch(() => caches.match(event.request)),
+    )
+    return
+  }
 
   if (event.request.mode === 'navigate') {
     event.respondWith(

@@ -183,14 +183,17 @@ test('reading companion keeps feature code and maintenance files in dedicated di
   }
 })
 
-test('PWA registration and static cache use the same update generation', async () => {
+test('PWA registration, static cache, and reading packages use the same update generation', async () => {
   const [html, serviceWorker] = await Promise.all([
     readFile(new URL('index.html', repoUrl), 'utf8'),
     readFile(new URL('public/sw.js', repoUrl), 'utf8'),
   ])
-  assert.match(html, /sw\.js\?v=7/)
+  assert.match(html, /sw\.js\?v=8/)
   assert.match(serviceWorker, /tangerine-reading-companion-static-/)
-  assert.match(serviceWorker, /STATIC_CACHE_PREFIX\}v7/)
+  assert.match(serviceWorker, /STATIC_CACHE_PREFIX\}v8/)
+  assert.match(serviceWorker, /includes\('\/presets\/reading-companion\/'\)/)
+  assert.match(serviceWorker, /catch\(\(\) => caches\.match\(event\.request\)\)/)
+  assert.doesNotMatch(serviceWorker, /pathname\.includes\('\/presets\/'\)\) return/)
   assert.doesNotMatch(serviceWorker, /startsWith\('tangerine-static-'/)
 })
 
