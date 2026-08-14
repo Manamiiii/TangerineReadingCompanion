@@ -1,4 +1,5 @@
-const STATIC_CACHE = 'tangerine-static-v6'
+const STATIC_CACHE_PREFIX = 'tangerine-reading-companion-static-'
+const STATIC_CACHE = `${STATIC_CACHE_PREFIX}v7`
 const ENABLE_RUNTIME_CACHE = self.location.protocol === 'https:'
 
 self.addEventListener('install', () => {
@@ -10,7 +11,7 @@ self.addEventListener('activate', (event) => {
     self.clients.claim(),
     caches.keys().then((keys) => Promise.all(
       keys
-        .filter((key) => key.startsWith('tangerine-static-') && key !== STATIC_CACHE)
+        .filter((key) => key.startsWith(STATIC_CACHE_PREFIX) && key !== STATIC_CACHE)
         .map((key) => caches.delete(key)),
     )),
   ]))

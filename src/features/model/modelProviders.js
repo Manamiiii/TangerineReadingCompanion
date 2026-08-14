@@ -103,9 +103,17 @@ export function readingModelProviderDefaults(providerId) {
 }
 
 export function readingModelProfileStorageKey(providerId, field) {
-  return `readerModelProfile:${normalizeReadingModelProvider(providerId)}:${field}`
+  return `tangerine-reading-companion:model:profile:${normalizeReadingModelProvider(providerId)}:${field}`
 }
 
 export function readingModelApiKeyStorageKey(providerId) {
+  return `tangerine-reading-companion:model:api-key:${normalizeReadingModelProvider(providerId)}`
+}
+
+export function legacyReadingModelProfileStorageKey(providerId, field) {
+  return `readerModelProfile:${normalizeReadingModelProvider(providerId)}:${field}`
+}
+
+export function legacyReadingModelApiKeyStorageKey(providerId) {
   return `readerModelApiKey:${normalizeReadingModelProvider(providerId)}`
 }

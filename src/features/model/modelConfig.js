@@ -1,5 +1,7 @@
 import {
   inferReadingModelProvider,
+  legacyReadingModelApiKeyStorageKey,
+  legacyReadingModelProfileStorageKey,
   normalizeReadingModelProvider,
   READING_MODEL_PROVIDER,
   READING_MODEL_PROVIDERS,
@@ -9,29 +11,56 @@ import {
 } from './modelProviders.js'
 
 export const MODEL_STORAGE_KEYS = {
+  provider: 'tangerine-reading-companion:model:provider',
+  endpoint: 'tangerine-reading-companion:model:endpoint',
+  model: 'tangerine-reading-companion:model:name',
+  apiKey: 'tangerine-reading-companion:model:api-key',
+}
+
+const LEGACY_MODEL_STORAGE_KEYS = Object.freeze({
   provider: 'readerModelProvider',
   endpoint: 'readerModelEndpoint',
   model: 'readerModelName',
   apiKey: 'readerModelApiKey',
-}
+})
 
 export const MODEL_CONFIG_SCOPE = Object.freeze({
   READING: 'reading',
 })
 
-export const MODEL_CONFIG_CHANGED_EVENT = 'tangerine:model-config-changed'
+export const MODEL_CONFIG_CHANGED_EVENT = 'tangerine-reading-companion:model-config-changed'
+
+function readStoredValue(storage, key, legacyKey, allowLegacy) {
+  const current = storage.getItem(key)
+  if (current !== null) return current
+  if (!allowLegacy) return ''
+  const legacy = storage.getItem(legacyKey)
+  if (legacy === null) return ''
+  storage.setItem(key, legacy)
+  return legacy
+}
 
 export function loadStoredModelConfig(
   providerId = '',
   allowLegacy = true,
+  browserWindow = window,
 ) {
+  const { localStorage, sessionStorage } = browserWindow
   const useReadingLegacy = allowLegacy
   const legacyEndpoint = useReadingLegacy
-    ? window.localStorage.getItem(MODEL_STORAGE_KEYS.endpoint) || ''
+    ? readStoredValue(
+        localStorage,
+        MODEL_STORAGE_KEYS.endpoint,
+        LEGACY_MODEL_STORAGE_KEYS.endpoint,
+        true,
+      )
     : ''
-  const storedProviderId = window.localStorage.getItem(
+  const storedProviderId = readStoredValue(
+    localStorage,
     MODEL_STORAGE_KEYS.provider,
-  ) || ''
+    LEGACY_MODEL_STORAGE_KEYS.provider,
+    useReadingLegacy,
+  )
   const selectedProviderId = providerId
     ? normalizeReadingModelProvider(providerId)
     : storedProviderId
@@ -43,24 +72,44 @@ export function loadStoredModelConfig(
   const legacyMatchesProvider = inferReadingModelProvider(legacyEndpoint) === selectedProviderId
   return {
     ...defaults,
-    endpoint: window.localStorage.getItem(
+    endpoint: readStoredValue(
+      localStorage,
       readingModelProfileStorageKey(selectedProviderId, 'endpoint'),
+      legacyReadingModelProfileStorageKey(selectedProviderId, 'endpoint'),
+      useReadingLegacy,
     ) || (useReadingLegacy && legacyMatchesProvider ? legacyEndpoint : '') || defaults.endpoint,
-    model: window.localStorage.getItem(
+    model: readStoredValue(
+      localStorage,
       readingModelProfileStorageKey(selectedProviderId, 'model'),
+      legacyReadingModelProfileStorageKey(selectedProviderId, 'model'),
+      useReadingLegacy,
     ) || (useReadingLegacy && legacyMatchesProvider
-      ? window.localStorage.getItem(MODEL_STORAGE_KEYS.model) || ''
+      ? readStoredValue(
+          localStorage,
+          MODEL_STORAGE_KEYS.model,
+          LEGACY_MODEL_STORAGE_KEYS.model,
+          true,
+        )
       : '') || defaults.model,
-    apiKey: window.sessionStorage.getItem(
+    apiKey: readStoredValue(
+      sessionStorage,
       readingModelApiKeyStorageKey(selectedProviderId),
+      legacyReadingModelApiKeyStorageKey(selectedProviderId),
+      useReadingLegacy,
     ) || (useReadingLegacy && legacyMatchesProvider
-      ? window.sessionStorage.getItem(MODEL_STORAGE_KEYS.apiKey) || ''
+      ? readStoredValue(
+          sessionStorage,
+          MODEL_STORAGE_KEYS.apiKey,
+          LEGACY_MODEL_STORAGE_KEYS.apiKey,
+          true,
+        )
       : ''),
   }
 }
 
 export function saveStoredModelConfig(
   nextConfig,
+  browserWindow = window,
 ) {
   const providerId = normalizeReadingModelProvider(nextConfig.providerId)
   const provider = READING_MODEL_PROVIDERS[providerId]
@@ -71,33 +120,33 @@ export function saveStoredModelConfig(
     apiKey: nextConfig.apiKey.trim(),
     temperature: provider.temperature,
   }
-  window.localStorage.setItem(MODEL_STORAGE_KEYS.provider, providerId)
-  window.localStorage.setItem(
+  browserWindow.localStorage.setItem(MODEL_STORAGE_KEYS.provider, providerId)
+  browserWindow.localStorage.setItem(
     readingModelProfileStorageKey(providerId, 'endpoint'),
     normalized.endpoint,
   )
-  window.localStorage.setItem(
+  browserWindow.localStorage.setItem(
     readingModelProfileStorageKey(providerId, 'model'),
     normalized.model,
   )
   if (normalized.endpoint) {
-    window.localStorage.setItem(MODEL_STORAGE_KEYS.endpoint, normalized.endpoint)
+    browserWindow.localStorage.setItem(MODEL_STORAGE_KEYS.endpoint, normalized.endpoint)
   } else {
-    window.localStorage.removeItem(MODEL_STORAGE_KEYS.endpoint)
+    browserWindow.localStorage.removeItem(MODEL_STORAGE_KEYS.endpoint)
   }
   if (normalized.model) {
-    window.localStorage.setItem(MODEL_STORAGE_KEYS.model, normalized.model)
+    browserWindow.localStorage.setItem(MODEL_STORAGE_KEYS.model, normalized.model)
   } else {
-    window.localStorage.removeItem(MODEL_STORAGE_KEYS.model)
+    browserWindow.localStorage.removeItem(MODEL_STORAGE_KEYS.model)
   }
   if (normalized.apiKey) {
-    window.sessionStorage.setItem(readingModelApiKeyStorageKey(providerId), normalized.apiKey)
-    window.sessionStorage.setItem(MODEL_STORAGE_KEYS.apiKey, normalized.apiKey)
+    browserWindow.sessionStorage.setItem(readingModelApiKeyStorageKey(providerId), normalized.apiKey)
+    browserWindow.sessionStorage.setItem(MODEL_STORAGE_KEYS.apiKey, normalized.apiKey)
   } else {
-    window.sessionStorage.removeItem(readingModelApiKeyStorageKey(providerId))
-    window.sessionStorage.removeItem(MODEL_STORAGE_KEYS.apiKey)
+    browserWindow.sessionStorage.removeItem(readingModelApiKeyStorageKey(providerId))
+    browserWindow.sessionStorage.removeItem(MODEL_STORAGE_KEYS.apiKey)
   }
-  window.dispatchEvent(new CustomEvent(MODEL_CONFIG_CHANGED_EVENT, {
+  browserWindow.dispatchEvent(new browserWindow.CustomEvent(MODEL_CONFIG_CHANGED_EVENT, {
     detail: { scope: MODEL_CONFIG_SCOPE.READING, config: normalized },
   }))
   return normalized

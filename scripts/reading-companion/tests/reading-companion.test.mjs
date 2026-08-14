@@ -46,8 +46,11 @@ import {
 import {
   READING_MAP_DEFAULT_VIEW,
   READING_MAP_PROVIDER,
+  READING_MAP_STORAGE_KEYS,
+  loadStoredReadingMapConfig,
   normalizeReadingMapProvider,
   readingMapTileSources,
+  saveStoredReadingMapConfig,
 } from '../../../src/features/reading-companion/map/mapConfig.js'
 import {
   normalizeGeoJsonGeometry,
@@ -84,8 +87,14 @@ import {
   READING_MODEL_PROVIDERS,
   inferReadingModelProvider,
   readingModelApiKeyStorageKey,
+  readingModelProfileStorageKey,
   readingModelProviderDefaults,
 } from '../../../src/features/reading-companion/model/modelProviders.js'
+import {
+  MODEL_STORAGE_KEYS,
+  loadStoredModelConfig,
+  saveStoredModelConfig,
+} from '../../../src/features/model/modelConfig.js'
 import {
   READING_PROMPT_IDS,
   personalBookKnowledgeMessages,
@@ -108,6 +117,29 @@ const readingPackage = JSON.parse(
     'utf8',
   ),
 )
+
+function memoryStorage(initial = {}) {
+  const values = new Map(Object.entries(initial))
+  return {
+    getItem: (key) => values.has(key) ? values.get(key) : null,
+    setItem: (key, value) => values.set(key, String(value)),
+    removeItem: (key) => values.delete(key),
+  }
+}
+
+function fakeBrowserWindow({ local = {}, session = {} } = {}) {
+  return {
+    localStorage: memoryStorage(local),
+    sessionStorage: memoryStorage(session),
+    CustomEvent: class CustomEvent {
+      constructor(type, options) {
+        this.type = type
+        this.detail = options?.detail
+      }
+    },
+    dispatchEvent() {},
+  }
+}
 
 test('reading companion keeps feature code and maintenance files in dedicated directories', async () => {
   const dedicatedPaths = [
@@ -142,6 +174,8 @@ test('reading companion keeps feature code and maintenance files in dedicated di
     'src/db/readingCompanionSeed.js',
     'src/domain/readingCompanion.js',
     'src/presets/readingCompanion.js',
+    'src/components/rowDetail.jsx',
+    'src/features/model/ModelSettingsModal.jsx',
     'scripts/reading/build-preview.mjs',
   ]
   for (const file of retiredMixedPaths) {
@@ -154,8 +188,10 @@ test('PWA registration and static cache use the same update generation', async (
     readFile(new URL('index.html', repoUrl), 'utf8'),
     readFile(new URL('public/sw.js', repoUrl), 'utf8'),
   ])
-  assert.match(html, /sw\.js\?v=6/)
-  assert.match(serviceWorker, /tangerine-static-v6/)
+  assert.match(html, /sw\.js\?v=7/)
+  assert.match(serviceWorker, /tangerine-reading-companion-static-/)
+  assert.match(serviceWorker, /STATIC_CACHE_PREFIX\}v7/)
+  assert.doesNotMatch(serviceWorker, /startsWith\('tangerine-static-'/)
 })
 
 test('personal books accept a chapter count or pasted numeric directory', () => {
@@ -1137,6 +1173,75 @@ test('reading model presets support domestic switching without sharing session k
   assert.notEqual(
     readingModelApiKeyStorageKey(READING_MODEL_PROVIDER.ZHIPU),
     readingModelApiKeyStorageKey(READING_MODEL_PROVIDER.DEEPSEEK),
+  )
+  assert.match(readingModelApiKeyStorageKey(READING_MODEL_PROVIDER.ZHIPU), /^tangerine-reading-companion:/u)
+  assert.match(
+    readingModelProfileStorageKey(READING_MODEL_PROVIDER.ZHIPU, 'model'),
+    /^tangerine-reading-companion:/u,
+  )
+})
+
+test('standalone model and map settings migrate legacy keys without rewriting them', () => {
+  const browserWindow = fakeBrowserWindow({
+    local: {
+      readerModelProvider: 'deepseek',
+      'readerModelProfile:deepseek:endpoint': 'https://legacy.example/chat/completions',
+      'readerModelProfile:deepseek:model': 'legacy-model',
+      'reader-map-provider': 'tianditu',
+      'reader-map-tianditu-token': 'legacy-map-token',
+    },
+    session: {
+      'readerModelApiKey:deepseek': 'legacy-api-key',
+    },
+  })
+
+  const modelConfig = loadStoredModelConfig('', true, browserWindow)
+  assert.equal(modelConfig.providerId, 'deepseek')
+  assert.equal(modelConfig.endpoint, 'https://legacy.example/chat/completions')
+  assert.equal(modelConfig.model, 'legacy-model')
+  assert.equal(modelConfig.apiKey, 'legacy-api-key')
+  assert.equal(browserWindow.localStorage.getItem(MODEL_STORAGE_KEYS.provider), 'deepseek')
+  assert.equal(
+    browserWindow.localStorage.getItem(readingModelProfileStorageKey('deepseek', 'model')),
+    'legacy-model',
+  )
+  assert.equal(
+    browserWindow.sessionStorage.getItem(readingModelApiKeyStorageKey('deepseek')),
+    'legacy-api-key',
+  )
+
+  const mapConfig = loadStoredReadingMapConfig(browserWindow.localStorage)
+  assert.deepEqual(mapConfig, {
+    providerId: 'tianditu',
+    tiandituToken: 'legacy-map-token',
+  })
+  assert.equal(
+    browserWindow.localStorage.getItem(READING_MAP_STORAGE_KEYS.tiandituToken),
+    'legacy-map-token',
+  )
+
+  saveStoredModelConfig({
+    providerId: 'deepseek',
+    endpoint: 'https://new.example/chat/completions',
+    model: 'new-model',
+    apiKey: 'new-api-key',
+  }, browserWindow)
+  saveStoredReadingMapConfig({
+    providerId: 'openstreetmap',
+    tiandituToken: '',
+  }, browserWindow.localStorage)
+  assert.equal(
+    browserWindow.localStorage.getItem('readerModelProfile:deepseek:model'),
+    'legacy-model',
+  )
+  assert.equal(browserWindow.localStorage.getItem('reader-map-provider'), 'tianditu')
+  assert.equal(
+    browserWindow.localStorage.getItem(readingModelProfileStorageKey('deepseek', 'model')),
+    'new-model',
+  )
+  assert.equal(
+    browserWindow.localStorage.getItem(READING_MAP_STORAGE_KEYS.provider),
+    'openstreetmap',
   )
 })
 

@@ -9,6 +9,11 @@ export const READING_MAP_PROVIDER = Object.freeze({
 })
 
 export const READING_MAP_STORAGE_KEYS = Object.freeze({
+  provider: 'tangerine-reading-companion:map:provider',
+  tiandituToken: 'tangerine-reading-companion:map:tianditu-token',
+})
+
+const LEGACY_READING_MAP_STORAGE_KEYS = Object.freeze({
   provider: 'reader-map-provider',
   tiandituToken: 'reader-map-tianditu-token',
 })
@@ -40,6 +45,44 @@ export function normalizeReadingMapProvider(providerId) {
   return READING_MAP_PROVIDERS[providerId]
     ? providerId
     : READING_MAP_PROVIDER.INTERNATIONAL
+}
+
+function readMigratedMapValue(storage, key, legacyKey) {
+  const current = storage.getItem(key)
+  if (current !== null) return current
+  const legacy = storage.getItem(legacyKey)
+  if (legacy === null) return ''
+  storage.setItem(key, legacy)
+  return legacy
+}
+
+export function loadStoredReadingMapConfig(storage = window.localStorage) {
+  return {
+    providerId: normalizeReadingMapProvider(readMigratedMapValue(
+      storage,
+      READING_MAP_STORAGE_KEYS.provider,
+      LEGACY_READING_MAP_STORAGE_KEYS.provider,
+    )),
+    tiandituToken: readMigratedMapValue(
+      storage,
+      READING_MAP_STORAGE_KEYS.tiandituToken,
+      LEGACY_READING_MAP_STORAGE_KEYS.tiandituToken,
+    ),
+  }
+}
+
+export function saveStoredReadingMapConfig(nextConfig, storage = window.localStorage) {
+  const normalized = {
+    providerId: normalizeReadingMapProvider(nextConfig.providerId),
+    tiandituToken: nextConfig.tiandituToken.trim(),
+  }
+  storage.setItem(READING_MAP_STORAGE_KEYS.provider, normalized.providerId)
+  if (normalized.tiandituToken) {
+    storage.setItem(READING_MAP_STORAGE_KEYS.tiandituToken, normalized.tiandituToken)
+  } else {
+    storage.removeItem(READING_MAP_STORAGE_KEYS.tiandituToken)
+  }
+  return normalized
 }
 
 export function readingMapTileSources(providerId, tiandituToken = '') {
