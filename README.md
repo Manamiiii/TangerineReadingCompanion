@@ -51,6 +51,7 @@ npm run dev
 ```text
 src/platform/                     # 输入契约、平台能力和 Web 适配器
 src/features/reading-companion/   # 阅读界面、领域规则、资料读取、地图与模型契约
+src/styles/                       # 按功能拆分的样式，styles.css 保持导入顺序
 src/features/model/               # 供应商连接与本机配置
 src/features/ocr/                 # 本机 OCR
 scripts/reading-companion/        # 资料 staging、校验、审计与发布

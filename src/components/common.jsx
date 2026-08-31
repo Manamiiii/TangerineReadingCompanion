@@ -12,7 +12,7 @@ export function Modal({ title, onClose, children, width = 520, footer }) {
 
   return (
     <div className="modal-backdrop" onMouseDown={(event) => event.target === event.currentTarget && onClose?.()}>
-      <div className="modal-panel" style={{ maxWidth: width }}>
+      <div role="dialog" aria-modal="true" aria-label={title} className="modal-panel" style={{ maxWidth: width }}>
         <div className="modal-header">
           <h3>{title}</h3>
           <button type="button" className="icon-btn" onClick={onClose} aria-label="关闭">

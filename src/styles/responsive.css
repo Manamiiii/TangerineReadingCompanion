@@ -1,0 +1,239 @@
+@media (max-width: 800px) {
+  .reader-tool {
+    max-width: none;
+  }
+
+  .reader-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .reader-input-grid,
+  .reader-reading-workspace,
+  .reader-settings-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reader-feedback-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reader-progress-card {
+    min-height: 100px;
+  }
+
+  .reader-map-layout {
+    grid-template-columns: minmax(0, 1fr) 170px;
+  }
+
+  .reader-personal-book-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .reader-place-lookup-form {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+}
+
+@media (max-width: 560px) {
+  .reader-library-hero,
+  .reader-library-panel,
+  .reader-hero,
+  .reader-panel {
+    padding: 16px;
+  }
+
+  .reader-library-heading,
+  .reader-scan-result {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reader-book-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reader-personal-book-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .reader-cover-builder {
+    grid-template-columns: 82px minmax(0, 1fr);
+  }
+
+  .reader-book-metadata-scan {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reader-book-metadata-scan .btn {
+    justify-content: center;
+  }
+
+  .reader-book-metadata-result {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .reader-book-metadata-result pre {
+    max-width: calc(100vw - 72px);
+  }
+
+  .reader-cover-builder .reader-visual-cover {
+    width: 82px;
+    height: 112px;
+  }
+
+  .reader-question-form {
+    grid-template-columns: 1fr;
+  }
+
+  .reader-windows-install {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .reader-windows-install .btn {
+    grid-column: 1 / -1;
+    justify-content: center;
+  }
+
+  .reader-hero h2 {
+    font-size: 27px;
+  }
+
+  .reader-tabs {
+    display: flex;
+    overflow-x: auto;
+  }
+
+  .reader-tabs button {
+    flex: 0 0 auto;
+    min-width: 104px;
+  }
+
+  .reader-input-sources {
+    grid-template-columns: 1fr;
+  }
+
+  .reader-image-attachment {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .reader-image-attachment > .btn {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-content: center;
+  }
+
+  .reader-model-candidate {
+    grid-template-columns: 1fr;
+  }
+
+  .reader-model-candidate-fields {
+    grid-template-columns: minmax(0, 1fr) 92px;
+  }
+
+  .reader-model-candidate > .btn {
+    width: auto;
+    justify-self: start;
+  }
+
+  .reader-observed-form {
+    grid-template-columns: 1fr;
+  }
+
+  .reader-selection-add,
+  .reader-selection-add.has-place {
+    grid-template-columns: minmax(0, 1fr) 92px;
+  }
+
+  .reader-selection-add strong {
+    grid-column: 1 / -1;
+  }
+
+  .reader-observed-add {
+    justify-content: center;
+  }
+
+  .reader-panel-heading {
+    align-items: flex-start;
+  }
+
+  .reader-map-heading-actions {
+    align-items: flex-end;
+    flex-direction: column;
+  }
+
+  .reader-map-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .reader-place-lookup-heading,
+  .reader-place-lookup-results article {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .reader-place-lookup-heading small {
+    max-width: none;
+    text-align: left;
+  }
+
+  .reader-place-lookup-form {
+    grid-template-columns: 1fr;
+  }
+
+  .reader-observed-pagination {
+    align-items: stretch;
+  }
+
+  .reader-observed-pagination > span {
+    width: 100%;
+  }
+
+  .reader-place-lookup-results button {
+    max-width: none;
+  }
+
+  .reader-leaflet-map {
+    min-height: 420px;
+  }
+
+  .reader-place-list {
+    max-height: 150px;
+  }
+
+  .reader-place-detail {
+    grid-column: 1;
+  }
+
+  .reader-memory-overview {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .reader-memory-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .reader-place-distance-form {
+    grid-template-columns: 1fr;
+  }
+
+  .reader-place-distance-form > span {
+    display: none;
+  }
+
+  .reader-place-distance-form .btn {
+    justify-content: center;
+  }
+
+  .reader-fact-locked {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .reader-fact-locked p {
+    min-width: calc(100% - 30px);
+  }
+}
+
