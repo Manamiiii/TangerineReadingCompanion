@@ -1,6 +1,8 @@
 # Tangerine Reading Companion
 
-Tangerine Reading Companion（橘子阅读伴侣）是一个本地优先、尊重阅读进度的个人阅读 Web App。它按书和版本保存阅读进度、已遇到的人物与地点、个人备注和地图位置，并在展示资料与模型回答前执行剧透门禁。
+Tangerine Reading Companion（橘子阅读伴侣）是一个本地优先、尊重阅读进度的多端可安装个人阅读伴侣。当前已交付 Web/PWA，共享 Vite/React 核心；Windows、Android、iOS 按计划使用 Tauri 2 外壳。它按书和版本保存阅读进度、已遇到的人物与地点、个人备注和地图位置，并在展示资料与模型回答前执行剧透门禁。
+
+多端平台支持、统一输入契约和按序验收清单见 [多端路线](docs/multiplatform-roadmap.md)。多端安装不代表自动同步，首阶段不加入账号或后端。
 
 ## 当前能力
 
@@ -47,6 +49,7 @@ npm run dev
 ## 结构
 
 ```text
+src/platform/                     # 输入契约、平台能力和 Web 适配器
 src/features/reading-companion/   # 阅读界面、领域规则、资料读取、地图与模型契约
 src/features/model/               # 供应商连接与本机配置
 src/features/ocr/                 # 本机 OCR

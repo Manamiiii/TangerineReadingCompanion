@@ -1,4 +1,5 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { useReadingInput } from '../input/useReadingInput.js'
 import { useLiveQuery } from 'dexie-react-hooks'
 import {
   ArrowLeft,
@@ -28,9 +29,6 @@ import { loadReadingPackage, loadReadingPackageCatalog } from '../data/readingPa
 import { generateId } from '../../../utils.js'
 import { Modal } from '../../../components/common.jsx'
 import { searchReadingPlaces } from '../map/geocoding.js'
-import {
-  recognizeImageText,
-} from '../../ocr/localOcr.js'
 import {
   analyzeReadingExcerpt,
   answerReadingQuestion,
@@ -1945,17 +1943,17 @@ export function ReaderTool() {
   const [loadError, setLoadError] = useState('')
   const [pendingChapterId, setPendingChapterId] = useState('')
   const [saveState, setSaveState] = useState('idle')
-  const [excerpt, setExcerpt] = useState('')
-  const [imageInput, setImageInput] = useState(null)
+  const {
+    excerpt, link, imageInput, inputStatus, ocrState, ocrProgress, sessionVersion,
+    setInputStatus, changeExcerpt: updateExcerpt, pasteFromClipboard, chooseImage,
+    clearImage, clearInput, runLocalOcr,
+  } = useReadingInput(selectedPackageId)
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false)
   const [scanResults, setScanResults] = useState([])
   const [selectedExcerptText, setSelectedExcerptText] = useState('')
   const [selectedEntityKind, setSelectedEntityKind] = useState(OBSERVED_ENTITY_KIND.PERSON)
   const [selectedPlaceKind, setSelectedPlaceKind] = useState(OBSERVED_PLACE_KIND.UNKNOWN)
   const [scanStatus, setScanStatus] = useState('')
-  const [inputStatus, setInputStatus] = useState('')
-  const [ocrState, setOcrState] = useState('idle')
-  const [ocrProgress, setOcrProgress] = useState(0)
   const [activeTab, setActiveTab] = useState(
     () => parseReaderLocation(window.location.hash).tab,
   )
@@ -2025,9 +2023,11 @@ export function ReaderTool() {
     setLastPackageId(saveLastReadingPackageId(readingPackage.id))
   }, [readingPackage])
 
-  useEffect(() => () => {
-    if (imageInput?.url) URL.revokeObjectURL(imageInput.url)
-  }, [imageInput])
+  useEffect(() => {
+    setSelectedExcerptText('')
+    setScanStatus('')
+    setImagePreviewOpen(false)
+  }, [sessionVersion])
 
   useEffect(() => {
     if (!imagePreviewOpen) return undefined
@@ -2185,7 +2185,7 @@ export function ReaderTool() {
     setSelectedPackageId(packageId)
     setLastPackageId(saveLastReadingPackageId(packageId))
     setPendingChapterId('')
-    setExcerpt('')
+    clearInput()
     setScanResults([])
     setSelectedExcerptText('')
     setScanStatus('')
@@ -2284,7 +2284,7 @@ export function ReaderTool() {
     setSelectedPackageId('')
     setReadingPackage(null)
     setPendingChapterId('')
-    setExcerpt('')
+    clearInput()
     setScanResults([])
     setSelectedExcerptText('')
     setScanStatus('')
@@ -2304,31 +2304,12 @@ export function ReaderTool() {
   }
 
   function changeExcerpt(value) {
-    setExcerpt(value)
+    updateExcerpt(value)
     setSelectedExcerptText('')
     setSelectedEntityKind(OBSERVED_ENTITY_KIND.PERSON)
     setSelectedPlaceKind(OBSERVED_PLACE_KIND.UNKNOWN)
     setScanStatus('')
     setInputStatus('')
-  }
-
-  async function pasteFromClipboard() {
-    setInputStatus('')
-    if (!navigator.clipboard?.readText) {
-      setInputStatus('当前浏览器不支持直接读取剪贴板，请使用 Ctrl+V。')
-      return
-    }
-    try {
-      const text = await navigator.clipboard.readText()
-      if (!text.trim()) {
-        setInputStatus('剪贴板里没有文字。')
-        return
-      }
-      changeExcerpt(text)
-      setInputStatus('已从剪贴板粘贴。')
-    } catch {
-      setInputStatus('浏览器没有获得剪贴板权限，请点击文本框后使用 Ctrl+V。')
-    }
   }
 
   function actionForObservedName(name, kind, packageEntityId = '') {
@@ -2433,74 +2414,6 @@ export function ReaderTool() {
     if (next === observedEntities) return false
     await changeObservedEntities(next)
     return true
-  }
-
-  function chooseImage(event) {
-    const file = event.target.files?.[0]
-    if (!file) return
-    if (imageInput?.url) URL.revokeObjectURL(imageInput.url)
-    setImageInput({ file, name: file.name, url: URL.createObjectURL(file) })
-    setImagePreviewOpen(false)
-    setOcrState('idle')
-    setOcrProgress(0)
-    setInputStatus('')
-    event.target.value = ''
-  }
-
-  function clearImage() {
-    if (imageInput?.url) URL.revokeObjectURL(imageInput.url)
-    setImageInput(null)
-    setImagePreviewOpen(false)
-    setOcrState('idle')
-    setOcrProgress(0)
-  }
-
-  async function runLocalOcr() {
-    if (!imageInput?.file || ocrState === 'working') return
-    setOcrState('working')
-    setOcrProgress(0)
-    setInputStatus('正在本机初始化 OCR…')
-    try {
-      const text = await recognizeImageText(imageInput.file, (progress) => {
-        if (Number.isFinite(progress?.progress)) {
-          setOcrProgress(Math.round(progress.progress * 100))
-        }
-        if (progress?.status === 'recognizing text') {
-          setInputStatus('正在本机识别截图文字…')
-        }
-      })
-      if (!text) {
-        setOcrState('empty')
-        setInputStatus('OCR 没有识别出文字，可以换一张更清晰的截图。')
-        recordReadingTrialDiagnostic({
-          area: 'ocr',
-          action: 'ocr-excerpt',
-          outcome: 'error',
-          providerId: 'local',
-          error: new Error('没有识别出文字'),
-        })
-        return
-      }
-      changeExcerpt(text)
-      setOcrState('done')
-      setInputStatus('OCR 文字已放入当前段落，请先核对再扫描或调用模型。')
-      recordReadingTrialDiagnostic({
-        area: 'ocr',
-        action: 'ocr-excerpt',
-        outcome: 'success',
-        providerId: 'local',
-      })
-    } catch (error) {
-      setOcrState('error')
-      setInputStatus(`本机 OCR 失败：${error?.message || '无法初始化识别引擎'}`)
-      recordReadingTrialDiagnostic({
-        area: 'ocr',
-        action: 'ocr-excerpt',
-        outcome: 'error',
-        providerId: 'local',
-        error,
-      })
-    }
   }
 
   if (loadError) return <ReaderError message={loadError} />
@@ -2712,6 +2625,11 @@ export function ReaderTool() {
                 )}
               </>
             )}
+            <div className="reader-session-actions">
+              <span>当前会话临时输入</span>
+              <button type="button" className="btn btn-sm" onClick={clearInput}>清空当前内容</button>
+            </div>
+            {link && <p className="reader-input-status">已接收链接（不自动访问）：{link}</p>}
             <label className="reader-excerpt-field">
               <span>粘贴当前段落</span>
               <textarea
@@ -2775,7 +2693,7 @@ export function ReaderTool() {
             <p className="reader-input-status" role="status">
               {inputStatus || '\u00a0'}
             </p>
-            <div className="reader-reading-workspace">
+            <div className="reader-reading-workspace" key={`${selectedPackageId}:${currentChapterId}:${sessionVersion}`}>
               <div className="reader-reading-lane reader-understanding-lane">
                 <ReadingQuestionPanel
                   excerpt={excerpt}

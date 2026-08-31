@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { exportJsonFile, platform } from './platform/index.js'
 import { Database, Download, Upload } from 'lucide-react'
 import { ReaderTool } from './features/reading-companion/index.js'
 import {
@@ -14,14 +15,8 @@ export default function App() {
   async function handleExport() {
     setError('')
     const payload = await exportReadingData()
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' })
-    const url = URL.createObjectURL(blob)
-    const anchor = document.createElement('a')
-    anchor.href = url
-    anchor.download = `tangerine-reading-companion-${payload.exportedAt.slice(0, 10)}.json`
-    anchor.click()
-    URL.revokeObjectURL(url)
-    setNotice(`已导出 ${payload.data.meta.length} 条阅读记录。`)
+    await exportJsonFile(`tangerine-reading-companion-${payload.exportedAt.slice(0, 10)}.json`, payload)
+    setNotice(`已发起 ${payload.data.meta.length} 条阅读记录的备份下载，请确认文件已保存。`)
   }
 
   async function handleImport(event) {
@@ -34,7 +29,7 @@ export default function App() {
       const payload = JSON.parse(await file.text())
       const result = await importReadingData(payload)
       setNotice(`已导入 ${result.imported} 条阅读记录${result.source === 'tangerine-tools' ? '，来源为 TangerineTools 备份' : ''}。页面即将刷新。`)
-      window.setTimeout(() => window.location.reload(), 700)
+      window.setTimeout(() => platform.appLifecycle.reload(), 700)
     } catch (importError) {
       setError(importError?.message || '阅读数据导入失败')
     }

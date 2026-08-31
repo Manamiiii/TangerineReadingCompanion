@@ -9,10 +9,7 @@ import {
   Upload,
   X,
 } from 'lucide-react'
-import {
-  requestAppInstall,
-  subscribeInstallPrompt,
-} from '../../../pwaInstall.js'
+import { platform } from '../../../platform/index.js'
 import {
   recognizeImageText,
   recognizeStructuredImageText,
@@ -426,19 +423,17 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
   )
 }
 
-function WindowsInstallCard() {
-  const isWindows = navigator.userAgent.includes('Windows')
+function AppInstallCard() {
   const [installable, setInstallable] = useState(false)
   const [status, setStatus] = useState('')
-  const standalone = window.matchMedia('(display-mode: standalone)').matches
 
-  useEffect(() => subscribeInstallPrompt(setInstallable), [])
-  if (!isWindows || standalone || (!installable && !status)) return null
+  useEffect(() => platform.install.subscribe(setInstallable), [])
+  if (!installable && !status) return null
 
   async function install() {
-    const choice = await requestAppInstall()
+    const choice = await platform.install.request()
     if (choice?.outcome === 'accepted') {
-      setStatus('安装已开始，完成后可从开始菜单或桌面打开。')
+      setStatus('安装已开始，完成后可从设备的应用入口打开。')
     } else if (choice) {
       setStatus('已取消安装；以后仍可从浏览器菜单安装。')
     }
@@ -448,8 +443,8 @@ function WindowsInstallCard() {
     <section className="reader-windows-install">
       <Laptop size={22} />
       <div>
-        <strong>安装为 Windows 应用</strong>
-        <p>从开始菜单独立打开，并继续使用本机书架、剪贴板和 OCR。</p>
+        <strong>安装轻量 PWA</strong>
+        <p>独立窗口打开，继续使用当前浏览器中的书架和阅读进度。</p>
         {status && <small>{status}</small>}
       </div>
       {installable && (
@@ -487,7 +482,7 @@ export function ReadingLibrary({
           </button>
         )}
       </section>
-      <WindowsInstallCard />
+      <AppInstallCard />
       <section className="reader-library-panel">
         <div className="reader-library-heading">
           <div>

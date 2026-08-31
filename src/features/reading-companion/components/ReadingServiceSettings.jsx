@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { exportJsonFile } from '../../../platform/index.js'
 import {
   Download,
   ExternalLink,
@@ -49,7 +50,7 @@ export function ReadingServiceSettings({
   const feedbackChapter = readingPackage?.chapters
     ?.find((chapter) => chapter.id === currentChapterId)
 
-  function exportReadingFeedback() {
+  async function exportReadingFeedback() {
     try {
       const payload = createReadingFeedbackBundle({
         appVersion: packageMetadata.version,
@@ -59,17 +60,9 @@ export function ReadingServiceSettings({
         currentChapterId,
         diagnostics: readingTrialDiagnosticsSnapshot(),
       })
-      const blob = new Blob([JSON.stringify(payload, null, 2)], {
-        type: 'application/json',
-      })
-      const url = URL.createObjectURL(blob)
-      const link = document.createElement('a')
       const editionKey = readingPackage.edition.isbn || readingPackage.edition.id
-      link.href = url
-      link.download = `reading-feedback-${editionKey}-${payload.exportedAt.slice(0, 10)}.json`
-      link.click()
-      URL.revokeObjectURL(url)
-      setMessage('阅读反馈包已导出。')
+      await exportJsonFile(`reading-feedback-${editionKey}-${payload.exportedAt.slice(0, 10)}.json`, payload)
+      setMessage('阅读反馈包下载已发起，请确认文件已保存。')
       recordReadingTrialDiagnostic({
         area: 'feedback',
         action: 'feedback-export',
