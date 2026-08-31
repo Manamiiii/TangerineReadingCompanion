@@ -17,7 +17,9 @@
     "preview:data": "node scripts/reading-companion/build-preview.mjs",
     "check:preset": "node scripts/reading-companion/apply-preview.mjs",
     "apply:preset": "node scripts/reading-companion/apply-preview.mjs --write",
-    "test": "node --test scripts/reading-companion/tests/*.test.mjs scripts/tests/*.test.mjs"
+    "test": "node --test scripts/reading-companion/tests/*.test.mjs scripts/tests/*.test.mjs",
+    "test:e2e": "playwright test",
+    "check:native": "node scripts/check-native-environment.mjs"
   },
   "dependencies": {
     "@tesseract.js-data/chi_sim": "^1.0.0",
@@ -31,6 +33,7 @@
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
+    "@playwright/test": "^1.62.1",
     "@vitejs/plugin-react": "^6.0.3",
     "fake-indexeddb": "^6.2.4",
     "oxlint": "^1.74.0",

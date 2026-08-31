@@ -434,7 +434,7 @@ export function ObservedEntitiesPanel({
           )}
         >
           <div className="reader-memory-detail">
-            {selectedEntity.kind === OBSERVED_ENTITY_KIND.PLACE && (
+            {selectedEntity.kind === OBSERVED_ENTITY_KIND.PLACE && (selectedMatch || selectedEntity.mapLocation || (selectedEntity.placeKind && selectedEntity.placeKind !== OBSERVED_PLACE_KIND.UNKNOWN)) && (
               <button type="button" className="btn" onClick={() => onOpenMap(selectedEntity)}>在地图中查看此地点</button>
             )}
             <div className="reader-memory-overview">

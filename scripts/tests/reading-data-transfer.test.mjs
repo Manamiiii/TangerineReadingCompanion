@@ -5,6 +5,7 @@ import { db } from '../../src/db/core.js'
 import {
   exportReadingData,
   importReadingData,
+  previewReadingImport,
   readingRecordsFromPayload,
   READING_BACKUP_FORMAT,
 } from '../../src/readingDataTransfer.js'
@@ -140,4 +141,39 @@ test('rejects unknown formats and malformed reading records', () => {
     }),
     /已遇到记录无效/u,
   )
+})
+
+
+test('preview is read-only, reports merge counts and rejects concurrent local changes atomically', async () => {
+  await db.meta.bulkPut([
+    { key: 'readerState:edition-1', value: { editionId: 'edition-1', currentChapterId: 'chapter-01' } },
+    { key: 'readerState:keep', value: { editionId: 'keep' } },
+  ])
+  const payload = { format: READING_BACKUP_FORMAT, schemaVersion: 1, data: { meta: [
+    { key: 'readerState:edition-1', value: { editionId: 'edition-1', currentChapterId: 'chapter-02' } },
+    { key: 'readerState:new', value: { editionId: 'new' } },
+  ] } }
+  const before = await db.meta.toArray()
+  const preview = await previewReadingImport(payload)
+  assert.equal(preview.added, 1)
+  assert.equal(preview.replaced, 1)
+  assert.equal(preview.retained, 1)
+  assert.deepEqual(await db.meta.toArray(), before)
+  await saveReadingState('edition-1', { currentChapterId: 'chapter-03' })
+  await assert.rejects(importReadingData(payload, { expectedSnapshot: preview.snapshot }), /数据已变化/)
+  assert.equal(await db.meta.get('readerState:new'), undefined)
+  assert.equal((await db.meta.get('readerState:edition-1')).value.currentChapterId, 'chapter-03')
+  const current = await previewReadingImport(payload)
+  const result = await importReadingData(payload, { expectedSnapshot: current.snapshot })
+  assert.equal(result.retained, 1)
+  assert.ok(await db.meta.get('readerState:keep'))
+})
+
+test('legacy lookup can run in a readonly subscription before explicit migration', async () => {
+  await db.meta.put({ key: 'readerState:old:edition-1', value: { editionId: 'edition-1', currentChapterId: 'chapter-02' } })
+  const state = await db.transaction('r', db.meta, () => getReadingState('edition-1', { migrate: false }))
+  assert.equal(state.currentChapterId, 'chapter-02')
+  assert.equal(await db.meta.get('readerState:edition-1'), undefined)
+  await getReadingState('edition-1')
+  assert.ok(await db.meta.get('readerState:edition-1'))
 })

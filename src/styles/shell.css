@@ -99,3 +99,11 @@
     width: auto;
   }
 }
+
+.reader-backup-confirm { display: flex; align-items: center; gap: 8px; margin-block: 16px; }
+.reader-data-menu-popover small { overflow-wrap: anywhere; }
+.reader-app-header { flex-wrap: wrap; }
+.reader-app-header > .reader-transfer-notice { flex-basis: 100%; }
+
+.reader-offline-status { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 8px 24px; color: var(--text-muted); font-size: 12px; }
+.reader-offline-status details { max-width: 680px; }

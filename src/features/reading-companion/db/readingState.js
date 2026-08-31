@@ -10,7 +10,12 @@ function newestRecord(left, right) {
   return rightTime >= leftTime ? right : left
 }
 
-export async function getReadingState(editionId) {
+export async function getReadingState(editionId, { migrate = true } = {}) {
+  if (migrate) return db.transaction('rw', db.meta, () => readReadingState(editionId, true))
+  return readReadingState(editionId, false)
+}
+
+async function readReadingState(editionId, migrate) {
   const key = readingStateKey(editionId)
   const records = await db.meta
     .filter((record) => (
@@ -24,7 +29,7 @@ export async function getReadingState(editionId) {
   if (record.key !== key) {
     const value = { ...record.value, editionId }
     delete value.sceneId
-    await db.meta.put({ key, value })
+    if (migrate) await db.meta.put({ key, value })
     return value
   }
   return record.value

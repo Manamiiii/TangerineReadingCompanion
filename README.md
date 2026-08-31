@@ -31,7 +31,9 @@ npm run dev
 | 命令 | 用途 |
 |---|---|
 | `npm run lint` | 静态检查 |
-| `npm test` | 领域规则、资料包和迁移测试 |
+| `npm test` | 领域规则、资料包、迁移、输入与离线策略测试 |
+| `npm run test:e2e` | 构建后在独立 Chromium 中运行阅读流程；首次先 `npx playwright install chromium` |
+| `npm run check:native` | 只读检查原生构建环境，缺项时退出码 1 |
 | `npm run build` | 生产构建 |
 | `npm run check:packages` | 校验正式阅读资料包 |
 | `npm run audit:quality` | 生成资料覆盖与来源质量报告 |
@@ -56,9 +58,13 @@ src/features/model/               # 供应商连接与本机配置
 src/features/ocr/                 # 本机 OCR
 scripts/reading-companion/        # 资料 staging、校验、审计与发布
 public/presets/reading-companion/ # 正式版本化资料包
-docs/                             # 产品、安全、模型和数据规范
+tests/e2e/                        # 独立浏览器端到端测试
+scripts/build-offline.mjs         # 生成构建级离线缓存清单
+docs/                             # 产品、安全、模型、数据与多端交付规范
 ```
+
+原生环境、安装权限和后续验收见 [原生开发](docs/native-development.md)。E2E 使用独立端口 4174、临时浏览器上下文和合成数据，不读取日常浏览器书架；报告与截图在忽略的 `artifacts/e2e/`。
 
 ## 部署
 
-仓库通过 `.github/workflows/pages.yml` 构建 GitHub Pages。生产构建使用相对路径，适配仓库子路径部署。
+仓库通过 `.github/workflows/pages.yml` 构建 GitHub Pages。CI 包含 lint、Node 测试、浏览器 E2E、资料校验和构建。生产构建使用相对路径，适配仓库子路径部署。应用只在生产模式注册 Service Worker，预缓存共享核心、全部按需组件和已发布资料；新版本准备完成后显示显式更新按钮。OCR 首次初始化、在线地图和模型不属于离线保证。

@@ -149,8 +149,14 @@ export function ReaderTool() {
   }, [activeTab])
 
   const editionId = readingPackage?.edition.id || ''
+  useEffect(() => {
+    if (!editionId) return
+    let active = true
+    getReadingState(editionId).catch(() => { if (active) setLoadError('阅读状态迁移失败，请先备份本机数据后重试。') })
+    return () => { active = false }
+  }, [editionId])
   const savedState = useLiveQuery(
-    () => (editionId ? getReadingState(editionId) : null),
+    () => (editionId ? getReadingState(editionId, { migrate: false }) : null),
     [editionId],
   )
   const defaultChapterId = readingPackage?.chapters[0]?.id || ''
@@ -727,7 +733,7 @@ export function ReaderTool() {
             </p>
             <div className="reader-reading-workspace" key={`${selectedPackageId}:${currentChapterId}:${sessionVersion}`}>
               <div className="reader-reading-lane reader-understanding-lane">
-                <ReadingQuestionPanel
+                <ReadingQuestionPanel key={excerpt}
                   excerpt={excerpt}
                   selectedText={selectedExcerptText}
                   bookTitle={readingPackage.book.title}

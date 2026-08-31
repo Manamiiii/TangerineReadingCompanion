@@ -110,8 +110,38 @@ export async function exportReadingData() {
   }
 }
 
-export async function importReadingData(payload) {
+function mergeSummary(localRecords, incomingRecords) {
+  const localKeys = new Set(normalizeReadingRecords(localRecords).map(record => record.key))
+  const incomingKeys = new Set(incomingRecords.map(record => record.key))
+  const replaced = incomingRecords.filter(record => localKeys.has(record.key)).length
+  return {
+    added: incomingRecords.length - replaced,
+    replaced,
+    retained: [...localKeys].filter(key => !incomingKeys.has(key)).length,
+  }
+}
+
+export async function previewReadingImport(payload) {
   const { records, source } = readingRecordsFromPayload(payload)
-  await db.meta.bulkPut(records)
-  return { imported: records.length, source }
+  const localRecords = await db.meta.toArray()
+  return {
+    source,
+    total: records.length,
+    ...mergeSummary(localRecords, records),
+    // Memory-only concurrency token. Never written to storage or diagnostics.
+    snapshot: JSON.stringify(localRecords),
+  }
+}
+
+export async function importReadingData(payload, { expectedSnapshot } = {}) {
+  const { records, source } = readingRecordsFromPayload(payload)
+  return db.transaction('rw', db.meta, async () => {
+    const localRecords = await db.meta.toArray()
+    if (expectedSnapshot !== undefined && JSON.stringify(localRecords) !== expectedSnapshot) {
+      throw new Error('预览后本机数据已变化，请重新选择备份、预览并备份本机数据。')
+    }
+    const summary = mergeSummary(localRecords, records)
+    await db.meta.bulkPut(records)
+    return { imported: records.length, source, ...summary }
+  })
 }
