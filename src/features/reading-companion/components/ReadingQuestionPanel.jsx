@@ -1,3 +1,4 @@
+import { useAsyncTask } from '../../../platform/useAsyncTask.js'
 import { useEffect, useState } from 'react'
 import { Settings2, ShieldCheck } from 'lucide-react'
 import { answerReadingQuestion } from '../model/modelAdapter.js'
@@ -5,16 +6,17 @@ import { recordReadingTrialDiagnostic } from '../domain/trialDiagnostics.js'
 
 export function ReadingQuestionPanel({
   excerpt,
+  backgrounds,
   selectedText,
-  bookTitle,
-  currentChapter,
   modelConfig,
   onOpenSettings,
 }) {
+  const task = useAsyncTask(backgrounds)
   const [question, setQuestion] = useState('')
   const [requestState, setRequestState] = useState('idle')
   const [message, setMessage] = useState('')
   const [result, setResult] = useState(null)
+  useEffect(() => { setResult(null); setRequestState('idle') }, [backgrounds])
   const configured = Boolean(
     modelConfig.endpoint.trim()
     && modelConfig.model.trim()
@@ -22,11 +24,13 @@ export function ReadingQuestionPanel({
   )
 
   useEffect(() => {
+    if (selectedText) { task.cancel(); setRequestState('idle'); setResult(null) }
     if (selectedText) setQuestion(`“${selectedText}”是什么意思？`)
-  }, [selectedText])
+  }, [selectedText, task])
 
   async function ask(event) {
     event.preventDefault()
+    const ticket = task.start()
     setRequestState('working')
     setMessage('')
     setResult(null)
@@ -38,9 +42,10 @@ export function ReadingQuestionPanel({
         temperature: modelConfig.temperature,
         question,
         excerpt,
-        bookTitle,
-        chapterLabel: currentChapter?.label,
+        backgrounds,
+        signal: ticket.signal,
       })
+      if (!ticket.isCurrent()) return
       setResult(answer)
       setRequestState('done')
       recordReadingTrialDiagnostic({
@@ -50,6 +55,7 @@ export function ReadingQuestionPanel({
         providerId: modelConfig.providerId,
       })
     } catch (error) {
+      if (!ticket.isCurrent()) return
       setRequestState('error')
       setMessage(error?.message || '当前内容答疑失败')
       recordReadingTrialDiagnostic({
@@ -68,12 +74,12 @@ export function ReadingQuestionPanel({
         <div>
           <ShieldCheck size={19} />
           <div>
-            <strong>无剧透问问当前内容</strong>
-            <p>只解释眼前段落、概念和时代背景。</p>
+            <strong>查找当前内容依据</strong>
+            <p>从当前段落和已解锁背景中摘录依据。</p>
           </div>
         </div>
         {configured ? (
-          <span className="reader-safe-chip">当前进度内</span>
+          <span className="reader-safe-chip">限当前依据</span>
         ) : (
           <button type="button" className="btn btn-sm" onClick={onOpenSettings}>
             <Settings2 size={13} /> 配置模型
@@ -84,6 +90,8 @@ export function ReadingQuestionPanel({
         <input
           value={question}
           onChange={(event) => {
+            task.cancel()
+            setRequestState('idle')
             setQuestion(event.target.value)
             setMessage('')
             setResult(null)
@@ -95,18 +103,17 @@ export function ReadingQuestionPanel({
           className="btn btn-sm"
           disabled={!configured || !question.trim() || requestState === 'working'}
         >
-          {requestState === 'working' ? '解释中…' : '解释'}
+          {requestState === 'working' ? '查找中…' : '查找'}
         </button>
       </form>
       {message && <p className="reader-model-message" role="status">{message}</p>}
       {result && (
         <div className="reader-question-answer" role="status">
-          <strong>{result.uncertain ? '可能的解释' : '解释'}</strong>
-          <p>{result.answer}</p>
+          <strong>相关依据</strong>
+          {result.evidence.map((item, index) => <blockquote key={index}><p>{item.quote}</p><small>{item.label}</small></blockquote>)}
         </div>
       )}
     </div>
   )
 }
-
 

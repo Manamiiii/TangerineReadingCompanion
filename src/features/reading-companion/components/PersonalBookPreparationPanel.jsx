@@ -1,3 +1,4 @@
+import { useAsyncTask } from '../../../platform/useAsyncTask.js'
 import { useState } from 'react'
 import { Settings2, Sparkles } from 'lucide-react'
 import { preparePersonalBookKnowledge } from '../model/modelAdapter.js'
@@ -9,6 +10,7 @@ export function PersonalBookPreparationPanel({
   onPrepared,
   onOpenSettings,
 }) {
+  const task = useAsyncTask(readingPackage.id)
   const [requestState, setRequestState] = useState('idle')
   const [message, setMessage] = useState('')
   const configured = Boolean(
@@ -21,6 +23,7 @@ export function PersonalBookPreparationPanel({
     .length
 
   async function prepare() {
+    const ticket = task.start()
     setRequestState('working')
     setMessage('')
     try {
@@ -28,10 +31,12 @@ export function PersonalBookPreparationPanel({
         endpoint: modelConfig.endpoint,
         model: modelConfig.model,
         apiKey: modelConfig.apiKey,
+        signal: ticket.signal,
         temperature: modelConfig.temperature,
         book: readingPackage.book,
         edition: readingPackage.edition,
       })
+      if (!ticket.isCurrent()) return
       const addedCount = await onPrepared(candidates)
       setRequestState('done')
       setMessage(
@@ -46,6 +51,7 @@ export function PersonalBookPreparationPanel({
         providerId: modelConfig.providerId,
       })
     } catch (error) {
+      if (!ticket.isCurrent()) return
       setRequestState('error')
       setMessage(error?.message || '基础资料准备失败')
       recordReadingTrialDiagnostic({

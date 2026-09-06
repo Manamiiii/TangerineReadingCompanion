@@ -1417,7 +1417,7 @@ test('personal book preparation returns only bounded names and no generated fact
   assert.deepEqual(normalizePersonalBookKnowledge({ facts: [{}] }), [])
 })
 
-test('current-reading questions answer concepts and block obvious future-plot questions', async () => {
+test('current-reading questions quote supplied evidence and block obvious future-plot questions', async () => {
   assert.equal(readingQuestionLooksForward('这个制度是什么意思？'), false)
   assert.equal(readingQuestionLooksForward('这个人物最后怎么样？'), true)
   assert.equal(readingAnswerLooksForward('这是一个历史时期。'), false)
@@ -1438,7 +1438,7 @@ test('current-reading questions answer concepts and block obvious future-plot qu
         json: async () => ({
           choices: [{
             message: {
-              content: '{"answer":"这是一个历史时期。","uncertain":false,"futurePlot":"ignored"}',
+              content: '{"evidence":[{"sourceId":"excerpt","quote":"当前段落提到了重建时期。"}],"futurePlot":"ignored"}',
             },
           }],
         }),
@@ -1447,7 +1447,7 @@ test('current-reading questions answer concepts and block obvious future-plot qu
   })
   assert.match(requestBody.messages[0].content, /不得补充后续章节/)
   assert.match(requestBody.messages[1].content, /当前段落提到了重建时期/)
-  assert.deepEqual(result, { answer: '这是一个历史时期。', uncertain: false })
+  assert.deepEqual(result, { evidence: [{ quote: '当前段落提到了重建时期。', label: '当前段落' }] })
   await assert.rejects(
     answerReadingQuestion({
       endpoint: 'https://question-model.example/v1/chat/completions',

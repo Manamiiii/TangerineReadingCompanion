@@ -136,14 +136,21 @@ export function normalizeTiandituResults(payload) {
     .filter(Boolean)
 }
 
-async function waitForProviderRateLimit(providerId) {
-  const waitMs = Math.max(0, (nextRequestAtByProvider.get(providerId) || 0) - Date.now())
-  if (waitMs > 0) await new Promise((resolve) => setTimeout(resolve, waitMs))
-  nextRequestAtByProvider.set(providerId, Date.now() + 1000)
+async function waitForProviderRateLimit(providerId, signal) {
+  const start = Math.max(Date.now(), nextRequestAtByProvider.get(providerId) || 0)
+  nextRequestAtByProvider.set(providerId, start + 1000)
+  const waitMs = start - Date.now()
+  if (waitMs > 0) await new Promise((resolve, reject) => {
+    const abort = () => { clearTimeout(timer); reject(new DOMException('地图搜索已取消', 'AbortError')) }
+    const timer = setTimeout(() => { signal?.removeEventListener('abort', abort); resolve() }, waitMs)
+    signal?.addEventListener('abort', abort, { once: true })
+  })
+  signal?.throwIfAborted()
 }
 
-async function fetchJson(url, fetchImpl) {
+async function fetchJson(url, fetchImpl, signal) {
   const response = await fetchImpl(url, {
+    signal,
     headers: {
       Accept: 'application/json',
       'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.7',
@@ -158,7 +165,9 @@ export async function searchReadingPlaces({
   query,
   tiandituToken = '',
   fetchImpl = globalThis.fetch,
+  signal,
 }) {
+  signal?.throwIfAborted()
   const searchQuery = normalizedQuery(query)
   if (!searchQuery) throw new Error('请输入地图搜索词')
   if (searchQuery.length > 120) throw new Error('地图搜索词不能超过 120 个字符')
@@ -173,7 +182,7 @@ export async function searchReadingPlaces({
   if (resultCache.has(cacheKey)) return resultCache.get(cacheKey)
 
   let results
-  await waitForProviderRateLimit(provider)
+  await waitForProviderRateLimit(provider, signal)
   if (provider === READING_MAP_PROVIDER.DOMESTIC) {
     const postStr = JSON.stringify({
       keyWord: searchQuery,
@@ -185,7 +194,7 @@ export async function searchReadingPlaces({
       show: 2,
     })
     const url = `https://api.tianditu.gov.cn/v2/search?postStr=${encodeURIComponent(postStr)}&type=query&tk=${encodeURIComponent(token)}`
-    results = normalizeTiandituResults(await fetchJson(url, fetchImpl))
+    results = normalizeTiandituResults(await fetchJson(url, fetchImpl, signal))
   } else {
     const parameters = new URLSearchParams({
       q: searchQuery,
@@ -198,8 +207,12 @@ export async function searchReadingPlaces({
       limit: '5',
     })
     const url = `https://nominatim.openstreetmap.org/search?${parameters}`
-    results = normalizeNominatimResults(await fetchJson(url, fetchImpl))
+    results = normalizeNominatimResults(await fetchJson(url, fetchImpl, signal))
   }
+  signal?.throwIfAborted()
   resultCache.set(cacheKey, results)
+  while (resultCache.size > 30) resultCache.delete(resultCache.keys().next().value)
   return results
 }
+
+export function clearMapSearchCache() { resultCache.clear() }

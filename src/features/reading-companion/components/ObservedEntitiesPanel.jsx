@@ -149,18 +149,14 @@ export function ObservedEntitiesPanel({
     event.preventDefault()
     setStatus('')
     try {
-      const next = upsertObservedEntity(observedEntities, {
+      const update = current => upsertObservedEntity(current, {
         id: generateId('observed'),
         name,
         kind,
         placeKind,
         firstSeenChapterId: currentChapterId,
       }, chapters)
-      if (next === observedEntities) {
-        setStatus(`这个名称${currentAction.label}。`)
-        return
-      }
-      await onChange(next)
+      await onChange(update)
       setName('')
       setPlaceKind(OBSERVED_PLACE_KIND.UNKNOWN)
       setStatus(
@@ -178,7 +174,7 @@ export function ObservedEntitiesPanel({
   async function removeObservedEntity(id) {
     setStatus('')
     try {
-      await onChange(observedEntities.filter((entity) => entity.id !== id))
+      await onChange(current => current.filter((entity) => entity.id !== id))
     } catch (error) {
       setStatus(error?.message || '删除失败')
     }
@@ -187,7 +183,7 @@ export function ObservedEntitiesPanel({
   async function removeObservedMapLocation(id) {
     setStatus('')
     try {
-      await onChange(clearObservedPlaceLocation(observedEntities, id))
+      await onChange(current => clearObservedPlaceLocation(current, id))
       setStatus('已清除个人地图位置，名称和首次遇到章节仍然保留。')
     } catch (error) {
       setStatus(error?.message || '清除地图位置失败')
@@ -197,7 +193,7 @@ export function ObservedEntitiesPanel({
   async function changeObservedPlaceKind(id, nextPlaceKind) {
     setStatus('')
     try {
-      await onChange(updateObservedPlaceKind(observedEntities, id, nextPlaceKind))
+      await onChange(current => updateObservedPlaceKind(current, id, nextPlaceKind))
       setStatus(
         nextPlaceKind === OBSERVED_PLACE_KIND.REAL
           ? '已标记为现实地点，可以在地图区域搜索位置。'
@@ -211,18 +207,14 @@ export function ObservedEntitiesPanel({
   async function recordObservedAgain(entity) {
     setStatus('')
     try {
-      const next = upsertObservedEntity(observedEntities, {
+      const update = current => upsertObservedEntity(current, {
         id: entity.id,
         name: entity.name,
         kind: entity.kind,
         placeKind: entity.placeKind,
         firstSeenChapterId: currentChapterId,
       }, chapters)
-      if (next === observedEntities) {
-        setStatus(`“${entity.name}”在${currentChapter?.label || '当前章'}已经记录。`)
-        return
-      }
-      await onChange(next)
+      await onChange(update)
       setStatus(`已补记“${entity.name}”在${currentChapter?.label || '当前章'}的出现。`)
     } catch (error) {
       setStatus(error?.message || '记录本章出现失败')
@@ -233,7 +225,7 @@ export function ObservedEntitiesPanel({
     setStatus('')
     try {
       const draft = noteDrafts[entity.id] ?? entity.note ?? ''
-      await onChange(updateObservedEntityNote(observedEntities, entity.id, draft))
+      await onChange(current => updateObservedEntityNote(current, entity.id, draft))
       setNoteDrafts((current) => {
         const next = { ...current }
         delete next[entity.id]

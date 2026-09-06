@@ -615,7 +615,7 @@ function geoJsonCoordinateCount(value) {
   return count
 }
 
-function isValidGeoJsonGeometry(geometry) {
+export function isValidGeoJsonGeometry(geometry) {
   if (
     !isObject(geometry)
     || !VALID_GEOJSON_TYPES.has(geometry.type)

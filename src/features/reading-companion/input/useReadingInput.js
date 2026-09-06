@@ -1,9 +1,13 @@
+import { clearMapSearchCache } from '../map/geocoding.js'
+import { clearModelSession } from '../../model/modelClient.js'
+import { createAsyncTask } from '../../../platform/asyncTask.js'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { platform } from '../../../platform/index.js'
 import { createInputRevision, normalizeReadingInput } from '../../../platform/readingInput.js'
 import { recognizeImageText } from '../../ocr/localOcr.js'
 
 export function useReadingInput(bookId) {
+  const ocrTask = useRef(createAsyncTask())
   const revision = useRef(createInputRevision())
   const [excerpt, setExcerpt] = useState('')
   const [link, setLink] = useState('')
@@ -14,6 +18,9 @@ export function useReadingInput(bookId) {
   const [sessionVersion, setSessionVersion] = useState(0)
 
   const clearInput = useCallback(() => {
+    ocrTask.current.cancel()
+    clearModelSession()
+    clearMapSearchCache()
     revision.current.next()
     setExcerpt('')
     setLink('')
@@ -26,7 +33,12 @@ export function useReadingInput(bookId) {
 
   useEffect(() => {
     clearInput()
-    return () => { revision.current.next() }
+    return () => {
+      revision.current.next()
+      ocrTask.current.cancel()
+      clearModelSession()
+      clearMapSearchCache()
+    }
   }, [bookId, clearInput])
 
   useEffect(() => platform.appLifecycle.subscribe((event) => {
@@ -39,6 +51,9 @@ export function useReadingInput(bookId) {
 
   const acceptInput = useCallback((value) => {
     const input = normalizeReadingInput(value)
+    ocrTask.current.cancel()
+    clearModelSession()
+    clearMapSearchCache()
     revision.current.next()
     setInputStatus('')
     setOcrState('idle')
@@ -60,6 +75,9 @@ export function useReadingInput(bookId) {
   function changeExcerpt(text) {
     try {
       const input = normalizeReadingInput({ kind: 'text', source: 'manual', text })
+      ocrTask.current.cancel()
+      clearModelSession()
+      clearMapSearchCache()
       revision.current.next()
       setExcerpt(input.text)
       setLink('')
@@ -92,6 +110,9 @@ export function useReadingInput(bookId) {
   }
 
   function clearImage() {
+    ocrTask.current.cancel()
+    clearModelSession()
+    clearMapSearchCache()
     revision.current.next()
     setImageInput(null)
     setOcrState('idle')
@@ -102,6 +123,7 @@ export function useReadingInput(bookId) {
   async function runLocalOcr() {
     if (!imageInput?.file || ocrState === 'working') return
     const ticket = revision.current.next()
+    const operation = ocrTask.current.start()
     setOcrState('working')
     setInputStatus('正在本机识别截图文字…')
     try {
@@ -109,9 +131,11 @@ export function useReadingInput(bookId) {
         if (revision.current.isCurrent(ticket) && Number.isFinite(progress?.progress)) {
           setOcrProgress(Math.round(progress.progress * 100))
         }
-      })
+      }, { signal: operation.signal })
       if (!revision.current.isCurrent(ticket)) return
       const input = normalizeReadingInput({ kind: 'text', source: 'ocr', text })
+      clearModelSession()
+      clearMapSearchCache()
       setExcerpt(input.text)
       setSessionVersion((version) => version + 1)
       setOcrState(text ? 'done' : 'empty')

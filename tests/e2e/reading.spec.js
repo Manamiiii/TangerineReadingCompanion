@@ -162,3 +162,64 @@ test.describe('formal spoiler gates with synthetic test facts', () => {
     await expect(page.getByText('SYNTHETIC-HIDDEN-FACT', { exact: true })).toHaveCount(0)
   })
 })
+
+test.describe('async and model boundaries', () => {
+  test.use({ serviceWorkers: 'block' })
+
+  test('switching map targets discards a delayed result', async ({ page }) => {
+    await openBook(page)
+    await seedRecords(page, [{ key: `readerState:${pkg.edition.id}`, value: {
+      editionId: pkg.edition.id, currentChapterId: 'chapter-01', observedEntities: ['Alpha', 'Beta'].map(name => ({
+        id: name, name, kind: 'place', placeKind: 'real', firstSeenChapterId: 'chapter-01',
+      })),
+    } }])
+    let release
+    let started
+    let completed
+    const responded = new Promise(resolve => { completed = resolve })
+    const requested = new Promise(resolve => { started = resolve })
+    await page.route('https://nominatim.openstreetmap.org/**', async route => {
+      started()
+      await new Promise(resolve => { release = resolve })
+      await route.fulfill({ json: [{ place_id: 1, display_name: 'LATE-ALPHA-RESULT', lat: '30', lon: '40' }] })
+      completed()
+    })
+    await page.reload()
+    await page.getByRole('tab', { name: /地图/ }).click()
+    await page.getByRole('button', { name: '定位“Alpha”', exact: true }).click()
+    await page.getByRole('button', { name: '搜索公网地图', exact: true }).click()
+    await requested
+    await page.getByRole('button', { name: '定位“Beta”', exact: true }).click()
+    release()
+    await responded
+    await expect(page.getByLabel('现代地图搜索词')).toHaveValue('Beta')
+    await expect(page.getByText('LATE-ALPHA-RESULT')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: '确认“Beta”是这里' })).toHaveCount(0)
+  })
+
+  test('invented names and unsupported answers never appear in reading results', async ({ page }) => {
+    await page.addInitScript(() => {
+      localStorage.setItem('tangerine-reading-companion:model:provider', 'custom')
+      localStorage.setItem('tangerine-reading-companion:model:profile:custom:endpoint', 'https://model.example/chat')
+      localStorage.setItem('tangerine-reading-companion:model:profile:custom:model', 'synthetic')
+      sessionStorage.setItem('tangerine-reading-companion:model:api-key:custom', 'synthetic-key')
+    })
+    let modelPayload = { candidates: [{ name: 'Bob', kind: 'person' }], answer: 'SYNTHETIC-UNSUPPORTED-PLOT' }
+    await page.route('https://model.example/chat', route => route.fulfill({ json: {
+      choices: [{ message: { content: JSON.stringify(modelPayload) } }],
+    } }))
+    await openBook(page)
+    await excerpt(page).fill('Alice walked into the garden.')
+    await page.getByRole('button', { name: '用模型发现新名称', exact: true }).click()
+    await expect(page.getByText('这次没有发现新的名称。', { exact: true })).toBeVisible()
+    await expect(page.locator('input[value="Bob"]')).toHaveCount(0)
+    await page.getByPlaceholder(/例如：重建时期/).fill('这里发生了什么？')
+    await page.getByRole('button', { name: '查找', exact: true }).click()
+    await expect(page.getByText('当前内容中没有足够依据，暂不补充解释')).toBeVisible()
+    await expect(page.getByText('SYNTHETIC-UNSUPPORTED-PLOT')).toHaveCount(0)
+    modelPayload = { evidence: [{ sourceId: 'excerpt', quote: 'Alice walked into the garden.' }] }
+    await page.getByRole('button', { name: '查找', exact: true }).click()
+    await expect(page.locator('.reader-question-answer blockquote')).toContainText('Alice walked into the garden.')
+    await expect(page.locator('.reader-question-answer blockquote')).toContainText('当前段落')
+  })
+})

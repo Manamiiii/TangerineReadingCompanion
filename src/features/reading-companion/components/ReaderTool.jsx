@@ -1,10 +1,10 @@
 import { ReadingInputSource } from './ReadingInputSource.jsx'
-import { lazy, Suspense, useEffect, useMemo, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useReadingInput } from '../input/useReadingInput.js'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, BookOpen, ClipboardPaste, Map as MapIcon, Plus, Settings2, ShieldCheck, UserRoundSearch } from 'lucide-react'
 import { getReadingState, saveReadingState } from '../db/readingState.js'
-import { deletePersonalReadingPackage, savePersonalReadingPackage } from '../db/personalBooks.js'
+import { deletePersonalReadingPackage, savePersonalReadingPackage, updatePersonalReadingPackage } from '../db/personalBooks.js'
 import { loadReadingPackage, loadReadingPackageCatalog } from '../data/readingPackages.js'
 import { generateId } from '../../../utils.js'
 import { preparePersonalBookKnowledge } from '../model/modelAdapter.js'
@@ -50,6 +50,7 @@ function ReaderError({ message }) {
 }
 
 export function ReaderTool() {
+  const chapterSave = useRef(0)
   const [catalog, setCatalog] = useState(null)
   const [selectedPackageId, setSelectedPackageId] = useState(
     () => parseReaderLocation(window.location.hash).packageId,
@@ -161,6 +162,7 @@ export function ReaderTool() {
   )
   const defaultChapterId = readingPackage?.chapters[0]?.id || ''
   const currentChapterId = pendingChapterId || savedState?.currentChapterId || defaultChapterId
+  useEffect(() => { clearInput(); setMapFocus(null) }, [editionId, currentChapterId, clearInput])
   const currentChapter = readingPackage?.chapters.find((chapter) => chapter.id === currentChapterId)
   const progressPercent = readingPackage && currentChapter
     ? Math.round((currentChapter.number / readingPackage.chapters.length) * 100)
@@ -256,6 +258,7 @@ export function ReaderTool() {
   )
 
   async function changeChapter(chapterId) {
+    const ticket = ++chapterSave.current
     clearInput()
     setMapFocus(null)
     setPendingChapterId(chapterId)
@@ -266,22 +269,22 @@ export function ReaderTool() {
         bookId: readingPackage.book.id,
         currentChapterId: chapterId,
       })
-      setSaveState('saved')
+      if (ticket === chapterSave.current) setSaveState('saved')
     } catch {
-      setSaveState('error')
+      if (ticket === chapterSave.current) setSaveState('error')
     } finally {
-      setPendingChapterId('')
+      if (ticket === chapterSave.current) setPendingChapterId('')
     }
   }
 
-  async function changeObservedEntities(observedEntities) {
+  async function changeObservedEntities(update) {
     setSaveState('saving')
     try {
-      await saveReadingState(editionId, {
+      await saveReadingState(editionId, current => ({
         packageId: readingPackage.id,
         bookId: readingPackage.book.id,
-        observedEntities,
-      })
+        observedEntities: update(current.observedEntities || []),
+      }))
       setSaveState('saved')
     } catch (error) {
       setSaveState('error')
@@ -296,6 +299,7 @@ export function ReaderTool() {
   }
 
   function selectBook(packageId) {
+    chapterSave.current++
     setSelectedPackageId(packageId)
     setLastPackageId(saveLastReadingPackageId(packageId))
     setPendingChapterId('')
@@ -309,7 +313,7 @@ export function ReaderTool() {
     clearImage()
   }
 
-  async function createPersonalBook(form) {
+  async function createPersonalBook(form, { signal } = {}) {
     let pkg = createPersonalReadingPackage({
       ...form,
       packageId: generateId('reader-package-personal'),
@@ -317,6 +321,8 @@ export function ReaderTool() {
       editionId: generateId('reader-edition-personal'),
     })
     await savePersonalReadingPackage(pkg)
+    setCatalog(current => [...(current || []), personalCatalogEntry(pkg)])
+    if (signal?.aborted) return
     let preparationStatus = ''
     const modelConfigured = Boolean(
       modelConfig.endpoint.trim()
@@ -331,16 +337,17 @@ export function ReaderTool() {
           apiKey: modelConfig.apiKey,
           temperature: modelConfig.temperature,
           book: pkg.book,
+          signal,
           edition: pkg.edition,
         })
-        const prepared = mergePersonalBookKnowledge(
-          pkg,
-          candidates,
-          () => generateId('personal-ai-entity'),
-        )
-        pkg = prepared.package
-        await savePersonalReadingPackage(pkg)
-        preparationStatus = `书籍已创建，并自动准备了 ${prepared.addedCount} 个基础名称。`
+        signal?.throwIfAborted()
+        let addedCount = 0
+        pkg = await updatePersonalReadingPackage(pkg.id, current => {
+          const prepared = mergePersonalBookKnowledge(current, candidates, () => generateId('personal-ai-entity'))
+          addedCount = prepared.addedCount
+          return prepared.package
+        })
+        preparationStatus = `书籍已创建，并自动准备了 ${addedCount} 个基础名称。`
         recordReadingTrialDiagnostic({
           area: 'model',
           action: 'model-personal-book-preparation',
@@ -348,6 +355,7 @@ export function ReaderTool() {
           providerId: modelConfig.providerId,
         })
       } catch (error) {
+        if (signal?.aborted) return
         preparationStatus = `书籍已创建；AI 基础资料暂时没有准备成功：${error?.message || '模型请求失败'}`
         recordReadingTrialDiagnostic({
           area: 'model',
@@ -360,6 +368,7 @@ export function ReaderTool() {
     } else if (form.prepareWithModel) {
       preparationStatus = '书籍已创建。配置模型后，可在阅读页一键准备基础资料。'
     }
+    if (signal?.aborted) return
     const entry = personalCatalogEntry(pkg)
     setCatalog((current) => [
       ...(current || []).filter((item) => item.id !== entry.id),
@@ -370,15 +379,14 @@ export function ReaderTool() {
   }
 
   async function preparePersonalBook(candidates) {
-    const prepared = mergePersonalBookKnowledge(
-      readingPackage,
-      candidates,
-      () => generateId('personal-ai-entity'),
-    )
-    if (prepared.addedCount === 0) return 0
-    await savePersonalReadingPackage(prepared.package)
-    setReadingPackage(prepared.package)
-    return prepared.addedCount
+    let addedCount = 0
+    const pkg = await updatePersonalReadingPackage(readingPackage.id, current => {
+      const prepared = mergePersonalBookKnowledge(current, candidates, () => generateId('personal-ai-entity'))
+      addedCount = prepared.addedCount
+      return prepared.package
+    })
+    setReadingPackage(current => current?.id === pkg.id ? pkg : current)
+    return addedCount
   }
 
   async function deletePersonalBook(entry) {
@@ -395,6 +403,7 @@ export function ReaderTool() {
   }
 
   function returnToLibrary() {
+    chapterSave.current++
     setSelectedPackageId('')
     setReadingPackage(null)
     setPendingChapterId('')
@@ -456,7 +465,7 @@ export function ReaderTool() {
         (entity) => entity.id === packageEntityId,
       )
       const action = actionForObservedName(name, kind, packageEntityId)
-      const next = upsertObservedEntity(observedEntities, {
+      const update = current => upsertObservedEntity(current, {
         id: generateId('observed'),
         name,
         kind,
@@ -467,11 +476,7 @@ export function ReaderTool() {
           : [],
         firstSeenChapterId: currentChapterId,
       }, readingPackage.chapters)
-      if (next === observedEntities) {
-        setScanStatus(`“${name}”${action.label}。`)
-        return
-      }
-      await changeObservedEntities(next)
+      await changeObservedEntities(update)
       setSelectedExcerptText('')
       setScanStatus(
         action.type === 'move-earlier'
@@ -514,7 +519,7 @@ export function ReaderTool() {
     const packageEntity = readingPackage.onDemandEntities?.find(
       (entity) => entity.id === candidate.matchedEntityId,
     )
-    const next = upsertObservedEntity(observedEntities, {
+    const update = current => upsertObservedEntity(current, {
       id: generateId('observed'),
       name: candidate.name,
       kind: candidate.kind,
@@ -525,8 +530,7 @@ export function ReaderTool() {
         : [],
       firstSeenChapterId: currentChapterId,
     }, readingPackage.chapters)
-    if (next === observedEntities) return false
-    await changeObservedEntities(next)
+    await changeObservedEntities(update)
     return true
   }
 
@@ -734,10 +738,9 @@ export function ReaderTool() {
             <div className="reader-reading-workspace" key={`${selectedPackageId}:${currentChapterId}:${sessionVersion}`}>
               <div className="reader-reading-lane reader-understanding-lane">
                 <ReadingQuestionPanel key={excerpt}
+                  backgrounds={unlockedEntities}
                   excerpt={excerpt}
                   selectedText={selectedExcerptText}
-                  bookTitle={readingPackage.book.title}
-                  currentChapter={currentChapter}
                   modelConfig={modelConfig}
                   onOpenSettings={() => openTab(READER_TAB.SETTINGS)}
                 />
@@ -821,6 +824,7 @@ export function ReaderTool() {
           <div hidden={activeTab !== READER_TAB.MAP}>
             <ReadingMapPanel
               focus={mapFocus}
+              sessionVersion={sessionVersion}
               key={selectedPackageId}
               entities={visibleMapEntities}
               observedEntities={observedEntities}

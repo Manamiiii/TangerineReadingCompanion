@@ -1,3 +1,4 @@
+import { useAsyncTask } from '../../../platform/useAsyncTask.js'
 import { useEffect, useState } from 'react'
 import { Plus, Settings2, ShieldCheck, Sparkles } from 'lucide-react'
 import { analyzeReadingExcerpt } from '../model/modelAdapter.js'
@@ -15,6 +16,7 @@ export function ModelAnalysisPanel({
   modelConfig,
   onOpenSettings,
 }) {
+  const task = useAsyncTask(excerpt)
   const [requestState, setRequestState] = useState('idle')
   const [message, setMessage] = useState('')
   const [candidates, setCandidates] = useState([])
@@ -32,9 +34,12 @@ export function ModelAnalysisPanel({
     setRequestState('idle')
   }, [currentChapter?.id])
 
+  useEffect(() => { setRequestState('idle') }, [excerpt])
+
   const resultsStale = candidates.length > 0 && analysisExcerpt !== excerpt
 
   async function analyze() {
+    const ticket = task.start()
     setRequestState('working')
     setMessage('')
     try {
@@ -42,12 +47,14 @@ export function ModelAnalysisPanel({
         endpoint: modelConfig.endpoint,
         model: modelConfig.model,
         apiKey: modelConfig.apiKey,
+        signal: ticket.signal,
         temperature: modelConfig.temperature,
         excerpt,
         bookTitle,
         chapterLabel: currentChapter?.label,
         knownEntities,
       })
+      if (!ticket.isCurrent()) return
       setCandidates(results)
       setAnalysisExcerpt(excerpt)
       setRequestState('done')
@@ -63,6 +70,7 @@ export function ModelAnalysisPanel({
         providerId: modelConfig.providerId,
       })
     } catch (error) {
+      if (!ticket.isCurrent()) return
       setRequestState('error')
       setMessage(error?.message || '模型识别失败')
       recordReadingTrialDiagnostic({

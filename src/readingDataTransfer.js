@@ -1,4 +1,6 @@
 import { db } from './db/core.js'
+import { normalizePersistedReadingState } from './features/reading-companion/domain/persistedReadingState.js'
+import { normalizePersonalPackage } from './features/reading-companion/domain/persistedPersonalPackage.js'
 import {
   assertReadingPackage,
   readingStateKey,
@@ -35,14 +37,13 @@ function normalizeStateRecord(record) {
     && !Array.isArray(record.value.observedEntities)) {
     throw new Error(`阅读状态已遇到记录无效：${record.key}`)
   }
-  const value = { ...record.value, editionId }
-  delete value.sceneId
+  const value = normalizePersistedReadingState({ ...record.value, editionId })
   return { key: readingStateKey(editionId), value }
 }
 
 function normalizePersonalPackageRecord(record) {
   if (!record.key.startsWith('readerPersonalPackage:')) return record
-  const pkg = record.value?.package
+  const pkg = normalizePersonalPackage(record.value?.package)
   try {
     assertReadingPackage(pkg)
   } catch {
@@ -52,7 +53,15 @@ function normalizePersonalPackageRecord(record) {
   if (record.key !== `readerPersonalPackage:${pkg.id}`) {
     throw new Error(`个人书籍记录 key 与资料包 id 不一致：${record.key}`)
   }
-  return record
+  return { key: record.key, value: {
+    package: pkg,
+    ...Object.fromEntries(['createdAt', 'updatedAt'].flatMap(key => {
+      const value = record.value[key]
+      if (value === undefined) return []
+      if (typeof value !== 'string' || !Number.isFinite(Date.parse(value))) throw new Error('个人书籍时间无效')
+      return [[key, value]]
+    })),
+  } }
 }
 
 function backupSource(payload) {
@@ -76,6 +85,9 @@ function newestRecord(left, right) {
 function normalizeReadingRecords(meta) {
   const records = new Map()
   for (const candidate of meta) {
+    if (typeof candidate?.key === 'string'
+      && READING_META_PREFIXES.some(prefix => candidate.key.startsWith(prefix))
+      && !Object.hasOwn(candidate, 'value')) throw new Error('阅读记录缺少 value')
     if (!isReadingMetaRecord(candidate)) continue
     const normalized = normalizePersonalPackageRecord(normalizeStateRecord(candidate))
     records.set(normalized.key, newestRecord(records.get(normalized.key), normalized))

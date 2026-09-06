@@ -1,3 +1,4 @@
+import { useAsyncTask } from '../../../platform/useAsyncTask.js'
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { Map as MapIcon, MapPin, Maximize2, Minimize2, ScanSearch, Settings2, Sparkles } from 'lucide-react'
 import { searchReadingPlaces } from '../map/geocoding.js'
@@ -25,6 +26,7 @@ export function ReadingMapPanel({
   onOpenSettings,
   isActive,
   focus,
+  sessionVersion,
 }) {
   const { providerId, tiandituToken } = mapConfig
   const [renderedMapConfig, setRenderedMapConfig] = useState(mapConfig)
@@ -39,7 +41,15 @@ export function ReadingMapPanel({
   const [lookupMessage, setLookupMessage] = useState('')
   const [isFullscreen, setIsFullscreen] = useState(false)
   const [isExpanded, setIsExpanded] = useState(false)
-  const lookupRequestRef = useRef(0)
+  const lookupContext = JSON.stringify([sessionVersion, currentChapterId, providerId, lookupTargetId, lookupQuery, lookupMode, isActive])
+  const lookupTask = useAsyncTask(lookupContext)
+  useEffect(() => {
+    setLookupResults([])
+    setLookupState('idle')
+    setTranslationState('idle')
+    setLookupMessage('')
+  }, [lookupContext])
+  useEffect(() => { setLookupSuggestions([]) }, [sessionVersion, currentChapterId, providerId, lookupTargetId])
   const workspaceRef = useRef(null)
   const places = useMemo(
     () => visibleReadingEntities(entities, currentChapterId, chapters)
@@ -182,6 +192,7 @@ export function ReadingMapPanel({
   }
 
   function beginLookup(place) {
+    lookupTask.cancel()
     setLookupTargetId(place.id)
     const nextMode = place.placeKind === OBSERVED_PLACE_KIND.REAL ? 'exact' : 'approximate-area'
     setLookupMode(nextMode)
@@ -195,6 +206,7 @@ export function ReadingMapPanel({
   }
 
   async function suggestLookupQueries() {
+    const ticket = lookupTask.start()
     setTranslationState('working')
     setLookupMessage('')
     try {
@@ -202,11 +214,13 @@ export function ReadingMapPanel({
         endpoint: modelConfig.endpoint,
         model: modelConfig.model,
         apiKey: modelConfig.apiKey,
+        signal: ticket.signal,
         temperature: modelConfig.temperature,
         query: lookupMode === 'approximate-area' ? lookupQuery : lookupTarget.name,
         bookTitle,
         chapterLabel: currentChapter?.label,
       })
+      if (!ticket.isCurrent()) return
       setLookupSuggestions(suggestions)
       setLookupQuery(suggestions[0])
       setTranslationState('done')
@@ -218,6 +232,7 @@ export function ReadingMapPanel({
         providerId: modelConfig.providerId,
       })
     } catch (error) {
+      if (!ticket.isCurrent()) return
       setTranslationState('error')
       setLookupMessage(error?.message || '生成英文搜索词失败')
       recordReadingTrialDiagnostic({
@@ -231,6 +246,7 @@ export function ReadingMapPanel({
   }
 
   async function activateLookupFallback() {
+    const ticket = lookupTask.start()
     setTranslationState('working')
     setLookupResults([])
     setLookupState('idle')
@@ -243,11 +259,13 @@ export function ReadingMapPanel({
           endpoint: modelConfig.endpoint,
           model: modelConfig.model,
           apiKey: modelConfig.apiKey,
+          signal: ticket.signal,
           temperature: modelConfig.temperature,
           query: lookupTarget.name,
           bookTitle,
           chapterLabel: currentChapter?.label,
         })
+        if (!ticket.isCurrent()) return
         setLookupSuggestions(suggestions)
       }
       const broadQuery = suggestions.at(-1) || lookupQuery
@@ -269,6 +287,7 @@ export function ReadingMapPanel({
         })
       }
     } catch (error) {
+      if (!ticket.isCurrent()) return
       setTranslationState('error')
       setLookupMessage(error?.message || '生成参考区域搜索词失败')
       if (requestedModelSuggestion) {
@@ -285,8 +304,7 @@ export function ReadingMapPanel({
 
   async function submitLookup(event) {
     event.preventDefault()
-    const requestId = lookupRequestRef.current + 1
-    lookupRequestRef.current = requestId
+    const ticket = lookupTask.start()
     setLookupState('loading')
     setLookupMessage('')
     setLookupResults([])
@@ -295,8 +313,9 @@ export function ReadingMapPanel({
         providerId,
         query: lookupQuery,
         tiandituToken,
+        signal: ticket.signal,
       })
-      if (lookupRequestRef.current !== requestId) return
+      if (!ticket.isCurrent()) return
       setLookupResults(results)
       setLookupState('ready')
       if (results.length === 0) {
@@ -317,7 +336,7 @@ export function ReadingMapPanel({
         })
       }
     } catch (error) {
-      if (lookupRequestRef.current !== requestId) return
+      if (!ticket.isCurrent()) return
       setLookupState('error')
       setLookupMessage(error?.message || '地图搜索失败')
       recordReadingTrialDiagnostic({
@@ -334,26 +353,26 @@ export function ReadingMapPanel({
     if (!lookupTarget) return
     setLookupMessage('')
     try {
-      const next = lookupMode === 'approximate-area'
+      const update = current => lookupMode === 'approximate-area'
         ? confirmObservedPlaceApproximateArea(
-            observedEntities,
+            current,
             lookupTarget.id,
             result,
             areaRadiusKm,
           )
         : lookupMode === 'fallback-area'
           ? confirmObservedRealPlaceFallbackArea(
-              observedEntities,
+              current,
               lookupTarget.id,
               result,
               areaRadiusKm,
             )
         : confirmObservedPlaceLocation(
-            observedEntities,
+            current,
             lookupTarget.id,
             result,
           )
-      await onChangeObservedEntities(next)
+      await onChangeObservedEntities(update)
       setLookupTargetId('')
       setLookupQuery('')
       setLookupResults([])
@@ -465,6 +484,7 @@ export function ReadingMapPanel({
                 <input
                   value={lookupQuery}
                   onChange={(event) => {
+                    lookupTask.cancel()
                     setLookupQuery(event.target.value)
                     setLookupSuggestions([])
                   }}

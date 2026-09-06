@@ -1,8 +1,3 @@
-let workerPromise = null
-let metadataWorkerPromise = null
-let numericWorkerPromise = null
-let progressListener = null
-
 function cleanOcrLine(value) {
   let line = value
   let previous = ''
@@ -39,97 +34,59 @@ function localLanguagePath() {
   return new URL('reader-ocr/', document.baseURI).href.replace(/\/$/, '')
 }
 
-async function createOcrWorker(languages = ['chi_sim', 'eng']) {
-  const { createWorker, OEM } = await import('tesseract.js')
-  return createWorker(languages, OEM.LSTM, {
-    langPath: localLanguagePath(),
-    logger: (message) => {
-      if (typeof progressListener === 'function') progressListener(message)
-    },
+// A worker belongs to one operation; termination releases the image and OCR heap.
+export async function runOcrWorker(createWorker, image, { signal, parameters } = {}) {
+  signal?.throwIfAborted()
+  let worker
+  let termination
+  const terminate = () => worker && (termination ||= Promise.resolve(worker.terminate()))
+  let rejectAbort
+  const aborted = new Promise((_, reject) => { rejectAbort = reject })
+  const cancel = () => rejectAbort(new DOMException('OCR 已取消', 'AbortError'))
+  signal?.addEventListener('abort', cancel, { once: true })
+  const operation = (async () => {
+    worker = await createWorker()
+    if (signal?.aborted) { await terminate(); signal.throwIfAborted() }
+    if (parameters) await worker.setParameters(parameters)
+    signal?.throwIfAborted()
+    const result = await worker.recognize(image)
+    signal?.throwIfAborted()
+    return result
+  })()
+  try {
+    return await Promise.race([operation, aborted])
+  } finally {
+    signal?.removeEventListener('abort', cancel)
+    await terminate()
+  }
+}
+
+async function recognize(image, onProgress, options = {}, languages = ['chi_sim', 'eng'], parameters) {
+  if (!image) throw new Error('请先选择一张截图')
+  const { signal } = options
+  const result = await runOcrWorker(async () => {
+    const { createWorker, OEM } = await import('tesseract.js')
+    signal?.throwIfAborted()
+    return createWorker(languages, OEM.LSTM, {
+      langPath: localLanguagePath(),
+      logger: message => { if (!signal?.aborted) onProgress?.(message) },
+    })
+  }, image, { signal, parameters })
+  return normalizeOcrText(result?.data?.text, options)
+}
+
+export function recognizeImageText(image, onProgress, options) {
+  return recognize(image, onProgress, options)
+}
+
+export function recognizeStructuredImageText(image, onProgress, { pageSegmentationMode = '6', characterWhitelist = '', signal } = {}) {
+  return recognize(image, onProgress, { preserveLines: true, signal }, ['chi_sim'], {
+    tessedit_pageseg_mode: pageSegmentationMode, tessedit_char_whitelist: characterWhitelist,
   })
 }
 
-async function createStructuredOcrWorker() {
-  const worker = await createOcrWorker(['chi_sim'])
-  await worker.setParameters({ tessedit_pageseg_mode: '6' })
-  return worker
-}
-
-async function createNumericOcrWorker() {
-  const worker = await createOcrWorker(['eng'])
-  await worker.setParameters({
-    tessedit_pageseg_mode: '7',
-    tessedit_char_whitelist: '0123456789',
+export function recognizeNumericImageText(image, onProgress, { pageSegmentationMode = '7', signal } = {}) {
+  return recognize(image, onProgress, { preserveLines: true, signal }, ['eng'], {
+    tessedit_pageseg_mode: pageSegmentationMode, tessedit_char_whitelist: '0123456789',
   })
-  return worker
-}
-
-export async function recognizeImageText(image, onProgress, options) {
-  if (!image) throw new Error('请先选择一张截图')
-  progressListener = onProgress
-  if (!workerPromise) {
-    workerPromise = createOcrWorker().catch((error) => {
-      workerPromise = null
-      throw error
-    })
-  }
-  try {
-    const worker = await workerPromise
-    const result = await worker.recognize(image)
-    return normalizeOcrText(result?.data?.text, options)
-  } finally {
-    progressListener = null
-  }
-}
-
-export async function recognizeStructuredImageText(
-  image,
-  onProgress,
-  { pageSegmentationMode = '6', characterWhitelist = '' } = {},
-) {
-  if (!image) throw new Error('请先选择一张截图')
-  progressListener = onProgress
-  if (!metadataWorkerPromise) {
-    metadataWorkerPromise = createStructuredOcrWorker().catch((error) => {
-      metadataWorkerPromise = null
-      throw error
-    })
-  }
-  try {
-    const worker = await metadataWorkerPromise
-    await worker.setParameters({
-      tessedit_pageseg_mode: pageSegmentationMode,
-      tessedit_char_whitelist: characterWhitelist,
-    })
-    const result = await worker.recognize(image)
-    return normalizeOcrText(result?.data?.text, { preserveLines: true })
-  } finally {
-    progressListener = null
-  }
-}
-
-export async function recognizeNumericImageText(
-  image,
-  onProgress,
-  { pageSegmentationMode = '7' } = {},
-) {
-  if (!image) throw new Error('请先选择一张截图')
-  progressListener = onProgress
-  if (!numericWorkerPromise) {
-    numericWorkerPromise = createNumericOcrWorker().catch((error) => {
-      numericWorkerPromise = null
-      throw error
-    })
-  }
-  try {
-    const worker = await numericWorkerPromise
-    await worker.setParameters({
-      tessedit_pageseg_mode: pageSegmentationMode,
-      tessedit_char_whitelist: '0123456789',
-    })
-    const result = await worker.recognize(image)
-    return normalizeOcrText(result?.data?.text, { preserveLines: true })
-  } finally {
-    progressListener = null
-  }
 }

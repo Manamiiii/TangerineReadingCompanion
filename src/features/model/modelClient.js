@@ -1,5 +1,12 @@
 const modelResultCache = new Map()
 const MAX_MODEL_CACHE_ENTRIES = 30
+const activeRequests = new Set()
+
+export function clearModelSession() {
+  modelResultCache.clear()
+  for (const controller of activeRequests) controller.abort()
+  activeRequests.clear()
+}
 
 function requiredText(value, message) {
   const text = typeof value === 'string' ? value.trim() : ''
@@ -16,6 +23,7 @@ export function normalizeModelEndpoint(value) {
     throw new Error('模型接口地址无效')
   }
   const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname)
+  if (url.username || url.password) throw new Error('模型接口地址不能包含账号密码')
   if (url.protocol !== 'https:' && !(local && url.protocol === 'http:')) {
     throw new Error('模型接口必须使用 HTTPS；本机 localhost 可以使用 HTTP')
   }
@@ -74,12 +82,17 @@ export async function requestModelJson({
   temperature = 0,
   messages,
   fetchImpl = globalThis.fetch,
+  signal,
 }) {
   const requestUrl = normalizeModelEndpoint(endpoint || url)
   const requestModel = requiredText(model || modelName, '请填写模型名称')
   const requestKey = requiredText(apiKey || key, '请填写 API Key')
   if (typeof fetchImpl !== 'function') throw new Error('当前环境无法调用模型接口')
   const controller = new AbortController()
+  const cancel = () => controller.abort()
+  signal?.throwIfAborted()
+  signal?.addEventListener('abort', cancel, { once: true })
+  activeRequests.add(controller)
   const timeout = setTimeout(() => controller.abort(), 45000)
   let response
   try {
@@ -98,22 +111,20 @@ export async function requestModelJson({
       }),
       signal: controller.signal,
     })
+    if (!response.ok) {
+      throw new Error(`模型接口返回 ${response.status}`)
+    }
+    const body = await response.json()
+    controller.signal.throwIfAborted()
+    return parseJsonObject(body?.choices?.[0]?.message?.content)
   } catch (error) {
-    if (error?.name === 'AbortError') throw new Error('模型请求超时')
-    throw new Error(`模型请求失败：${error?.message || '网络不可用或接口不允许浏览器访问'}`)
+    if (controller.signal.aborted || error?.name === 'AbortError') throw new DOMException('模型请求已取消或超时', 'AbortError')
+    // Provider/network messages can echo credentials or submitted text.
+    if (/^模型接口返回 \d+$/.test(error?.message)) throw error
+    throw new Error('模型请求失败，请检查网络、接口和返回格式')
   } finally {
     clearTimeout(timeout)
+    activeRequests.delete(controller)
+    signal?.removeEventListener('abort', cancel)
   }
-  if (!response.ok) {
-    let detail = ''
-    try {
-      const body = await response.json()
-      detail = body?.error?.message || ''
-    } catch {
-      // The status is enough when a provider does not return JSON.
-    }
-    throw new Error(`模型接口返回 ${response.status}${detail ? `：${detail}` : ''}`)
-  }
-  const body = await response.json()
-  return parseJsonObject(body?.choices?.[0]?.message?.content)
 }

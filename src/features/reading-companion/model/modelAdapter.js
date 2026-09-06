@@ -1,10 +1,12 @@
 import {
   OBSERVED_ENTITY_KIND,
+  scanOnDemandEntities,
   OBSERVED_PLACE_KIND,
 } from '../domain/readingCompanion.js'
 import {
   READING_PROMPT_IDS,
   excerptEntityLinkMessages,
+  readingEvidenceMessages,
   personalBookKnowledgeMessages,
 } from './promptCatalog.js'
 import {
@@ -32,6 +34,10 @@ function cachedModelResult(key) {
 
 function storeModelResult(key, result) {
   return cacheModelResult(key, result)
+}
+
+export function nameOccursInExcerpt(excerpt, name) {
+  return scanOnDemandEntities(excerpt, [{ id: 'candidate', name, aliases: [] }]).length > 0
 }
 
 export function normalizeModelCandidates(payload, allowedEntityIds = null) {
@@ -156,7 +162,9 @@ export async function preparePersonalBookKnowledge({
   book,
   edition,
   fetchImpl = globalThis.fetch,
+  signal,
 }) {
+  signal?.throwIfAborted()
   const url = normalizeModelEndpoint(endpoint)
   const modelName = requiredText(model, '请填写模型名称')
   const key = requiredText(apiKey, '请填写 API Key')
@@ -184,6 +192,7 @@ export async function preparePersonalBookKnowledge({
     key,
     temperature,
     fetchImpl,
+    signal,
     messages: personalBookKnowledgeMessages(bookContext),
   })
   const result = normalizePersonalBookKnowledge(payload)
@@ -204,76 +213,36 @@ export function readingAnswerLooksForward(value) {
 }
 
 export async function answerReadingQuestion({
-  endpoint,
-  model,
-  apiKey,
-  temperature = 0,
-  question,
-  excerpt = '',
-  bookTitle = '',
-  chapterLabel = '',
-  fetchImpl = globalThis.fetch,
+  endpoint, model, apiKey, temperature = 0, question, excerpt = '', backgrounds = [],
+  fetchImpl = globalThis.fetch, signal,
 }) {
-  const url = normalizeModelEndpoint(endpoint)
-  const modelName = requiredText(model, '请填写模型名称')
-  const key = requiredText(apiKey, '请填写 API Key')
-  const text = requiredText(question, '请输入想了解的概念或当前段落问题')
+  signal?.throwIfAborted()
+  const text = requiredText(question, '请输入当前阅读问题')
   if (text.length > 500) throw new Error('单次问题最多 500 个字符')
-  if (readingQuestionLooksForward(text)) {
-    throw new Error('这里先只解释概念和当前段落，不回答后续剧情或结局')
-  }
-  const currentExcerpt = typeof excerpt === 'string' ? excerpt.trim().slice(0, 6000) : ''
-  if (typeof fetchImpl !== 'function') throw new Error('当前环境无法调用模型接口')
-  const cacheKey = modelCacheKey('reading-question-v1', [
-    url,
-    modelName,
-    text,
-    currentExcerpt,
-    bookTitle,
-    chapterLabel,
-  ])
-  const cached = cachedModelResult(cacheKey)
-  if (cached) return cached
+  if (readingQuestionLooksForward(text)) throw new Error('这里不回答后续剧情或结局')
+  const sources = [
+    ...(excerpt.trim() ? [{ id: 'excerpt', text: excerpt.trim().slice(0, 6000), label: '当前段落' }] : []),
+    ...backgrounds.slice(0, 20).filter(item => typeof item?.safeNote === 'string').map((item, index) => ({
+      id: 'background-' + index, text: item.safeNote.slice(0, 400), label: '已解锁背景 · ' + item.name,
+    })),
+  ]
+  if (!sources.length) throw new Error('请先提供当前段落，或确认带有已审核背景的名称')
   const payload = await requestModelJson({
-    url,
-    modelName,
-    key,
-    temperature,
-    fetchImpl,
-    messages: [
-      {
-        role: 'system',
-        content: [
-          '你是阅读伴侣中的无剧透概念解释助手。',
-          '只解释用户询问的词语、历史文化背景、语言含义，或用户当前提供段落中已经出现的内容。',
-          '不得补充后续章节、人物未来关系、身份秘密、命运、结局或当前段落之外的剧情。',
-          '如果问题必须依赖后续剧情才能回答，请明确说“这涉及后续剧情，这里先不展开”。',
-          '回答使用简洁中文，优先让普通读者一遍看懂；不确定时明确说明。',
-          '只返回 JSON：{"answer":"回答","uncertain":false}。',
-        ].join('\n'),
-      },
-      {
-        role: 'user',
-        content: [
-          `书籍：${bookTitle || '未知'}`,
-          `当前阅读位置：${chapterLabel || '未知章节'}`,
-          `问题：${text}`,
-          currentExcerpt ? `当前段落：\n${currentExcerpt}` : '当前段落：未提供',
-        ].join('\n'),
-      },
-    ],
+    endpoint, model, apiKey, temperature, fetchImpl, signal,
+    messages: readingEvidenceMessages(text, sources),
   })
-  const answer = typeof payload?.answer === 'string'
-    ? payload.answer.normalize('NFKC').trim().slice(0, 4000)
-    : ''
-  if (!answer) throw new Error('模型没有返回可用的解释')
-  if (readingAnswerLooksForward(answer)) {
-    throw new Error('模型回答可能涉及后续剧情，已停止显示')
+  if (!Array.isArray(payload?.evidence) || payload.evidence.length === 0 || payload.evidence.length > 3) {
+    throw new Error('当前内容中没有足够依据，暂不补充解释')
   }
-  return storeModelResult(cacheKey, {
-    answer,
-    uncertain: payload?.uncertain === true,
+  const evidence = payload.evidence.map(item => {
+    const source = sources.find(source => source.id === item?.sourceId)
+    const quote = typeof item?.quote === 'string' ? item.quote.trim() : ''
+    if (!source || !quote || quote.length > 800 || !source.text.includes(quote)) {
+      throw new Error('模型返回了当前依据之外的内容，已停止显示')
+    }
+    return { quote, label: source.label }
   })
+  return { evidence }
 }
 
 export async function analyzeReadingExcerpt({
@@ -286,7 +255,9 @@ export async function analyzeReadingExcerpt({
   chapterLabel,
   knownEntities = [],
   fetchImpl = globalThis.fetch,
+  signal,
 }) {
+  signal?.throwIfAborted()
   const url = normalizeModelEndpoint(endpoint)
   const modelName = requiredText(model, '请填写模型名称')
   const key = requiredText(apiKey, '请填写 API Key')
@@ -311,6 +282,7 @@ export async function analyzeReadingExcerpt({
     key,
     temperature,
     fetchImpl,
+    signal,
     messages: excerptEntityLinkMessages({
       bookTitle,
       chapterLabel,
@@ -322,6 +294,7 @@ export async function analyzeReadingExcerpt({
     knownEntityIndex.map((entity) => [entity.id, entity]),
   )
   const result = normalizeModelCandidates(payload, allowedEntityIds)
+    .filter(candidate => nameOccursInExcerpt(text, candidate.name))
     .map((candidate) => {
       const matchedEntity = knownEntitiesById.get(candidate.matchedEntityId)
       if (!matchedEntity) return candidate
@@ -349,7 +322,9 @@ export async function suggestReadingPlaceQueries({
   bookTitle = '',
   chapterLabel = '',
   fetchImpl = globalThis.fetch,
+  signal,
 }) {
+  signal?.throwIfAborted()
   const url = normalizeModelEndpoint(endpoint)
   const modelName = requiredText(model, '请填写模型名称')
   const key = requiredText(apiKey, '请填写 API Key')
@@ -371,6 +346,7 @@ export async function suggestReadingPlaceQueries({
     key,
     temperature,
     fetchImpl,
+    signal,
     messages: [
           {
             role: 'system',
@@ -416,7 +392,9 @@ export async function analyzeReadingBookMetadata({
   localMetadata = {},
   uncertainFields = [],
   fetchImpl = globalThis.fetch,
+  signal,
 }) {
+  signal?.throwIfAborted()
   const url = normalizeModelEndpoint(endpoint)
   const modelName = requiredText(model, '请填写模型名称')
   const key = requiredText(apiKey, '请填写 API Key')
@@ -438,6 +416,7 @@ export async function analyzeReadingBookMetadata({
     key,
     temperature,
     fetchImpl,
+    signal,
     messages: [
       {
         role: 'system',

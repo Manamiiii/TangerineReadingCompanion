@@ -10,6 +10,7 @@ Tangerine Reading Companion（橘子阅读伴侣）是一个本地优先、尊�
 - 按章节保存进度，并记录当前已遇到的人物、地点、概念和事件。
 - 页面文本、剪贴板或截图 OCR 输入；候选由读者确认后保存。
 - 已批准资料与个人确认地点的地图展示。
+- 当前内容依据查找：模型只选择原文和已解锁背景中的原句，不自由补充剧情。
 - `safe` / `potential` / `high` 三级剧透控制。
 - 智谱、DeepSeek、MiniMax、OpenAI 和自定义兼容接口的个人 BYOK 配置。
 - JSON 备份与恢复；可直接导入 TangerineTools 全量备份中的阅读数据。

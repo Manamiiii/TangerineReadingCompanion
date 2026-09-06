@@ -1,3 +1,5 @@
+import { useAsyncTask } from '../../../platform/useAsyncTask.js'
+import { clearModelSession } from '../../model/modelClient.js'
 import { useEffect, useState } from 'react'
 import {
   BookOpen,
@@ -49,6 +51,10 @@ function BookCover({ title, author = '', cover, compact = false }) {
   )
 }
 function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
+  const metadataTask = useAsyncTask()
+  const coverTask = useAsyncTask()
+  const createTask = useAsyncTask()
+  useEffect(() => () => clearModelSession(), [])
   const [form, setForm] = useState({
     title: '',
     author: '',
@@ -73,6 +79,11 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
     ocrText: '',
     correctedFields: [],
   })
+  useEffect(() => platform.appLifecycle.subscribe(event => {
+    if (event !== 'exit') return
+    setMetadataScan({ state: 'idle', fileName: '', progress: 0, result: null, ocrText: '', correctedFields: [] })
+    setStatus('')
+  }), [])
 
   function change(key, value) {
     setForm((current) => ({ ...current, [key]: value }))
@@ -87,8 +98,10 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
       setStatus('封面图片不能超过 1.5 MB。')
       return
     }
+    const coverTicket = coverTask.start()
     const reader = new FileReader()
     reader.onload = () => {
+      if (!coverTicket.isCurrent()) return
       change('coverImage', typeof reader.result === 'string' ? reader.result : '')
     }
     reader.onerror = () => setStatus('封面图片读取失败。')
@@ -100,6 +113,8 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
     event.target.value = ''
     if (!file) return
     setStatus('')
+    const ticket = metadataTask.start()
+    clearModelSession()
     setMetadataScan({
       state: 'working',
       fileName: file.name,
@@ -112,15 +127,16 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
       let text = await recognizeImageText(
         file,
         (progress) => {
-          if (Number.isFinite(progress?.progress)) {
+          if (ticket.isCurrent() && Number.isFinite(progress?.progress)) {
             setMetadataScan((current) => ({
               ...current,
               progress: Math.round(progress.progress * 100),
             }))
           }
         },
-        { preserveLines: true },
+        { preserveLines: true, signal: ticket.signal },
       )
+      if (!ticket.isCurrent()) return
       if (!text) throw new Error('截图中没有识别出文字')
       let localDetails = extractPersonalBookMetadataDetails(text)
       if (
@@ -129,13 +145,14 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
         || localDetails.uncertainFields.length > 0
       ) {
         const retryText = await recognizeStructuredImageText(file, (progress) => {
-          if (Number.isFinite(progress?.progress)) {
+          if (ticket.isCurrent() && Number.isFinite(progress?.progress)) {
             setMetadataScan((current) => ({
               ...current,
               progress: Math.round(progress.progress * 100),
             }))
           }
-        })
+        }, { signal: ticket.signal })
+        if (!ticket.isCurrent()) return
         const retryDetails = extractPersonalBookMetadataDetails(retryText)
         const quality = (details) => (
           Object.keys(details.metadata).length * 2
@@ -161,10 +178,12 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
             apiKey: modelConfig.apiKey,
             temperature: modelConfig.temperature,
             ocrText: text,
+            signal: ticket.signal,
             localMetadata,
             uncertainFields: localDetails.uncertainFields,
           })
         : {}
+      if (!ticket.isCurrent()) return
       const metadata = mergePersonalBookMetadata(
         localMetadata,
         modelMetadata,
@@ -203,6 +222,7 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
         providerId: configured ? modelConfig.providerId : 'local',
       })
     } catch (error) {
+      if (!ticket.isCurrent()) return
       setMetadataScan({
         state: 'error',
         fileName: file.name,
@@ -227,7 +247,9 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
     setSaving(true)
     setStatus('')
     try {
-      await onCreate(form)
+      const ticket = createTask.start()
+      metadataTask.cancel()
+      await onCreate(form, { signal: ticket.signal })
       recordReadingTrialDiagnostic({
         area: 'book',
         action: 'book-create',

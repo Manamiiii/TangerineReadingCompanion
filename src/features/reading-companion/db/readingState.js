@@ -1,6 +1,7 @@
 import { readingStateKey } from '../domain/readingCompanion.js'
 import { db } from '../../../db/core.js'
 import { nowIso } from '../../../utils.js'
+import { normalizePersistedReadingState } from '../domain/persistedReadingState.js'
 
 const LEGACY_READING_STATE_PREFIX = 'readerState:'
 
@@ -27,24 +28,26 @@ async function readReadingState(editionId, migrate) {
   const record = records.reduce(newestRecord, null)
   if (!record?.value) return null
   if (record.key !== key) {
-    const value = { ...record.value, editionId }
-    delete value.sceneId
+    const value = normalizePersistedReadingState({ ...record.value, editionId })
     if (migrate) await db.meta.put({ key, value })
     return value
   }
-  return record.value
+  return normalizePersistedReadingState(record.value)
 }
 
 export async function saveReadingState(editionId, patch) {
   const key = readingStateKey(editionId)
-  const current = await db.meta.get(key)
-  const value = {
-    ...current?.value,
-    ...patch,
-    editionId,
-    updatedAt: nowIso(),
-  }
-  delete value.sceneId
-  await db.meta.put({ key, value })
-  return value
+  return db.transaction('rw', db.meta, async () => {
+    const current = await readReadingState(editionId, false) || {}
+    // Execute domain updates against the latest state inside the same transaction.
+    const changes = typeof patch === 'function' ? patch(current) : patch
+    if (!changes || typeof changes !== 'object' || typeof changes.then === 'function') {
+      throw new Error('阅读状态修改必须是同步操作')
+    }
+    const value = normalizePersistedReadingState({
+      ...current, ...changes, editionId, updatedAt: nowIso(),
+    })
+    await db.meta.put({ key, value })
+    return value
+  })
 }
