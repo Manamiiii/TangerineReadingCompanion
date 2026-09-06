@@ -1,5 +1,6 @@
+import { ReadingPanelBoundary } from '../../../components/ReadingPanelBoundary.jsx'
 import { useAsyncTask } from '../../../platform/useAsyncTask.js'
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, useEffect, useMemo, useRef, useState } from 'react'
 import { Map as MapIcon, MapPin, Maximize2, Minimize2, ScanSearch, Settings2, Sparkles } from 'lucide-react'
 import { searchReadingPlaces } from '../map/geocoding.js'
 import { suggestReadingPlaceQueries } from '../model/modelAdapter.js'
@@ -586,7 +587,7 @@ export function ReadingMapPanel({
         {lookupMessage && <p className="reader-place-lookup-message" role="status">{lookupMessage}</p>}
       </div>
       <div className="reader-map-layout">
-        <Suspense fallback={<div className="reader-map-loading">正在加载地图组件…</div>}>
+        <ReadingPanelBoundary fallback={<div className="reader-map-loading">正在加载地图组件…</div>}>
           <ReadingGeoMap
             places={spatialPlaces}
             selectedPlaceId={selectedPlaceId}
@@ -595,7 +596,7 @@ export function ReadingMapPanel({
             tiandituToken={renderedMapConfig.tiandituToken}
             isActive={isActive}
           />
-        </Suspense>
+        </ReadingPanelBoundary>
         {places.length === 0 ? (
           <div className="reader-map-background-card">
             <MapPin size={20} />

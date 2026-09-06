@@ -1,5 +1,6 @@
+import { ReadingPanelBoundary } from '../../../components/ReadingPanelBoundary.jsx'
 import { ReadingInputSource } from './ReadingInputSource.jsx'
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, useEffect, useMemo, useRef, useState } from 'react'
 import { useReadingInput } from '../input/useReadingInput.js'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, BookOpen, ClipboardPaste, Map as MapIcon, Plus, Settings2, ShieldCheck, UserRoundSearch } from 'lucide-react'
@@ -844,7 +845,7 @@ export function ReaderTool() {
         )}
 
         {activeTab === READER_TAB.FACTS && (
-          <Suspense fallback={<div className="reader-empty-state">正在加载背景资料…</div>}>
+          <ReadingPanelBoundary fallback={<div className="reader-empty-state">正在加载背景资料…</div>}>
             <ReadingFactsPanel
               key={`${readingPackage.id}:${currentChapterId}`}
               facts={readingPackage.facts}
@@ -855,11 +856,11 @@ export function ReaderTool() {
               currentChapter={currentChapter}
               chapters={readingPackage.chapters}
             />
-          </Suspense>
+          </ReadingPanelBoundary>
         )}
 
         {activeTab === READER_TAB.SETTINGS && (
-          <Suspense fallback={<div className="reader-empty-state">正在加载设置…</div>}>
+          <ReadingPanelBoundary fallback={<div className="reader-empty-state">正在加载设置…</div>}>
             <ReadingServiceSettings
               modelConfig={modelConfig}
               mapConfig={mapConfig}
@@ -870,7 +871,7 @@ export function ReaderTool() {
               onSaveModel={saveModelConfig}
               onSaveMap={saveMapConfig}
             />
-          </Suspense>
+          </ReadingPanelBoundary>
         )}
       </main>
     </div>

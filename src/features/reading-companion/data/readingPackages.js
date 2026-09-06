@@ -1,14 +1,21 @@
 import { assertReadingPackage } from '../domain/readingCompanion.js'
+import readingDataUrls from 'virtual:reading-data-urls'
 import {
   listPersonalReadingPackageEntries,
   loadPersonalReadingPackage,
 } from '../db/personalBooks.js'
 
-const catalogUrl = `${import.meta.env.BASE_URL}presets/reading-companion/catalog.json`
+function dataUrl(path) {
+  const versioned = import.meta.env.DEV ? path : readingDataUrls[path]
+  if (!versioned) throw new Error('当前页面不包含此版本资料，请刷新后重试')
+  return `${import.meta.env.BASE_URL}${versioned}`
+}
+
+const catalogUrl = dataUrl('presets/reading-companion/catalog.json')
 
 async function fetchJson(url, label) {
   const response = await fetch(url)
-  if (!response.ok) throw new Error(`${label}加载失败（${response.status}）`)
+  if (!response.ok) throw new Error(`${label}加载失败（${response.status}），可刷新页面重试；刷新会清空临时输入`)
   return response.json()
 }
 
@@ -40,6 +47,6 @@ export async function loadReadingPackageCatalog() {
 export async function loadReadingPackage(entry) {
   if (entry?.source === 'personal') return loadPersonalReadingPackage(entry.id)
   if (!entry?.path) throw new Error('阅读资料目录缺少资料包路径')
-  const url = `${import.meta.env.BASE_URL}${entry.path}`
+  const url = dataUrl(entry.path)
   return assertReadingPackage(await fetchJson(url, '阅读资料包'))
 }

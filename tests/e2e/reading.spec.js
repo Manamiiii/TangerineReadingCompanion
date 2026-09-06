@@ -146,7 +146,7 @@ test.describe('formal spoiler gates with synthetic test facts', () => {
       revealAt: { chapterId: 'chapter-02' }, riskLevel: 'high', riskCategories: ['character_relationship'],
       sourceIds: ['source-weread-edition-metadata'],
     }]
-    await page.route('**/gone-with-the-wind-zh-9787570202188.json', route => route.fulfill({ json: fixture }))
+    await page.route('**/gone-with-the-wind-zh-9787570202188*.json', route => route.fulfill({ json: fixture }))
     await openBook(page)
     await expect(page.getByText('SYNTHETIC-HIDDEN-FACT', { exact: true })).toHaveCount(0)
     await page.getByLabel('我已经读到').selectOption('chapter-02')

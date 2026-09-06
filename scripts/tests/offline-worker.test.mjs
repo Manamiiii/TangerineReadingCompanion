@@ -22,7 +22,7 @@ test('offline worker caches only build files and activates updates only on expli
       skipWaiting: () => activations++,
       clients: { claim: async () => {} },
     },
-    caches: { open: async () => cache, keys: async () => ['tangerine-reading-companion-static-test'] },
+    caches: { open: async () => cache, match: cache.match, keys: async () => ['tangerine-reading-companion-static-test'] },
     fetch: async () => { throw new Error('offline') },
   })
   let work
