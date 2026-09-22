@@ -185,8 +185,10 @@ export function ReadingGeoMap({
       } else {
         marker = L.circleMarker([latitude, longitude], markerStyle(place))
       }
+      const tooltip = document.createElement('span')
+      tooltip.textContent = place.name
       marker
-        .bindTooltip(place.name, {
+        .bindTooltip(tooltip, {
           className: 'reader-map-tooltip',
           direction: 'top',
           offset: [0, -8],

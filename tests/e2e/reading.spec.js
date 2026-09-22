@@ -98,6 +98,22 @@ test('legacy scene state migrates without deleting the original record', async (
   expect(keys).toContain(`readerState:${pkg.edition.id}`)
 })
 
+test('map renders imported place names as literal text without executing HTML', async ({ page }) => {
+  await openBook(page)
+  const name = '<img src=x onerror="window.auditExecuted=true">'
+  await seedRecords(page, [{ key: `readerState:${pkg.edition.id}`, value: {
+    editionId: pkg.edition.id, currentChapterId: 'chapter-01', observedEntities: [{
+      id: 'literal-place', name, kind: 'place', placeKind: 'real', firstSeenChapterId: 'chapter-01',
+      mapLocation: { mode: 'exact', latitude: 30, longitude: 40, label: '测试位置', providerId: 'openstreetmap' },
+    }],
+  } }])
+  await page.reload()
+  await page.getByRole('tab', { name: /地图/ }).click()
+  await expect(page.locator('.reader-map-tooltip')).toHaveText(name)
+  expect(await page.evaluate(() => window.auditExecuted)).toBeUndefined()
+  await expect(page.locator('.reader-map-tooltip img')).toHaveCount(0)
+})
+
 test('backup preview requires a prior backup and merges old reading records without clearing local data', async ({ page }) => {
   await openBook(page)
   await page.getByLabel('我已经读到').selectOption('chapter-02')

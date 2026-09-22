@@ -84,13 +84,20 @@ function newestRecord(left, right) {
 
 function normalizeReadingRecords(meta) {
   const records = new Map()
+  const canonicalKeys = new Set()
   for (const candidate of meta) {
     if (typeof candidate?.key === 'string'
       && READING_META_PREFIXES.some(prefix => candidate.key.startsWith(prefix))
       && !Object.hasOwn(candidate, 'value')) throw new Error('阅读记录缺少 value')
     if (!isReadingMetaRecord(candidate)) continue
     const normalized = normalizePersonalPackageRecord(normalizeStateRecord(candidate))
-    records.set(normalized.key, newestRecord(records.get(normalized.key), normalized))
+    const canonical = candidate.key === normalized.key
+    if (canonical && !canonicalKeys.has(normalized.key)) {
+      records.set(normalized.key, normalized)
+    } else if (canonical || !canonicalKeys.has(normalized.key)) {
+      records.set(normalized.key, newestRecord(records.get(normalized.key), normalized))
+    }
+    if (canonical) canonicalKeys.add(normalized.key)
   }
   return [...records.values()]
 }

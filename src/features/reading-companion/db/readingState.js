@@ -18,12 +18,11 @@ export async function getReadingState(editionId, { migrate = true } = {}) {
 
 async function readReadingState(editionId, migrate) {
   const key = readingStateKey(editionId)
+  const current = await db.meta.get(key)
+  if (current) return normalizePersistedReadingState(current.value)
   const records = await db.meta
-    .filter((record) => (
-      record.key === key
-      || (record.key.startsWith(LEGACY_READING_STATE_PREFIX)
-        && record.value?.editionId === editionId)
-    ))
+    .where('key').startsWith(LEGACY_READING_STATE_PREFIX)
+    .filter(record => record.value?.editionId === editionId)
     .toArray()
   const record = records.reduce(newestRecord, null)
   if (!record?.value) return null

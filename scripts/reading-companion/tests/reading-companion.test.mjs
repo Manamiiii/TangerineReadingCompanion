@@ -1287,6 +1287,28 @@ test('standalone model and map settings migrate legacy keys without rewriting th
   )
 })
 
+test('cleared model credentials cannot be restored from legacy profile or generic fallback', () => {
+  const browserWindow = fakeBrowserWindow({ local: { readerModelProvider: 'deepseek' }, session: {
+    'readerModelApiKey:deepseek': 'old-profile-key', readerModelApiKey: 'old-generic-key',
+  } })
+  const config = loadStoredModelConfig('', true, browserWindow)
+  saveStoredModelConfig({ ...config, apiKey: '' }, browserWindow)
+  assert.equal(loadStoredModelConfig('', true, browserWindow).apiKey, '')
+  assert.equal(loadStoredModelConfig('deepseek', true, browserWindow).apiKey, '')
+})
+
+test('model cannot link an excerpt name to an unrelated allowed entity', async () => {
+  const candidates = await analyzeReadingExcerpt({
+    endpoint: 'https://model.example/chat/completions', model: 'test', apiKey: 'test', excerpt: 'Alice spoke.',
+    knownEntities: [{ id: 'bob', name: 'Bob', kind: 'person', aliases: [] }],
+    fetchImpl: async () => ({ ok: true, json: async () => ({ choices: [{ message: { content: JSON.stringify({ candidates: [
+      { name: 'Alice', kind: 'person', matchedEntityId: 'bob' },
+    ] }) } }] }) }),
+  })
+  assert.equal(candidates[0].name, 'Alice')
+  assert.equal(candidates[0].matchedEntityId, null)
+})
+
 test('runtime model analysis stays a reader-confirmed candidate adapter', async () => {
   let request
   const knownEntities = [{

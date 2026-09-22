@@ -27,9 +27,9 @@ const LEGACY_MODEL_STORAGE_KEYS = Object.freeze({
 function readStoredValue(storage, key, legacyKey, allowLegacy) {
   const current = storage.getItem(key)
   if (current !== null) return current
-  if (!allowLegacy) return ''
+  if (!allowLegacy) return null
   const legacy = storage.getItem(legacyKey)
-  if (legacy === null) return ''
+  if (legacy === null) return null
   storage.setItem(key, legacy)
   return legacy
 }
@@ -90,14 +90,14 @@ export function loadStoredModelConfig(
       readingModelApiKeyStorageKey(selectedProviderId),
       legacyReadingModelApiKeyStorageKey(selectedProviderId),
       useReadingLegacy,
-    ) || (useReadingLegacy && legacyMatchesProvider
+    ) ?? (useReadingLegacy && legacyMatchesProvider
       ? readStoredValue(
           sessionStorage,
           MODEL_STORAGE_KEYS.apiKey,
           LEGACY_MODEL_STORAGE_KEYS.apiKey,
           true,
         )
-      : ''),
+      : '') ?? '',
   }
 }
 
@@ -137,8 +137,8 @@ export function saveStoredModelConfig(
     browserWindow.sessionStorage.setItem(readingModelApiKeyStorageKey(providerId), normalized.apiKey)
     browserWindow.sessionStorage.setItem(MODEL_STORAGE_KEYS.apiKey, normalized.apiKey)
   } else {
-    browserWindow.sessionStorage.removeItem(readingModelApiKeyStorageKey(providerId))
-    browserWindow.sessionStorage.removeItem(MODEL_STORAGE_KEYS.apiKey)
+    browserWindow.sessionStorage.setItem(readingModelApiKeyStorageKey(providerId), '')
+    browserWindow.sessionStorage.setItem(MODEL_STORAGE_KEYS.apiKey, '')
   }
   return normalized
 }

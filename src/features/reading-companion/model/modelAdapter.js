@@ -297,7 +297,11 @@ export async function analyzeReadingExcerpt({
     .filter(candidate => nameOccursInExcerpt(text, candidate.name))
     .map((candidate) => {
       const matchedEntity = knownEntitiesById.get(candidate.matchedEntityId)
-      if (!matchedEntity) return candidate
+      const normalizeName = value => typeof value === 'string'
+        ? value.normalize('NFKC').trim().toLocaleLowerCase() : ''
+      const matchesName = matchedEntity && [matchedEntity.name, matchedEntity.originalName, ...(matchedEntity.aliases || [])]
+        .some(name => normalizeName(name) === normalizeName(candidate.name))
+      if (!matchesName) return { ...candidate, matchedEntityId: null }
       return {
         ...candidate,
         kind: matchedEntity.kind,

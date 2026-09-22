@@ -25,6 +25,19 @@ test.after(async () => {
   db.close()
 })
 
+test('canonical imported state wins over retained newer legacy records in reads and exports', async () => {
+  const legacy = { key: 'readerState:old-scene:edition', value: { editionId: 'edition', currentChapterId: 'chapter-09', updatedAt: '2026-09-20T00:00:00Z' } }
+  const canonical = { key: 'readerState:edition', value: { editionId: 'edition', currentChapterId: 'chapter-02', updatedAt: '2026-09-10T00:00:00Z' } }
+  await db.meta.put(legacy)
+  await importReadingData({ format: READING_BACKUP_FORMAT, schemaVersion: 1, data: { meta: [canonical] } })
+  assert.equal((await getReadingState('edition')).currentChapterId, 'chapter-02')
+  assert.deepEqual(await db.meta.get(legacy.key), legacy)
+  assert.equal((await exportReadingData()).data.meta[0].value.currentChapterId, 'chapter-02')
+  for (const meta of [[legacy, canonical], [canonical, legacy]]) {
+    assert.equal(readingRecordsFromPayload({ format: READING_BACKUP_FORMAT, schemaVersion: 1, data: { meta } }).records[0].value.currentChapterId, 'chapter-02')
+  }
+})
+
 test('concurrent progress, name and note commands preserve each other', async () => {
   const chapters = [{ id: 'chapter-01' }, { id: 'chapter-02' }]
   const entry = id => ({ id, name: id, kind: 'person', firstSeenChapterId: 'chapter-01' })
