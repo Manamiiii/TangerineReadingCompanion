@@ -11,6 +11,13 @@ import { answerReadingQuestion } from '../../src/features/reading-companion/mode
 import { scanBookMetadata, mergeScannedMetadata } from '../../src/features/reading-companion/input/bookMetadataScan.js'
 import { assertReadingCatalog } from '../../src/features/reading-companion/domain/readingCatalog.js'
 import { readingDiagnosticErrorCode } from '../../src/features/reading-companion/domain/trialDiagnostics.js'
+import { extractPersonalBookMetadataDetails } from '../../src/features/reading-companion/domain/personalBooks.js'
+
+test('explicit author and translator values preserve characters that resemble role labels', () => {
+  const { metadata } = extractPersonalBookMetadataDetails('书名：测试书\n作者：测试作者\n译者：张译、李和平')
+  assert.equal(metadata.author, '测试作者')
+  assert.deepEqual(metadata.translators, ['张译', '李和平'])
+})
 
 test('GeoJSON validates nesting, ring closure, minimum points and bounded input', () => {
   for (const geometry of [

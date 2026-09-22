@@ -4,6 +4,7 @@ import { ReadingInputSource } from './ReadingInputSource.jsx'
 import { lazy, useEffect, useMemo, useRef, useState } from 'react'
 import { useReadingInput } from '../input/useReadingInput.js'
 import { useLiveQuery } from 'dexie-react-hooks'
+import { db } from '../../../db/core.js'
 import { ArrowLeft, BookOpen, ClipboardPaste, Map as MapIcon, Plus, Settings2, ShieldCheck, UserRoundSearch } from 'lucide-react'
 import { getReadingState, saveReadingState } from '../db/readingState.js'
 import { listPersonalReadingPackageEntries, deletePersonalReadingPackage, savePersonalReadingPackage, updatePersonalReadingPackage } from '../db/personalBooks.js'
@@ -118,9 +119,23 @@ export function ReaderTool() {
     writeReaderLocation({}, { replace: true })
   }, [catalog, selectedPackageId])
 
+  const selectedEntrySnapshot = useMemo(
+    () => JSON.stringify(catalog?.find(item => item.id === selectedPackageId) || null),
+    [catalog, selectedPackageId],
+  )
+  const selectedPersonalRecord = useLiveQuery(
+    () => selectedPackageId ? db.meta.get(`readerPersonalPackage:${selectedPackageId}`) : null,
+    [selectedPackageId],
+  )
+  const selectedPersonalRevision = useMemo(
+    () => JSON.stringify(selectedPersonalRecord?.value || null),
+    [selectedPersonalRecord],
+  )
   useEffect(() => {
-    const entry = catalog?.find((item) => item.id === selectedPackageId)
+    const entry = JSON.parse(selectedEntrySnapshot)
     if (!entry) return undefined
+    // Wait for the selected personal record; catalog refresh handles deletions.
+    if (entry.source === 'personal' && selectedPersonalRevision === 'null') return undefined
     let active = true
     setReadingPackage(null)
     setLoadError('')
@@ -132,7 +147,7 @@ export function ReaderTool() {
         if (active) setLoadError(error?.message || '无法读取阅读资料包')
       })
     return () => { active = false }
-  }, [catalog, selectedPackageId])
+  }, [selectedEntrySnapshot, selectedPersonalRevision])
 
   useEffect(() => {
     if (!readingPackage) return

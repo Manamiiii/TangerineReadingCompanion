@@ -105,18 +105,15 @@ export function extractPersonalBookMetadataDetails(value) {
     || lines.find((line) => /(?:出版社|出版公司)$/u.test(line))
   const slashLine = lines.find((line) => /[/／]/u.test(line) && /(?:译|著)/u.test(line))
   const [authorPart = '', translatorPart = ''] = slashLine?.split(/[/／]/u) || []
-  const author = (
-    labeledValue('作者', '著者')
-    || authorPart
-  ).trim()
+  const labeledAuthor = labeledValue('作者', '著者')
+  const author = labeledAuthor || authorPart.trim()
     .replace(/^(?:作者|著者)\s*[:：]?\s*/u, '')
     .replace(/\s*(?:著|作者)$/u, '')
     .trim()
-  const translatorText = labeledValue('译者', '翻译', '译')
-    || translatorPart
+  const labeledTranslators = labeledValue('译者', '翻译', '译')
+  const translatorText = labeledTranslators || translatorPart.replace(/\s+译\s*$/u, '')
   const translators = translatorText
-    .replace(/\s*译.*$/u, '')
-    .split(/[、,，和]/u)
+    .split(/[、,，]/u)
     .map((name) => name.trim())
     .filter(Boolean)
   const ignoredTitle = /^(?:简介|版权|目录|封面|字数|阅读|已完成|作者|译者|出版社|出版时间|ISBN)/iu

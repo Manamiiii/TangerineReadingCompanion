@@ -168,6 +168,48 @@ test('deleting a personal book in another tab returns its open reader to the lib
   await second.close()
 })
 
+test('adding an unrelated book in another tab preserves the current reading input', async ({ page, context }) => {
+  await openBook(page)
+  await excerpt(page).fill('当前阅读中的临时原文')
+  const second = await context.newPage()
+  await second.goto('/')
+  await second.getByRole('button', { name: '添加书籍', exact: true }).click()
+  await second.getByLabel('书名 *', { exact: true }).fill('另一本书')
+  await second.getByLabel('作者 *', { exact: true }).fill('测试作者')
+  await second.getByRole('checkbox', { name: /创建后用 AI/ }).uncheck()
+  await second.getByRole('button', { name: '创建并开始阅读', exact: true }).click()
+  await expect(second.getByRole('heading', { name: '另一本书', exact: true })).toBeVisible()
+  await expect(excerpt(page)).toHaveValue('当前阅读中的临时原文')
+  await second.close()
+})
+
+test('importing changed chapters updates the open personal book even when catalog summary is unchanged', async ({ page, context }) => {
+  await openBook(page)
+  const personal = createPersonalReadingPackage({ packageId: 'import-update', bookId: 'b', editionId: 'e', title: '导入更新测试', author: '作者', chapterCount: 2 })
+  await seedRecords(page, [{ key: 'readerPersonalPackage:import-update', value: { package: personal } }])
+  await page.reload()
+  await page.goto('/#book=import-update&tab=input')
+  await expect(page.getByRole('heading', { name: '导入更新测试', exact: true })).toBeVisible()
+  await excerpt(page).fill('旧资料下的临时原文')
+  personal.chapters[0].label = '修订后的第一章'
+  const payload = { format: 'tangerine-reading-companion-backup', schemaVersion: 1, data: { meta: [
+    { key: 'readerPersonalPackage:import-update', value: { package: personal } },
+  ] } }
+  const second = await context.newPage()
+  await second.goto('/')
+  await second.getByLabel('选择阅读备份').setInputFiles({ name: 'updated.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(payload)) })
+  const dialog = second.getByRole('dialog', { name: '备份导入预览' })
+  const download = second.waitForEvent('download')
+  await dialog.getByRole('button', { name: '先下载本机备份' }).click()
+  await download
+  await dialog.getByRole('checkbox').check()
+  await dialog.getByRole('button', { name: '确认合并导入' }).click()
+  await expect(second.getByRole('dialog', { name: '导入结果' })).toBeVisible()
+  await expect(page.getByLabel('我已经读到').locator('option:checked')).toHaveText('修订后的第一章')
+  await expect(excerpt(page)).toHaveValue('')
+  await second.close()
+})
+
 test('backup preview requires a prior backup and merges old reading records without clearing local data', async ({ page }) => {
   await openBook(page)
   await page.getByLabel('我已经读到').selectOption('chapter-02')
