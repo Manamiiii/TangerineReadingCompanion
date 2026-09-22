@@ -1,6 +1,7 @@
+import { normalizeReadingInput } from '../../../platform/readingInput.js'
 import { useAsyncTask } from '../../../platform/useAsyncTask.js'
 import { clearModelSession } from '../../model/modelClient.js'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   BookOpen,
   Image,
@@ -85,7 +86,10 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
     setStatus('')
   }), [])
 
+  const fieldEdits = useRef({})
+
   function change(key, value) {
+    fieldEdits.current[key] = (fieldEdits.current[key] || 0) + 1
     setForm((current) => ({ ...current, [key]: value }))
     setStatus('')
   }
@@ -104,7 +108,7 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
       if (!coverTicket.isCurrent()) return
       change('coverImage', typeof reader.result === 'string' ? reader.result : '')
     }
-    reader.onerror = () => setStatus('封面图片读取失败。')
+    reader.onerror = () => { if (coverTicket.isCurrent()) setStatus('封面图片读取失败。') }
     reader.readAsDataURL(file)
   }
 
@@ -114,6 +118,8 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
     if (!file) return
     setStatus('')
     const ticket = metadataTask.start()
+    const editsAtStart = { ...fieldEdits.current }
+    const warnings = []
     clearModelSession()
     setMetadataScan({
       state: 'working',
@@ -124,6 +130,7 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
       correctedFields: [],
     })
     try {
+      normalizeReadingInput({ kind: 'image', source: 'file', blob: file, name: file.name })
       let text = await recognizeImageText(
         file,
         (progress) => {
@@ -144,6 +151,7 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
         || !localDetails.metadata.translators?.length
         || localDetails.uncertainFields.length > 0
       ) {
+        try {
         const retryText = await recognizeStructuredImageText(file, (progress) => {
           if (ticket.isCurrent() && Number.isFinite(progress?.progress)) {
             setMetadataScan((current) => ({
@@ -165,13 +173,17 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
           localDetails = retryDetails
         }
       }
+        catch { ticket.signal.throwIfAborted(); warnings.push('增强识别失败，保留初次识别结果。') }
+      }
       const localMetadata = localDetails.metadata
       const configured = Boolean(
         modelConfig.endpoint.trim()
         && modelConfig.model.trim()
         && modelConfig.apiKey.trim(),
       )
-      const modelMetadata = configured
+      let modelMetadata = {}
+      try {
+      modelMetadata = configured
         ? await analyzeReadingBookMetadata({
             endpoint: modelConfig.endpoint,
             model: modelConfig.model,
@@ -183,6 +195,7 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
             uncertainFields: localDetails.uncertainFields,
           })
         : {}
+      } catch { ticket.signal.throwIfAborted(); warnings.push('模型整理失败，保留本机识别结果。') }
       if (!ticket.isCurrent()) return
       const metadata = mergePersonalBookMetadata(
         localMetadata,
@@ -195,17 +208,9 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
         return JSON.stringify(localValue ?? null) !== JSON.stringify(finalValue ?? null)
           && finalValue
       })
-      setForm((current) => ({
-        ...current,
-        title: metadata.title || current.title,
-        author: metadata.author || current.author,
-        translators: metadata.translators?.join('、') || current.translators,
-        publisher: metadata.publisher || current.publisher,
-        isbn: metadata.isbn || current.isbn,
-        publishedAt: metadata.publishedAt || current.publishedAt,
-        originalLanguage: metadata.originalLanguage || current.originalLanguage,
-        chapterCount: metadata.chapterCount || current.chapterCount,
-      }))
+      setForm(current => ({ ...current, ...Object.fromEntries(Object.entries(metadata)
+        .filter(([key, value]) => value && (fieldEdits.current[key] || 0) === (editsAtStart[key] || 0))
+        .map(([key, value]) => [key, key === 'translators' ? value.join('、') : value])) }))
       setMetadataScan({
         state: 'done',
         fileName: file.name,
@@ -214,7 +219,7 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
         ocrText: text,
         correctedFields,
       })
-      setStatus('已填入识别到的书籍信息，请核对后创建。')
+      setStatus([...warnings, '已填入识别信息，并保留识别期间的手工修改，请核对后创建。'].join(''))
       recordReadingTrialDiagnostic({
         area: 'book',
         action: 'book-metadata-scan',

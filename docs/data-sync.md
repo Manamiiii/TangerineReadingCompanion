@@ -8,7 +8,7 @@
 meta: 'key'
 ```
 
-个人书籍使用 `readerPersonalPackage:` 前缀，阅读进度与个人记忆使用 `readerState:` 前缀。模型供应商地址、模型 ID 与地图设置使用 `tangerine-reading-companion:*` 命名空间保存在 `localStorage`，API Key 位于同一命名空间的 `sessionStorage`，均不属于备份。首次升级会复制旧版阅读配置但不删除旧键，之后只写新命名空间。清空模型 API Key 会在当前会话保留空值标记，防止旧配置重新恢复密钥。
+个人书籍使用 `readerPersonalPackage:` 前缀，阅读进度与个人记忆使用 `readerState:` 前缀。模型供应商地址、模型 ID 与地图供应商选择使用 `tangerine-reading-companion:*` 命名空间保存在 `localStorage`，模型与地图 API Key 位于同一命名空间的 `sessionStorage`，均不属于备份。首次升级会复制旧版普通阅读配置但不删除旧键；旧地图 Key 迁入 sessionStorage 后移除 localStorage 中的新旧副本，之后只写新命名空间。清空模型 API Key 会在当前会话保留空值标记，防止旧配置重新恢复密钥。
 
 ## 专用备份
 

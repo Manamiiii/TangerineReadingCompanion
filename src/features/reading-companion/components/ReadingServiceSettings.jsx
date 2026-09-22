@@ -88,7 +88,7 @@ export function ReadingServiceSettings({
 
   function saveModel(event) {
     event.preventDefault()
-    onSaveModel(modelDraft)
+    try { onSaveModel(modelDraft) } catch { setMessage('配置保存失败，请检查浏览器存储权限。'); return }
     setMessage(
       modelDraft.apiKey.trim()
         ? `已切换到${selectedModelProvider.label}，请回到“阅读输入”用当前段落验证。`
@@ -98,7 +98,7 @@ export function ReadingServiceSettings({
 
   function saveMap(event) {
     event.preventDefault()
-    onSaveMap(mapDraft)
+    try { onSaveMap(mapDraft) } catch { setMessage('配置保存失败，请检查浏览器存储权限。'); return }
     setMessage(
       mapDraft.providerId === READING_MAP_PROVIDER.DOMESTIC
         ? (mapDraft.tiandituToken.trim()
@@ -280,7 +280,7 @@ export function ReadingServiceSettings({
             </a>
           </div>
         </details>
-        <p className="reader-settings-storage">天地图 Key 保存在当前浏览器。</p>
+        <p className="reader-settings-storage">天地图 Key 仅保存在当前浏览器会话，关闭会话后需重新填写。</p>
       </section>
       <section className="reader-panel reader-settings-card reader-feedback-card">
         <div className="reader-panel-heading">

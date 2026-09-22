@@ -59,15 +59,14 @@ export async function deletePersonalReadingPackage(packageId) {
 }
 
 export async function listPersonalReadingPackageEntries() {
-  const records = await db.meta
-    .filter((record) => record.key.startsWith(PERSONAL_READING_PACKAGE_KEY_PREFIX))
-    .toArray()
-  return records
-    .map((record) => record.value?.package)
-    .filter(Boolean)
-    .map((pkg) => ({
-      ...personalCatalogEntry(assertReadingPackage(pkg)),
-      createdAt: records.find((record) => record.value?.package?.id === pkg.id)?.value?.createdAt,
-    }))
-    .sort((left, right) => String(left.createdAt || '').localeCompare(String(right.createdAt || '')))
+  const records = await db.meta.where('key').startsWith(PERSONAL_READING_PACKAGE_KEY_PREFIX).toArray()
+  const entries = []
+  const warnings = []
+  for (const record of records) {
+    try { entries.push({ ...personalCatalogEntry(assertReadingPackage(record.value?.package)), createdAt: record.value.createdAt }) }
+    catch { warnings.push('一本个人书籍数据异常，已隔离；原记录保留，请勿清理浏览器数据。') }
+  }
+  entries.sort((left, right) => String(left.createdAt || '').localeCompare(String(right.createdAt || '')))
+  entries.warnings = warnings
+  return entries
 }

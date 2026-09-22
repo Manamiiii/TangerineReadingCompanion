@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Database, Download, Upload } from 'lucide-react'
 import { Modal } from './common.jsx'
-import { exportReadingData, importReadingData, previewReadingImport } from '../readingDataTransfer.js'
+import { exportReadingData, importReadingData, previewReadingImport, READING_BACKUP_MAX_BYTES } from '../readingDataTransfer.js'
 import { exportJsonFile, platform } from '../platform/index.js'
 import { inspectStorage, requestPersistentStorage, lastBackupRequest, recordBackupRequest } from '../platform/storageStatus.js'
 
@@ -27,7 +27,7 @@ export function ReadingDataManager() {
       setLastBackup(recordBackupRequest())
       setBackupRequested(true)
       setNotice(`已发起 ${payload.data.meta.length} 条阅读记录的备份下载，请确认文件已保存。`)
-    } catch { setError('备份导出失败，本机数据未修改。请检查存储和下载权限。') }
+    } catch (cause) { setError(cause.message || '备份导出失败，本机数据未修改。请检查存储和下载权限。') }
     finally { setBusy(false) }
   }
 
@@ -42,7 +42,7 @@ export function ReadingDataManager() {
     setBackupRequested(false)
     setBackupConfirmed(false)
     try {
-      if (file.size > 50 * 1024 * 1024) throw new Error('备份超过 50 MB，请使用较小的阅读专用备份。')
+      if (file.size > READING_BACKUP_MAX_BYTES) throw new Error('备份超过 50 MB，请使用较小的阅读专用备份。')
       const payload = JSON.parse(await file.text())
       const preview = await previewReadingImport(payload)
       setPending({ payload, preview })
@@ -56,7 +56,7 @@ export function ReadingDataManager() {
     setError('')
     try {
       const result = await importReadingData(pending.payload, { expectedSnapshot: pending.preview.snapshot })
-      setNotice(`合并完成：新增 ${result.added} 条，覆盖 ${result.replaced} 条，保留 ${result.retained} 条。刷新后使用导入的数据。`)
+      setNotice(`合并完成：新增 ${result.added} 条，覆盖 ${result.replaced} 条，保留 ${result.retained} 条。导入数据已写入本机；当前阅读进度可能已更新。`)
       setPending({ result })
     } catch (cause) { setError(cause.message) }
     finally { setBusy(false) }
@@ -81,6 +81,7 @@ export function ReadingDataManager() {
         <p>来源：{pending.preview.source === 'tangerine-tools' ? 'TangerineTools（仅提取阅读数据）' : '阅读伴侣'}</p>
         <p>新增 {pending.preview.added} 条 · 覆盖 {pending.preview.replaced} 条 · 保留本机其他 {pending.preview.retained} 条</p>
         <p>同 key 的整条记录会被覆盖，不合并其内部字段；备份中缺少的本机记录不会删除。</p>
+        <p role="note">合并立即生效。若当前书籍或进度被更新，临时原文、截图及模型结果会清空；请先自行保留需要的内容。</p>
         <button type="button" className="btn" disabled={busy} onClick={downloadBackup}>先下载本机备份</button>
         <label className="reader-backup-confirm"><input type="checkbox" disabled={!backupRequested || busy} checked={backupConfirmed} onChange={event => setBackupConfirmed(event.target.checked)} />我已确认导入前备份文件保存成功</label>
         <button type="button" className="btn btn-primary" disabled={!backupConfirmed || busy} onClick={applyImport}>确认合并导入</button>

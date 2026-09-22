@@ -61,6 +61,8 @@ test('personal preparation merges concurrent additions and cannot resurrect a de
   ))))
   assert.deepEqual((await loadPersonalReadingPackage(pkg.id)).onDemandEntities.map(item => item.name), ['Alpha', 'Beta'])
   await deletePersonalReadingPackage(pkg.id)
+  await assert.rejects(saveReadingState('edition', { currentChapterId: 'chapter-01' }, { personalPackageId: pkg.id }), /不存在|移除/)
+  assert.equal(await db.meta.get('readerState:edition'), undefined)
   await assert.rejects(updatePersonalReadingPackage(pkg.id, () => pkg), /不存在|移除/)
   assert.equal(await db.meta.get('readerPersonalPackage:personal'), undefined)
 })

@@ -490,7 +490,7 @@ export function ObservedEntitiesPanel({
               </div>
             </section>
 
-            {selectedEntity.kind === OBSERVED_ENTITY_KIND.PLACE && !selectedMatch && (
+            {selectedEntity.kind === OBSERVED_ENTITY_KIND.PLACE && (!selectedMatch || selectedMatch.sourceIds?.includes('source-personal-model-preparation')) && (
               <section className="reader-memory-section">
                 <div className="reader-memory-section-heading">
                   <div>

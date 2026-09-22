@@ -114,6 +114,23 @@ test('map renders imported place names as literal text without executing HTML', 
   await expect(page.locator('.reader-map-tooltip img')).toHaveCount(0)
 })
 
+test('blocked configuration storage does not prevent opening a book', async ({ page }) => {
+  await page.addInitScript(() => {
+    for (const key of ['localStorage', 'sessionStorage']) Object.defineProperty(window, key, { get() { throw new DOMException('Denied', 'SecurityError') } })
+  })
+  await openBook(page)
+  await expect(page.getByRole('tab', { name: /阅读输入/ })).toBeVisible()
+})
+
+test('a malformed personal package is isolated without hiding the library', async ({ page }) => {
+  await openBook(page)
+  await seedRecords(page, [{ key: 'readerPersonalPackage:broken', value: { package: { id: 'broken', personal: true } } }])
+  await page.goto('/')
+  await expect(page.getByRole('heading', { name: '我的书架' })).toBeVisible()
+  await expect(page.getByText(/一本个人书籍数据异常/)).toBeVisible()
+  await openBook(page)
+})
+
 test('backup preview requires a prior backup and merges old reading records without clearing local data', async ({ page }) => {
   await openBook(page)
   await page.getByLabel('我已经读到').selectOption('chapter-02')

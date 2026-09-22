@@ -5,7 +5,7 @@ import { useReadingInput } from '../input/useReadingInput.js'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { ArrowLeft, BookOpen, ClipboardPaste, Map as MapIcon, Plus, Settings2, ShieldCheck, UserRoundSearch } from 'lucide-react'
 import { getReadingState, saveReadingState } from '../db/readingState.js'
-import { deletePersonalReadingPackage, savePersonalReadingPackage, updatePersonalReadingPackage } from '../db/personalBooks.js'
+import { listPersonalReadingPackageEntries, deletePersonalReadingPackage, savePersonalReadingPackage, updatePersonalReadingPackage } from '../db/personalBooks.js'
 import { loadReadingPackage, loadReadingPackageCatalog } from '../data/readingPackages.js'
 import { generateId } from '../../../utils.js'
 import { preparePersonalBookKnowledge } from '../model/modelAdapter.js'
@@ -51,6 +51,8 @@ function ReaderError({ message }) {
 }
 
 export function ReaderTool() {
+  const personalEntries = useLiveQuery(() => listPersonalReadingPackageEntries().catch(() => Object.assign([], { warnings: ['本机书架读取失败，请检查存储权限。'] })), [])
+  const [catalogRevision, setCatalogRevision] = useState(0)
   const chapterSave = useRef(0)
   const [catalog, setCatalog] = useState(null)
   const [selectedPackageId, setSelectedPackageId] = useState(
@@ -81,7 +83,7 @@ export function ReaderTool() {
 
   useEffect(() => {
     let active = true
-    loadReadingPackageCatalog()
+    loadReadingPackageCatalog(personalEntries)
       .then((entries) => {
         if (!active) return
         setCatalog(entries)
@@ -90,7 +92,7 @@ export function ReaderTool() {
         if (active) setLoadError(error?.message || '无法读取阅读资料目录')
       })
     return () => { active = false }
-  }, [])
+  }, [personalEntries, catalogRevision])
 
   useEffect(() => {
     function applyBrowserLocation() {
@@ -162,7 +164,9 @@ export function ReaderTool() {
     [editionId],
   )
   const defaultChapterId = readingPackage?.chapters[0]?.id || ''
-  const currentChapterId = pendingChapterId || savedState?.currentChapterId || defaultChapterId
+  const storedChapterId = pendingChapterId || savedState?.currentChapterId || defaultChapterId
+  const invalidChapter = readingPackage && !readingPackage.chapters.some(chapter => chapter.id === storedChapterId)
+  const currentChapterId = invalidChapter ? defaultChapterId : storedChapterId
   useEffect(() => { clearInput(); setMapFocus(null) }, [editionId, currentChapterId, clearInput])
   const currentChapter = readingPackage?.chapters.find((chapter) => chapter.id === currentChapterId)
   const progressPercent = readingPackage && currentChapter
@@ -269,7 +273,7 @@ export function ReaderTool() {
         packageId: readingPackage.id,
         bookId: readingPackage.book.id,
         currentChapterId: chapterId,
-      })
+      }, { personalPackageId: readingPackage.personal ? readingPackage.id : undefined })
       if (ticket === chapterSave.current) setSaveState('saved')
     } catch {
       if (ticket === chapterSave.current) setSaveState('error')
@@ -285,7 +289,7 @@ export function ReaderTool() {
         packageId: readingPackage.id,
         bookId: readingPackage.book.id,
         observedEntities: update(current.observedEntities || []),
-      }))
+      }), { personalPackageId: readingPackage.personal ? readingPackage.id : undefined })
       setSaveState('saved')
     } catch (error) {
       setSaveState('error')
@@ -395,7 +399,7 @@ export function ReaderTool() {
       `删除个人书籍“${entry.title}”？这会同时删除该版本的进度、已遇到名称和个人地图位置，且无法撤销。`,
     )
     if (!confirmed) return
-    await deletePersonalReadingPackage(entry.id)
+    try { await deletePersonalReadingPackage(entry.id) } catch { setLoadError('个人书籍删除失败，本机数据未完成修改，请重试。'); return }
     setCatalog((current) => (current || []).filter((item) => item.id !== entry.id))
     if (lastPackageId === entry.id) {
       saveLastReadingPackageId('')
@@ -535,10 +539,12 @@ export function ReaderTool() {
     return true
   }
 
-  if (loadError) return <ReaderError message={loadError} />
+  if (loadError) return <><ReaderError message={loadError} /><button className="btn" onClick={() => { setLoadError(''); setSelectedPackageId(''); setReadingPackage(null); writeReaderLocation({}); setCatalogRevision(value => value + 1) }}>返回书架并重试</button></>
   if (!catalog) return <LoadingPanel message="正在加载阅读书架…" />
   if (!selectedPackageId) {
     return (
+      <>
+      {catalog.warnings?.map((warning, index) => <p key={index} role="alert">{warning} <button className="btn" onClick={() => setCatalogRevision(value => value + 1)}>重试</button></p>)}
       <ReadingLibrary
         catalog={catalog}
         continuePackageId={lastPackageId}
@@ -547,6 +553,7 @@ export function ReaderTool() {
         onDelete={deletePersonalBook}
         modelConfig={modelConfig}
       />
+      </>
     )
   }
   if (!readingPackage) return <LoadingPanel message="正在加载阅读资料…" />
@@ -606,6 +613,7 @@ export function ReaderTool() {
           <small>{editionSummary}</small>
         </div>
         <div className="reader-progress-card">
+          {invalidChapter && <p role="alert">保存的章节不在当前目录中，暂按第一章限制显示；请重新选择实际进度。</p>}
           <label>
             <span>我已经读到</span>
             <select value={currentChapterId} onChange={(event) => changeChapter(event.target.value)}>

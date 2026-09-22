@@ -34,7 +34,7 @@ function readStoredValue(storage, key, legacyKey, allowLegacy) {
   return legacy
 }
 
-export function loadStoredModelConfig(
+function readModelConfig(
   providerId = '',
   allowLegacy = true,
   browserWindow = window,
@@ -99,6 +99,11 @@ export function loadStoredModelConfig(
         )
       : '') ?? '',
   }
+}
+
+export function loadStoredModelConfig(providerId = '', allowLegacy = true, browserWindow = globalThis.window) {
+  try { return readModelConfig(providerId, allowLegacy, browserWindow) }
+  catch { return { ...readingModelProviderDefaults(providerId || READING_MODEL_PROVIDER.ZHIPU), apiKey: '' } }
 }
 
 export function saveStoredModelConfig(

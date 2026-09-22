@@ -56,32 +56,28 @@ function readMigratedMapValue(storage, key, legacyKey) {
   return legacy
 }
 
-export function loadStoredReadingMapConfig(storage = window.localStorage) {
-  return {
-    providerId: normalizeReadingMapProvider(readMigratedMapValue(
-      storage,
-      READING_MAP_STORAGE_KEYS.provider,
-      LEGACY_READING_MAP_STORAGE_KEYS.provider,
-    )),
-    tiandituToken: readMigratedMapValue(
-      storage,
-      READING_MAP_STORAGE_KEYS.tiandituToken,
-      LEGACY_READING_MAP_STORAGE_KEYS.tiandituToken,
-    ),
-  }
+export function loadStoredReadingMapConfig(storage, session) {
+  try {
+    storage ??= window.localStorage
+    session ??= window.sessionStorage
+    const providerId = normalizeReadingMapProvider(readMigratedMapValue(storage, READING_MAP_STORAGE_KEYS.provider, LEGACY_READING_MAP_STORAGE_KEYS.provider))
+    let tiandituToken = session.getItem(READING_MAP_STORAGE_KEYS.tiandituToken)
+    if (tiandituToken === null) {
+      tiandituToken = storage.getItem(READING_MAP_STORAGE_KEYS.tiandituToken) ?? storage.getItem(LEGACY_READING_MAP_STORAGE_KEYS.tiandituToken) ?? ''
+      session.setItem(READING_MAP_STORAGE_KEYS.tiandituToken, tiandituToken)
+    }
+    storage.removeItem(READING_MAP_STORAGE_KEYS.tiandituToken)
+    storage.removeItem(LEGACY_READING_MAP_STORAGE_KEYS.tiandituToken)
+    return { providerId, tiandituToken }
+  } catch { return { providerId: READING_MAP_PROVIDER.INTERNATIONAL, tiandituToken: '' } }
 }
 
-export function saveStoredReadingMapConfig(nextConfig, storage = window.localStorage) {
-  const normalized = {
-    providerId: normalizeReadingMapProvider(nextConfig.providerId),
-    tiandituToken: nextConfig.tiandituToken.trim(),
-  }
+export function saveStoredReadingMapConfig(nextConfig, storage = window.localStorage, session = window.sessionStorage) {
+  const normalized = { providerId: normalizeReadingMapProvider(nextConfig.providerId), tiandituToken: nextConfig.tiandituToken.trim() }
   storage.setItem(READING_MAP_STORAGE_KEYS.provider, normalized.providerId)
-  if (normalized.tiandituToken) {
-    storage.setItem(READING_MAP_STORAGE_KEYS.tiandituToken, normalized.tiandituToken)
-  } else {
-    storage.removeItem(READING_MAP_STORAGE_KEYS.tiandituToken)
-  }
+  session.setItem(READING_MAP_STORAGE_KEYS.tiandituToken, normalized.tiandituToken)
+  storage.removeItem(READING_MAP_STORAGE_KEYS.tiandituToken)
+  storage.removeItem(LEGACY_READING_MAP_STORAGE_KEYS.tiandituToken)
   return normalized
 }
 

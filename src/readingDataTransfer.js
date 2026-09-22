@@ -8,6 +8,14 @@ import {
 
 export const READING_BACKUP_FORMAT = 'tangerine-reading-companion-backup'
 export const READING_BACKUP_SCHEMA_VERSION = 1
+export const READING_BACKUP_MAX_BYTES = 50 * 1024 * 1024
+
+export function assertBackupSize(payload, maximumBytes = READING_BACKUP_MAX_BYTES) {
+  if (new Blob([JSON.stringify(payload, null, 2)]).size > maximumBytes) {
+    throw new Error('备份超过 50 MB 的导入上限，无法生成可恢复的备份；本机数据未修改。')
+  }
+  return payload
+}
 
 const READING_META_PREFIXES = ['readerState:', 'readerPersonalPackage:']
 const TANGERINE_TOOLS_SCHEMA_VERSION = 1
@@ -121,12 +129,12 @@ export function readingRecordsFromPayload(payload) {
 
 export async function exportReadingData() {
   const meta = normalizeReadingRecords(await db.meta.toArray())
-  return {
+  return assertBackupSize({
     format: READING_BACKUP_FORMAT,
     schemaVersion: READING_BACKUP_SCHEMA_VERSION,
     exportedAt: new Date().toISOString(),
     data: { meta },
-  }
+  })
 }
 
 function mergeSummary(localRecords, incomingRecords) {

@@ -34,16 +34,18 @@ export function writeReaderLocation(location, { replace = false, browserWindow =
   browserWindow.history[replace ? 'replaceState' : 'pushState'](null, '', nextUrl)
 }
 
-export function loadLastReadingPackageId(storage = localStorage) {
+export function loadLastReadingPackageId(storage) {
   try {
+    storage ??= globalThis.localStorage
     return validPackageId(storage.getItem(LAST_READING_PACKAGE_STORAGE_KEY))
   } catch {
     return ''
   }
 }
 
-export function saveLastReadingPackageId(packageId, storage = localStorage) {
+export function saveLastReadingPackageId(packageId, storage) {
   try {
+    storage ??= globalThis.localStorage
     const normalizedPackageId = validPackageId(packageId)
     if (normalizedPackageId) storage.setItem(LAST_READING_PACKAGE_STORAGE_KEY, normalizedPackageId)
     else storage.removeItem(LAST_READING_PACKAGE_STORAGE_KEY)

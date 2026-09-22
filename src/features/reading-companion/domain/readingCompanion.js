@@ -1,3 +1,5 @@
+import { isValidGeoJsonGeometry } from './geometry.js'
+export { isValidGeoJsonGeometry } from './geometry.js'
 export const READING_PACKAGE_SCHEMA_VERSION = 1
 
 export const SPOILER_RISK = {
@@ -43,13 +45,6 @@ const VALID_ENTITY_KINDS = new Set(['place', 'person', 'concept', 'event'])
 const VALID_PLACE_KINDS = new Set(['real', 'fictional', 'prototype', 'approximate'])
 const VALID_OBSERVED_PLACE_KINDS = new Set(Object.values(OBSERVED_PLACE_KIND))
 const VALID_GEOMETRY_TYPES = new Set(['point', 'area', 'geojson'])
-const VALID_GEOJSON_TYPES = new Set([
-  'Point',
-  'LineString',
-  'MultiLineString',
-  'Polygon',
-  'MultiPolygon',
-])
 const VALID_FACT_KINDS = new Set(['spatial', 'character', 'plot', 'history', 'concept'])
 const VALID_RISK_CATEGORIES = new Set(Object.keys(SPOILER_CATEGORY_LABELS))
 
@@ -594,39 +589,6 @@ function placeCoordinates(place) {
   return { latitude, longitude }
 }
 
-function geoJsonCoordinateCount(value) {
-  if (!Array.isArray(value)) return -1
-  if (
-    value.length >= 2
-    && value.every((item) => typeof item === 'number' && Number.isFinite(item))
-  ) {
-    const [longitude, latitude] = value
-    return longitude >= -180 && longitude <= 180 && latitude >= -90 && latitude <= 90
-      ? 1
-      : -1
-  }
-  let count = 0
-  for (const item of value) {
-    const itemCount = geoJsonCoordinateCount(item)
-    if (itemCount < 0) return -1
-    count += itemCount
-    if (count > 10000) return -1
-  }
-  return count
-}
-
-export function isValidGeoJsonGeometry(geometry) {
-  if (
-    !isObject(geometry)
-    || !VALID_GEOJSON_TYPES.has(geometry.type)
-    || !Array.isArray(geometry.coordinates)
-  ) {
-    return false
-  }
-  const coordinateCount = geoJsonCoordinateCount(geometry.coordinates)
-  return coordinateCount > 0 && coordinateCount <= 10000
-}
-
 function validatePlaceGeometry(geometry, label, errors) {
   if (!isObject(geometry)) {
     errors.push(`${label}.geometry 必须是对象`)
@@ -766,6 +728,8 @@ export function validateReadingPackage(pkg) {
     }
   }
 
+  if (!Array.isArray(pkg.edition?.translators) || !pkg.edition.translators.every(isNonEmptyString)) errors.push('edition.translators 必须是译者名称数组')
+
   if (!Array.isArray(pkg.chapters) || pkg.chapters.length === 0) {
     errors.push('chapters 必须是非空数组')
   } else {
@@ -776,8 +740,8 @@ export function validateReadingPackage(pkg) {
         continue
       }
       if (!isNonEmptyString(chapter.id)) errors.push(`chapters[${index}].id 不能为空`)
-      if (!Number.isInteger(chapter.number) || chapter.number < 1) {
-        errors.push(`chapters[${index}].number 必须是正整数`)
+      if (chapter.number !== index + 1) {
+        errors.push(`chapters[${index}].number 必须与章节顺序一致，从 1 连续递增`)
       }
       if (!isNonEmptyString(chapter.label)) errors.push(`chapters[${index}].label 不能为空`)
       if (chapterIds.has(chapter.id)) errors.push(`章节 id 重复：${chapter.id}`)
@@ -833,8 +797,8 @@ export function validateReadingPackage(pkg) {
       }
       if (entity.geometry) {
         validatePlaceGeometry(entity.geometry, `entities[${index}]`, errors)
-        if (entity.placeKind === 'fictional' && entity.geometry.type !== 'area') {
-          errors.push(`entities[${index}] 的虚构地点不能伪造精确坐标`)
+        if (['fictional', 'approximate'].includes(entity.placeKind) && entity.geometry.type !== 'area') {
+          errors.push(`entities[${index}] 的虚构或模糊地点不能伪造精确坐标`)
         }
       }
     }
@@ -886,11 +850,12 @@ export function validateReadingPackage(pkg) {
       errors.push(`${label}.safeNoteSourceIds 不能脱离 safeNote 单独存在`)
     }
     if (entity.kind === 'place') {
-      if (!VALID_PLACE_KINDS.has(entity.placeKind)) errors.push(`${label}.placeKind 无效`)
+      if (!(pkg.personal ? VALID_OBSERVED_PLACE_KINDS : VALID_PLACE_KINDS).has(entity.placeKind)) errors.push(`${label}.placeKind 无效`)
+      if (entity.placeKind === 'unknown' && entity.geometry) errors.push(`${label} 的未知地点不能提供坐标`)
       if (entity.geometry) {
         validatePlaceGeometry(entity.geometry, label, errors)
-        if (entity.placeKind === 'fictional' && entity.geometry.type !== 'area') {
-          errors.push(`${label} 的虚构地点不能伪造精确坐标`)
+        if (['fictional', 'approximate'].includes(entity.placeKind) && entity.geometry.type !== 'area') {
+          errors.push(`${label} 的虚构或模糊地点不能伪造精确坐标`)
         }
       }
     }

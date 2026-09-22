@@ -219,9 +219,10 @@ export async function answerReadingQuestion({
   signal?.throwIfAborted()
   const text = requiredText(question, '请输入当前阅读问题')
   if (text.length > 500) throw new Error('单次问题最多 500 个字符')
+  if (excerpt.trim().length > 6000) throw new Error('依据查找最多处理 6000 个字符，请缩短当前原文')
   if (readingQuestionLooksForward(text)) throw new Error('这里不回答后续剧情或结局')
   const sources = [
-    ...(excerpt.trim() ? [{ id: 'excerpt', text: excerpt.trim().slice(0, 6000), label: '当前段落' }] : []),
+    ...(excerpt.trim() ? [{ id: 'excerpt', text: excerpt.trim(), label: '当前段落' }] : []),
     ...backgrounds.slice(0, 20).filter(item => typeof item?.safeNote === 'string').map((item, index) => ({
       id: 'background-' + index, text: item.safeNote.slice(0, 400), label: '已解锁背景 · ' + item.name,
     })),

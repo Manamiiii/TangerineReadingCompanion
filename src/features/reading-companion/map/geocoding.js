@@ -1,3 +1,4 @@
+import { isValidGeoJsonGeometry } from '../domain/geometry.js'
 import {
   READING_MAP_PROVIDER,
   normalizeReadingMapProvider,
@@ -11,46 +12,15 @@ function normalizedQuery(query) {
 }
 
 function finiteCoordinate(value, minimum, maximum) {
+  if (!['number', 'string'].includes(typeof value) || String(value).trim() === '') return null
   const coordinate = Number(value)
   return Number.isFinite(coordinate) && coordinate >= minimum && coordinate <= maximum
     ? coordinate
     : null
 }
 
-function coordinateCount(value) {
-  if (!Array.isArray(value)) return 0
-  if (
-    value.length >= 2
-    && value.every((item) => typeof item === 'number' && Number.isFinite(item))
-  ) {
-    const [longitude, latitude] = value
-    return longitude >= -180 && longitude <= 180 && latitude >= -90 && latitude <= 90
-      ? 1
-      : -1
-  }
-  let count = 0
-  for (const item of value) {
-    const itemCount = coordinateCount(item)
-    if (itemCount < 0) return -1
-    count += itemCount
-    if (count > 10000) return -1
-  }
-  return count
-}
-
 export function normalizeGeoJsonGeometry(geometry) {
-  const validTypes = new Set([
-    'Point',
-    'LineString',
-    'MultiLineString',
-    'Polygon',
-    'MultiPolygon',
-  ])
-  if (!geometry || !validTypes.has(geometry.type) || !Array.isArray(geometry.coordinates)) {
-    return null
-  }
-  const count = coordinateCount(geometry.coordinates)
-  if (count < 1 || count > 10000) return null
+  if (!isValidGeoJsonGeometry(geometry)) return null
   return {
     type: geometry.type,
     coordinates: geometry.coordinates,
@@ -149,15 +119,30 @@ async function waitForProviderRateLimit(providerId, signal) {
 }
 
 async function fetchJson(url, fetchImpl, signal) {
+  const controller = new AbortController()
+  const abort = () => controller.abort(signal.reason)
+  signal?.throwIfAborted()
+  signal?.addEventListener('abort', abort, { once: true })
+  const timer = setTimeout(() => controller.abort(new DOMException('地图搜索超时，请重试', 'TimeoutError')), 20000)
+  try {
   const response = await fetchImpl(url, {
-    signal,
+    signal: controller.signal,
     headers: {
       Accept: 'application/json',
       'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.7',
     },
   })
-  if (!response.ok) throw new Error(`地图服务请求失败（${response.status}）`)
-  return response.json()
+  if (!response.ok) throw Object.assign(new Error(`地图服务请求失败（${response.status}）`), { status: response.status })
+  const payload = await response.json()
+  controller.signal.throwIfAborted()
+  return payload
+  } catch (error) {
+    if (controller.signal.aborted) throw controller.signal.reason
+    throw error
+  } finally {
+    clearTimeout(timer)
+    signal?.removeEventListener('abort', abort)
+  }
 }
 
 export async function searchReadingPlaces({

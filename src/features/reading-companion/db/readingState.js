@@ -34,9 +34,13 @@ async function readReadingState(editionId, migrate) {
   return normalizePersistedReadingState(record.value)
 }
 
-export async function saveReadingState(editionId, patch) {
+export async function saveReadingState(editionId, patch, { personalPackageId } = {}) {
   const key = readingStateKey(editionId)
   return db.transaction('rw', db.meta, async () => {
+    if (personalPackageId) {
+      const record = await db.meta.get(`readerPersonalPackage:${personalPackageId}`)
+      if (record?.value?.package?.edition?.id !== editionId) throw new Error('个人书籍不存在或已经移除，请返回书架')
+    }
     const current = await readReadingState(editionId, false) || {}
     // Execute domain updates against the latest state inside the same transaction.
     const changes = typeof patch === 'function' ? patch(current) : patch

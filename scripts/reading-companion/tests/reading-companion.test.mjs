@@ -719,7 +719,7 @@ test('package validation requires auditable place boundaries and avoids fabricat
   }]
   const errors = validateReadingPackage(invalidPackage)
   assert.ok(errors.some((error) => error.includes('未知来源')))
-  assert.ok(errors.some((error) => error.includes('虚构地点不能伪造精确坐标')))
+  assert.ok(errors.some((error) => error.includes('虚构或模糊地点不能伪造精确坐标')))
 })
 
 test('entity visibility and spatial projection are deterministic system capabilities', () => {
@@ -1252,13 +1252,13 @@ test('standalone model and map settings migrate legacy keys without rewriting th
     'legacy-api-key',
   )
 
-  const mapConfig = loadStoredReadingMapConfig(browserWindow.localStorage)
+  const mapConfig = loadStoredReadingMapConfig(browserWindow.localStorage, browserWindow.sessionStorage)
   assert.deepEqual(mapConfig, {
     providerId: 'tianditu',
     tiandituToken: 'legacy-map-token',
   })
   assert.equal(
-    browserWindow.localStorage.getItem(READING_MAP_STORAGE_KEYS.tiandituToken),
+    browserWindow.sessionStorage.getItem(READING_MAP_STORAGE_KEYS.tiandituToken),
     'legacy-map-token',
   )
 
@@ -1271,7 +1271,7 @@ test('standalone model and map settings migrate legacy keys without rewriting th
   saveStoredReadingMapConfig({
     providerId: 'openstreetmap',
     tiandituToken: '',
-  }, browserWindow.localStorage)
+  }, browserWindow.localStorage, browserWindow.sessionStorage)
   assert.equal(
     browserWindow.localStorage.getItem('readerModelProfile:deepseek:model'),
     'legacy-model',
@@ -2144,6 +2144,7 @@ test('a new book can build its first preview from staging without pipeline code 
       },
       edition: {
         id: 'test-book-zh-test-edition',
+        translators: [],
         isbn: '0000000000000',
         language: 'zh-CN',
         publisher: '测试出版社',

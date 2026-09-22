@@ -80,7 +80,7 @@ export function ReadingMapPanel({
             entity.name,
             entity.kind,
             entity.packageEntityId,
-          )
+          )?.geometry
         )
         || [
           OBSERVED_PLACE_KIND.FICTIONAL,
@@ -96,11 +96,15 @@ export function ReadingMapPanel({
   const [distanceFromId, setDistanceFromId] = useState('')
   const [distanceToId, setDistanceToId] = useState('')
   const [distancePair, setDistancePair] = useState(null)
+  const handledFocus = useRef(null)
   useEffect(() => {
-    if (!isActive || !focus) return
+    if (!isActive || !focus || handledFocus.current === focus) return
     const place = places.find(item => item.id === focus.packageEntityId || item.id === 'reader-map:' + focus.id || item.name === focus.name)
-    if (place) setSelectedPlaceId(place.id)
-    else if (searchableObservedPlaces.some(item => item.id === focus.id)) setLookupTargetId(focus.id)
+    const target = searchableObservedPlaces.find(item => item.id === focus.id)
+    if (place?.geometry) setSelectedPlaceId(place.id)
+    else if (target) beginLookup(target)
+    else return
+    handledFocus.current = focus
   }, [focus, isActive, places, searchableObservedPlaces])
   const selectedPlace = places.find((place) => place.id === selectedPlaceId) || places[0] || null
   const distancePlaces = useMemo(
@@ -768,5 +772,4 @@ export function ReadingMapPanel({
     </section>
   )
 }
-
 

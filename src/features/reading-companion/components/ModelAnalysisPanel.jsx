@@ -167,7 +167,7 @@ export function ModelAnalysisPanel({
                   isRecorded ? 'is-recorded' : '',
                   resultsStale ? 'is-stale' : '',
                 ].filter(Boolean).join(' ')}
-                key={`${index}:${candidate.name}`}
+                key={index}
               >
                 <div className="reader-model-candidate-fields">
                   <label>
@@ -243,4 +243,3 @@ export function ModelAnalysisPanel({
     </div>
   )
 }
-

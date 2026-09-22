@@ -88,6 +88,7 @@ export function ReadingQuestionPanel({
       </div>
       <form className="reader-question-form" onSubmit={ask}>
         <input
+          aria-label="当前内容问题"
           value={question}
           onChange={(event) => {
             task.cancel()
@@ -101,11 +102,12 @@ export function ReadingQuestionPanel({
         <button
           type="submit"
           className="btn btn-sm"
-          disabled={!configured || !question.trim() || requestState === 'working'}
+          disabled={!configured || !question.trim() || requestState === 'working' || excerpt.trim().length > 6000}
         >
           {requestState === 'working' ? '查找中…' : '查找'}
         </button>
       </form>
+      {excerpt.trim().length > 6000 && <p role="status">依据查找最多处理 6000 个字符，当前为 {excerpt.trim().length} 个。请缩短原文后查找。</p>}
       {message && <p className="reader-model-message" role="status">{message}</p>}
       {result && (
         <div className="reader-question-answer" role="status">
@@ -116,4 +118,3 @@ export function ReadingQuestionPanel({
     </div>
   )
 }
-

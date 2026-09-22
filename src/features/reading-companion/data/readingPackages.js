@@ -19,11 +19,15 @@ async function fetchJson(url, label) {
   return response.json()
 }
 
-export async function loadReadingPackageCatalog() {
-  const [catalog, personalEntries] = await Promise.all([
-    fetchJson(catalogUrl, '阅读资料目录'),
-    listPersonalReadingPackageEntries(),
-  ])
+export async function loadReadingPackageCatalog(personalEntries) {
+  const warnings = [...(personalEntries?.warnings || [])]
+  if (!personalEntries) {
+    try { personalEntries = await listPersonalReadingPackageEntries(); warnings.push(...personalEntries.warnings) }
+    catch { personalEntries = []; warnings.push('本机书架无法读取，请检查浏览器存储权限。') }
+  }
+  let catalog
+  try {
+    catalog = await fetchJson(catalogUrl, '阅读资料目录')
   if (catalog?.schemaVersion !== 1 || !Array.isArray(catalog.packages)) {
     throw new Error('阅读资料目录格式无效')
   }
@@ -41,7 +45,10 @@ export async function loadReadingPackageCatalog() {
       throw new Error(`阅读资料目录缺少有效的准备摘要：${entry.id}`)
     }
   }
-  return [...catalog.packages, ...personalEntries]
+  } catch { catalog = { packages: [] }; warnings.push('内置阅读资料目录暂不可用，个人书籍仍可使用。') }
+  const entries = [...catalog.packages, ...personalEntries]
+  entries.warnings = warnings
+  return entries
 }
 
 export async function loadReadingPackage(entry) {
