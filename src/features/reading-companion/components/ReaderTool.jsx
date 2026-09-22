@@ -1,3 +1,4 @@
+import { modelConfigIsComplete } from '../../model/modelConfig.js'
 import { ReadingPanelBoundary } from '../../../components/ReadingPanelBoundary.jsx'
 import { ReadingInputSource } from './ReadingInputSource.jsx'
 import { lazy, useEffect, useMemo, useRef, useState } from 'react'
@@ -32,10 +33,6 @@ const ReadingFactsPanel = lazy(() => import('./ReadingFactsPanel.jsx').then((mod
 })))
 
 const EMPTY_OBSERVED_ENTITIES = Object.freeze([])
-
-function loadStoredReadingModelConfig(providerId = '', allowLegacy = true) {
-  return loadStoredModelConfig(providerId, allowLegacy)
-}
 
 function LoadingPanel({ message }) {
   return <div className="reader-loading">{message}</div>
@@ -78,7 +75,7 @@ export function ReaderTool() {
   const [mapMounted, setMapMounted] = useState(false)
   const [mapFocus, setMapFocus] = useState(null)
   const [lastPackageId, setLastPackageId] = useState(() => loadLastReadingPackageId())
-  const [modelConfig, setModelConfig] = useState(() => loadStoredReadingModelConfig())
+  const [modelConfig, setModelConfig] = useState(() => loadStoredModelConfig())
   const [mapConfig, setMapConfig] = useState(() => loadStoredReadingMapConfig())
 
   useEffect(() => {
@@ -329,11 +326,7 @@ export function ReaderTool() {
     setCatalog(current => [...(current || []), personalCatalogEntry(pkg)])
     if (signal?.aborted) return
     let preparationStatus = ''
-    const modelConfigured = Boolean(
-      modelConfig.endpoint.trim()
-      && modelConfig.model.trim()
-      && modelConfig.apiKey.trim(),
-    )
+    const modelConfigured = modelConfigIsComplete(modelConfig)
     if (form.prepareWithModel && modelConfigured) {
       try {
         const candidates = await preparePersonalBookKnowledge({
@@ -643,6 +636,16 @@ export function ReaderTool() {
               id={`reader-tab-${tab.id}`}
               type="button"
               role="tab"
+              tabIndex={activeTab === tab.id ? 0 : -1}
+              onKeyDown={event => {
+                const index = readerTabs.findIndex(item => item.id === tab.id)
+                const nextIndex = { ArrowRight: (index + 1) % readerTabs.length, ArrowLeft: (index + readerTabs.length - 1) % readerTabs.length, Home: 0, End: readerTabs.length - 1 }[event.key]
+                if (nextIndex === undefined) return
+                event.preventDefault()
+                const next = readerTabs[nextIndex]
+                openTab(next.id)
+                document.getElementById(`reader-tab-${next.id}`)?.focus()
+              }}
               aria-selected={activeTab === tab.id}
               aria-controls={`reader-panel-${tab.id}`}
               className={activeTab === tab.id ? 'active' : ''}
@@ -656,7 +659,7 @@ export function ReaderTool() {
         })}
       </nav>
 
-      <main
+      <div
         className="reader-tab-content"
         id={`reader-panel-${activeTab}`}
         role="tabpanel"
@@ -875,13 +878,13 @@ export function ReaderTool() {
               readingPackage={readingPackage}
               readingState={savedState}
               currentChapterId={currentChapterId}
-              onLoadModelProvider={(providerId) => loadStoredReadingModelConfig(providerId, false)}
+              onLoadModelProvider={(providerId) => loadStoredModelConfig(providerId, false)}
               onSaveModel={saveModelConfig}
               onSaveMap={saveMapConfig}
             />
           </ReadingPanelBoundary>
         )}
-      </main>
+      </div>
     </div>
   )
 }

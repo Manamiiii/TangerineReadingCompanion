@@ -18,7 +18,7 @@ Tangerine Reading Companion（橘子阅读伴侣）是一个本地优先、尊�
 
 ## 本地运行
 
-Node.js 需要满足 `>=20.19.0`。
+Node.js 需要满足 `^20.19.0 || >=22.12.0`（建议使用 `.nvmrc` 指定版本）。
 
 ```bash
 npm install

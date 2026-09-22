@@ -10,7 +10,7 @@ function command(name, args = ['--version']) {
   return result.status === 0
 }
 const [nodeMajor, nodeMinor] = process.versions.node.split('.').map(Number)
-checks.push({ name: 'Node.js >=20.19', available: nodeMajor > 20 || (nodeMajor === 20 && nodeMinor >= 19) })
+checks.push({ name: 'Node.js ^20.19.0 || >=22.12.0', available: nodeMajor > 22 || (nodeMajor === 22 && nodeMinor >= 12) || (nodeMajor === 20 && nodeMinor >= 19) })
 const cargoHome = process.env.CARGO_HOME || path.join(os.homedir(), '.cargo')
 const rustc = existsSync(path.join(cargoHome, 'bin', 'rustc.exe')) ? path.join(cargoHome, 'bin', 'rustc.exe') : 'rustc'
 const cargo = existsSync(path.join(cargoHome, 'bin', 'cargo.exe')) ? path.join(cargoHome, 'bin', 'cargo.exe') : 'cargo'

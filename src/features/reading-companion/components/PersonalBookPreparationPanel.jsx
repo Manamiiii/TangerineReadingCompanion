@@ -1,3 +1,4 @@
+import { modelConfigIsComplete } from '../../model/modelConfig.js'
 import { useAsyncTask } from '../../../platform/useAsyncTask.js'
 import { useState } from 'react'
 import { Settings2, Sparkles } from 'lucide-react'
@@ -13,11 +14,7 @@ export function PersonalBookPreparationPanel({
   const task = useAsyncTask(readingPackage.id)
   const [requestState, setRequestState] = useState('idle')
   const [message, setMessage] = useState('')
-  const configured = Boolean(
-    modelConfig.endpoint.trim()
-    && modelConfig.model.trim()
-    && modelConfig.apiKey.trim(),
-  )
+  const configured = modelConfigIsComplete(modelConfig)
   const preparedCount = (readingPackage.onDemandEntities || [])
     .filter((entity) => entity.sourceIds?.includes('source-personal-model-preparation'))
     .length

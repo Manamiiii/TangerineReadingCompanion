@@ -84,9 +84,3 @@ export function recognizeStructuredImageText(image, onProgress, { pageSegmentati
     tessedit_pageseg_mode: pageSegmentationMode, tessedit_char_whitelist: characterWhitelist,
   })
 }
-
-export function recognizeNumericImageText(image, onProgress, { pageSegmentationMode = '7', signal } = {}) {
-  return recognize(image, onProgress, { preserveLines: true, signal }, ['eng'], {
-    tessedit_pageseg_mode: pageSegmentationMode, tessedit_char_whitelist: '0123456789',
-  })
-}

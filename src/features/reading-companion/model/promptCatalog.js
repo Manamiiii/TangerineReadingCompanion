@@ -1,8 +1,11 @@
+export const PERSONAL_KNOWLEDGE_LIMIT = 50
 export const READING_PROMPT_IDS = Object.freeze({
   personalBookKnowledge: 'personal-book-knowledge-v1',
   excerptEntityLink: 'reading-excerpt-entity-link-v1',
   formalPackageCandidates: 'formal-reading-package-candidates-v3',
   readingEvidence: 'reading-evidence-v1',
+  placeQuery: 'place-query-v1',
+  bookMetadata: 'book-metadata-v4',
 })
 
 export function readingEvidenceMessages(question, sources) {
@@ -29,7 +32,7 @@ export function personalBookKnowledgeMessages(bookContext) {
         '不要返回人物关系、身份秘密、命运、结局、剧情摘要、章节号、解释文字或坐标。',
         '无法确认具体中文译名时，使用最常见名称并把其他常见译名放入 aliases；不要编造。',
         '地点只有在明显属于现实地点或明显属于作品虚构地点时才标 real 或 fictional，否则标 unknown。',
-        '数量以实用为准，最多 50 项；冷门或不确定项目宁可省略。',
+        `数量以实用为准，最多 ${PERSONAL_KNOWLEDGE_LIMIT} 项；冷门或不确定项目宁可省略。`,
         '只返回 JSON：{"candidates":[{"name":"","kind":"person|place|concept|event","originalName":"","aliases":[],"placeKind":"unknown|real|fictional|prototype|approximate"}]}。',
       ].join('\n'),
     },
@@ -75,4 +78,55 @@ export function excerptEntityLinkMessages({
       ].join('\n'),
     },
   ]
+}
+
+export function placeQueryMessages(text, bookTitle, chapterLabel) {
+  return [
+          {
+            role: 'system',
+            content: [
+              '你只为国际地图生成地点检索词候选。',
+              '书名只用于判断历史译名、英文原名和可能的州或国家，不得输出剧情。',
+              '候选按从精确到宽泛排序：优先给出现代英文名或历史机构名，最后一个候选给出其所在城市、州或地区，供精确对象未被地图收录时定位参考区域。',
+              '最多返回 3 个互不重复的候选，不确定所在区域时不要猜测。',
+              '只返回 JSON：{"queries":["候选1","候选2"]}。',
+            ].join('\n'),
+          },
+          {
+            role: 'user',
+            content: [
+              `书籍：${bookTitle || '未知'}`,
+              `阅读章节：${chapterLabel || '未知'}`,
+              `作品中的地点名称：${text}`,
+            ].join('\n'),
+          },
+    ]
+}
+
+export function bookMetadataMessages(text, localMetadata, uncertainFields) {
+  return [
+      {
+        role: 'system',
+        content: [
+          '你负责校对书籍版权页 OCR 并整理书目信息，不得生成剧情或无关内容。',
+          '优先读取书名、作者、译者、出版社等明确字段标签后的值；忽略状态栏、页码、按钮、乱码和版权说明。',
+          'OCR 可能把“书名”“译者”等标签识别成 FE、BE 等短字母，也可能把中文值识别成形近字或拉丁字母；请利用字段顺序、作者、出版社、ISBN 和同页其他书目信息交叉纠正。',
+          '可以使用你掌握的公开书目知识核对准确 ISBN 对应版本的书名、作者和译者；不要简单照抄已标记为低置信的 OCR 值。',
+          '例如常见作品作者中的形近字、译者被识别为拉丁字母时，应优先依据 ISBN、出版社、出版日期与作品信息校正。',
+          '只有交叉信息足以确定时才纠错；无法确定的字段返回空值，不得猜测。',
+          '字段值不得带回字段标签，也不得在书名前添加无法确认的字母、符号或 OCR 噪声。',
+          '日期使用 YYYY-MM；译者使用字符串数组；没有的字段返回空值。',
+          '只返回 JSON：{"title":"","author":"","translators":[],"publisher":"","isbn":"","publishedAt":"","originalLanguage":"","chapterCount":null}。',
+        ].join('\n'),
+      },
+      {
+        role: 'user',
+        content: [
+          `本机候选：${JSON.stringify(localMetadata)}`,
+          `低置信字段：${JSON.stringify(uncertainFields)}`,
+          'OCR 原文：',
+          text,
+        ].join('\n'),
+      },
+    ]
 }

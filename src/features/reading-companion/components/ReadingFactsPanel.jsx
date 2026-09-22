@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
 import { AlertTriangle, Eye, EyeOff, ShieldCheck } from 'lucide-react'
 import {
-  OBSERVED_ENTITY_KIND,
   SPOILER_CATEGORY_LABELS,
   SPOILER_GATE_ACTION,
   SPOILER_RISK,
@@ -11,19 +10,7 @@ import {
 } from '../domain/readingCompanion.js'
 import { ReadingSafeNote } from './ReadingSafeNote.jsx'
 
-const PLACE_KIND_LABELS = {
-  real: '真实地点',
-  fictional: '虚构地点',
-  prototype: '原型地点',
-  approximate: '模糊区域',
-}
-
-const OBSERVED_KIND_LABELS = {
-  [OBSERVED_ENTITY_KIND.PLACE]: '地点',
-  [OBSERVED_ENTITY_KIND.PERSON]: '人物',
-  [OBSERVED_ENTITY_KIND.CONCEPT]: '概念',
-  [OBSERVED_ENTITY_KIND.EVENT]: '事件',
-}
+import { PLACE_KIND_LABELS, OBSERVED_KIND_LABELS } from './readerUi.js'
 
 function ReadingFactContent({ fact, entities, onHide }) {
   const entityNames = fact.entityIds

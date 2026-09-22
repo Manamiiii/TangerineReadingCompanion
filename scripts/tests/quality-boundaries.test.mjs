@@ -1,13 +1,16 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { isValidGeoJsonGeometry } from '../../src/features/reading-companion/domain/geometry.js'
-import { normalizeNominatimResults } from '../../src/features/reading-companion/map/geocoding.js'
+import { normalizeNominatimResults, searchReadingPlaces } from '../../src/features/reading-companion/map/geocoding.js'
 import { loadStoredModelConfig } from '../../src/features/model/modelConfig.js'
 import { loadStoredReadingMapConfig, saveStoredReadingMapConfig, READING_MAP_STORAGE_KEYS } from '../../src/features/reading-companion/map/mapConfig.js'
 import { createPersonalReadingPackage, mergePersonalBookKnowledge } from '../../src/features/reading-companion/domain/personalBooks.js'
 import { assertReadingPackage, validateReadingPackage } from '../../src/features/reading-companion/domain/readingCompanion.js'
 import { assertBackupSize } from '../../src/readingDataTransfer.js'
 import { answerReadingQuestion } from '../../src/features/reading-companion/model/modelAdapter.js'
+import { scanBookMetadata, mergeScannedMetadata } from '../../src/features/reading-companion/input/bookMetadataScan.js'
+import { assertReadingCatalog } from '../../src/features/reading-companion/domain/readingCatalog.js'
+import { readingDiagnosticErrorCode } from '../../src/features/reading-companion/domain/trialDiagnostics.js'
 
 test('GeoJSON validates nesting, ring closure, minimum points and bounded input', () => {
   for (const geometry of [
@@ -56,4 +59,41 @@ test('personal unknown places remain valid without coordinates and package UI co
 test('oversized export and evidence input fail explicitly before external work', async () => {
   assert.throws(() => assertBackupSize({ text: '中文'.repeat(100) }, 100), /导入上限/)
   await assert.rejects(answerReadingQuestion({ question: '这是什么', excerpt: '字'.repeat(6001), fetchImpl: () => assert.fail('must not request') }), /6000/)
+})
+
+test('optional OCR and model failures preserve local metadata and concurrent manual edits', async () => {
+  const result = await scanBookMetadata({
+    file: new Blob(['synthetic'], { type: 'image/png' }),
+    recognize: async () => '书名：测试书籍\n作者：王明',
+    recognizeStructured: async () => { throw new Error('retry failed') },
+    analyze: async () => { throw new Error('model failed') },
+    modelConfig: { endpoint: 'https://test.example', model: 'test', apiKey: 'synthetic' },
+  })
+  assert.equal(result.metadata.title, '测试书籍')
+  assert.equal(result.warnings.length, 2)
+  const merged = mergeScannedMetadata({ title: '手动书名', author: '' }, result.metadata, {}, { title: 1 })
+  assert.equal(merged.title, '手动书名')
+  assert.equal(merged.author, '王明')
+  await assert.rejects(scanBookMetadata({ file: new Blob(['bad']), recognize: () => assert.fail('invalid image must not initialize OCR') }), /图片/)
+})
+
+test('catalog validator rejects duplicate ids and missing summaries', () => {
+  const entry = { id: 'book', title: '书', editionLabel: '版本', path: 'presets/reading-companion/book.json', preparedSummary: Object.fromEntries(['entityCount', 'place', 'person', 'concept', 'event', 'factCount', 'sourceCount'].map(key => [key, 0])) }
+  assert.throws(() => assertReadingCatalog({ schemaVersion: 1, packages: [entry, entry] }), /重复/)
+  assert.throws(() => assertReadingCatalog({ schemaVersion: 1, packages: [{ ...entry, preparedSummary: {} }] }), /摘要/)
+})
+
+test('map timeout covers response bodies and diagnostics distinguish cancellation from timeout', async () => {
+  const original = globalThis.setTimeout, clear = globalThis.clearTimeout
+  let expire, cleared = false
+  globalThis.setTimeout = callback => { expire = callback; return 1 }
+  globalThis.clearTimeout = () => { cleared = true }
+  try {
+    await assert.rejects(searchReadingPlaces({ providerId: 'openstreetmap', query: 'synthetic-timeout', fetchImpl: async () => ({ ok: true, json: async () => { expire(); return [] } }) }), { name: 'TimeoutError' })
+    assert.equal(cleared, true)
+  } finally { globalThis.setTimeout = original; globalThis.clearTimeout = clear }
+  assert.equal(readingDiagnosticErrorCode({ status: 401 }), 'authentication')
+  assert.equal(readingDiagnosticErrorCode({ status: 429 }), 'rate-limit')
+  assert.equal(readingDiagnosticErrorCode({ name: 'AbortError' }), 'cancelled')
+  assert.equal(readingDiagnosticErrorCode({ name: 'TimeoutError' }), 'timeout')
 })

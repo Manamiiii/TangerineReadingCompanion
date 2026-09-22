@@ -142,10 +142,6 @@ export function extractPersonalBookMetadataDetails(value) {
   return { metadata, uncertainFields }
 }
 
-export function extractPersonalBookMetadataFromText(value) {
-  return extractPersonalBookMetadataDetails(value).metadata
-}
-
 export function mergePersonalBookMetadata(
   localMetadata = {},
   modelMetadata = {},

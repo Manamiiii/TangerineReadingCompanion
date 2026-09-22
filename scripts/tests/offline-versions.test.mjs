@@ -5,11 +5,12 @@ import { runInNewContext } from 'node:vm'
 
 const template = await readFile(new URL('../../public/sw.js', import.meta.url), 'utf8')
 const root = 'https://example.com/reader/'
-const prefix = 'tangerine-reading-companion-static-'
+const prefix = 'tangerine-reading-companion-static-%2Freader%2F:'
 const absolute = value => new URL(value.url || value, root).href
 const dataPath = version => `./presets/reading-companion/story.${version.repeat(64)}.json`
 
-function worker(version, storage, { failInstall = false } = {}) {
+function worker(version, storage, { failInstall = false, scope = root } = {}) {
+  const absolute = value => new URL(value.url || value, scope).href
   const files = ['./index.html', `./assets/app-${version}.js`, dataPath(version), './offline-manifest.json']
   const handlers = {}
   const notices = []
@@ -34,7 +35,7 @@ function worker(version, storage, { failInstall = false } = {}) {
   runInNewContext(template.replace('__BUILD_VERSION__', version).replace('/* __PRECACHE__ */ []', JSON.stringify(files)), {
     URL, Response,
     self: {
-      location: { href: root + 'sw.js' },
+      location: { href: scope + 'sw.js' },
       addEventListener: (type, handler) => { handlers[type] = handler },
       clients: { claim: async () => {}, get: async () => ({ postMessage: value => notices.push(value) }) },
       skipWaiting: async () => {},
@@ -131,4 +132,22 @@ test('legacy fixed paths use only their retained old cache', async () => {
   await a.lifecycle('activate')
   assert.equal(await (await a.fetch(url)).text(), 'legacy data')
   assert.equal(a.networkRequests, 0)
+})
+
+test('cache retention is isolated by deployment scope and preserves shared legacy caches', async () => {
+  const legacyKey = 'tangerine-reading-companion-static-old'
+  const storage = new Map([[legacyKey, new Map([
+    [absolute('./index.html'), new Response('legacy index')],
+    [absolute('./presets/reading-companion/story.json'), new Response('legacy story')],
+  ])]])
+  const other = worker('a', storage, { scope: 'https://example.com/other/' })
+  await other.lifecycle('install')
+  for (const version of ['a', 'b', 'c']) {
+    const instance = worker(version, storage)
+    await instance.lifecycle('install')
+    await instance.lifecycle('activate')
+  }
+  assert.equal(storage.has('tangerine-reading-companion-static-%2Fother%2F:a'), true)
+  assert.equal(storage.has(legacyKey), true)
+  assert.equal(await (await worker('c', storage).fetch('./presets/reading-companion/story.json')).text(), 'legacy story')
 })

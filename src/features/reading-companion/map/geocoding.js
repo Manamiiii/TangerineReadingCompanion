@@ -125,17 +125,17 @@ async function fetchJson(url, fetchImpl, signal) {
   signal?.addEventListener('abort', abort, { once: true })
   const timer = setTimeout(() => controller.abort(new DOMException('地图搜索超时，请重试', 'TimeoutError')), 20000)
   try {
-  const response = await fetchImpl(url, {
-    signal: controller.signal,
-    headers: {
-      Accept: 'application/json',
-      'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.7',
-    },
-  })
-  if (!response.ok) throw Object.assign(new Error(`地图服务请求失败（${response.status}）`), { status: response.status })
-  const payload = await response.json()
-  controller.signal.throwIfAborted()
-  return payload
+    const response = await fetchImpl(url, {
+      signal: controller.signal,
+      headers: {
+        Accept: 'application/json',
+        'Accept-Language': 'zh-CN,zh;q=0.9,en;q=0.7',
+      },
+    })
+    if (!response.ok) throw Object.assign(new Error(`地图服务请求失败（${response.status}）`), { status: response.status })
+    const payload = await response.json()
+    controller.signal.throwIfAborted()
+    return payload
   } catch (error) {
     if (controller.signal.aborted) throw controller.signal.reason
     throw error

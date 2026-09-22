@@ -1,3 +1,4 @@
+import { modelConfigIsComplete } from '../../model/modelConfig.js'
 import { useAsyncTask } from '../../../platform/useAsyncTask.js'
 import { useEffect, useState } from 'react'
 import { Plus, Settings2, ShieldCheck, Sparkles } from 'lucide-react'
@@ -21,11 +22,7 @@ export function ModelAnalysisPanel({
   const [message, setMessage] = useState('')
   const [candidates, setCandidates] = useState([])
   const [analysisExcerpt, setAnalysisExcerpt] = useState('')
-  const configured = Boolean(
-    modelConfig.endpoint.trim()
-    && modelConfig.model.trim()
-    && modelConfig.apiKey.trim(),
-  )
+  const configured = modelConfigIsComplete(modelConfig)
 
   useEffect(() => {
     setCandidates([])

@@ -2,7 +2,6 @@ import assert from 'node:assert/strict'
 import { readFile } from 'node:fs/promises'
 import test from 'node:test'
 import {
-  projectReadingPlaces,
   scanOnDemandEntities,
   unlockedOnDemandEntities,
   upsertObservedEntity,
@@ -78,7 +77,7 @@ test('reader trial flow scans, records, unlocks, maps, and exports one chapter s
     ],
   )
   assert.deepEqual(
-    projectReadingPlaces(unlocked).map((place) => place.id),
+    unlocked.filter(entity => entity.kind === 'place' && entity.geometry).map(place => place.id),
     ['place-atlanta'],
   )
 

@@ -1,14 +1,9 @@
-import { useEffect, useState } from 'react'
+import { Modal, FileButton } from '../../../components/common.jsx'
+import { useState } from 'react'
 import { ClipboardPaste, Image, Upload, ScanSearch, X } from 'lucide-react'
 
 export function ReadingInputSource({ excerpt, link, imageInput, ocrState, ocrProgress, pasteFromClipboard, chooseImage, runLocalOcr, clearImage, clearInput, changeExcerpt, captureExcerptSelection }) {
   const [imagePreviewOpen, setImagePreviewOpen] = useState(false)
-  useEffect(() => {
-    if (!imagePreviewOpen) return
-    const close = event => { if (event.key === 'Escape') setImagePreviewOpen(false) }
-    window.addEventListener('keydown', close)
-    return () => window.removeEventListener('keydown', close)
-  }, [imagePreviewOpen])
   return <>
             <div className="reader-input-sources" aria-label="选择内容输入方式">
               <button type="button" className="reader-input-source" onClick={pasteFromClipboard}>
@@ -18,15 +13,14 @@ export function ReadingInputSource({ excerpt, link, imageInput, ocrState, ocrPro
                   <small>直接放入刚复制的文字</small>
                 </span>
               </button>
-              <label className="reader-input-source">
+              <FileButton className="reader-input-source" onChange={chooseImage}>
                 <Image size={20} />
                 <span>
                   <strong>从截图提取</strong>
                   <small>选择图片后在本机识别</small>
                 </span>
                 <Upload size={15} />
-                <input type="file" accept="image/*" onChange={chooseImage} hidden />
-              </label>
+              </FileButton>
             </div>
             {imageInput && (
               <>
@@ -59,27 +53,9 @@ export function ReadingInputSource({ excerpt, link, imageInput, ocrState, ocrPro
                   </button>
                 </div>
                 {imagePreviewOpen && (
-                  <div
-                    className="reader-image-lightbox"
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label="截图大图预览"
-                    onMouseDown={(event) => {
-                      if (event.target === event.currentTarget) setImagePreviewOpen(false)
-                    }}
-                  >
-                    <div>
-                      <button
-                        type="button"
-                        className="icon-btn"
-                        onClick={() => setImagePreviewOpen(false)}
-                        aria-label="关闭大图"
-                      >
-                        <X size={18} />
-                      </button>
-                      <img src={imageInput.url} alt="所选阅读页面大图预览" />
-                    </div>
-                  </div>
+                  <Modal title="截图大图预览" width={1000} onClose={() => setImagePreviewOpen(false)}>
+                    <img src={imageInput.url} alt="所选阅读页面大图预览" style={{ display: 'block', maxWidth: '100%', maxHeight: '70vh', margin: 'auto', objectFit: 'contain' }} />
+                  </Modal>
                 )}
               </>
             )}

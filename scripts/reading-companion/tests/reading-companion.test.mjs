@@ -1,3 +1,4 @@
+const extractPersonalBookMetadataFromText = value => extractPersonalBookMetadataDetails(value).metadata
 import assert from 'node:assert/strict'
 import { access, readFile } from 'node:fs/promises'
 import test from 'node:test'
@@ -15,16 +16,13 @@ import {
   matchOnDemandEntity,
   normalizeObservedEntityName,
   observedEntityEncounterChapterIds,
-  projectReadingPlaces,
   readingEntitySafeNoteSources,
   readingPlaceRelations,
   readerConfirmedMapEntities,
   readingStateKey,
-  riskForDisclosure,
   scanOnDemandEntities,
   scanObservedEntities,
   spoilerGateAction,
-  strongestSpoilerRisk,
   summarizeReadingPackage,
   unlockedOnDemandEntities,
   updateObservedEntityNote,
@@ -62,7 +60,6 @@ import {
   buildPersonalChapters,
   createPersonalReadingPackage,
   extractPersonalBookMetadataDetails,
-  extractPersonalBookMetadataFromText,
   mergePersonalBookKnowledge,
   mergePersonalBookMetadata,
   personalCatalogEntry,
@@ -74,10 +71,8 @@ import {
   normalizeModelCandidates,
   normalizePersonalBookKnowledge,
   preparePersonalBookKnowledge,
-  readingAnswerLooksForward,
   readingQuestionLooksForward,
   suggestReadingPlaceQueries,
-  translateReadingPlaceQuery,
 } from '../../../src/features/reading-companion/model/modelAdapter.js'
 import {
   normalizeOcrText,
@@ -753,14 +748,6 @@ test('entity visibility and spatial projection are deterministic system capabili
   assert.deepEqual(
     visibleReadingEntities(entities, 'chapter-02', readingPackage.chapters).map(({ id }) => id),
     ['place-real'],
-  )
-  const projected = projectReadingPlaces(
-    visibleReadingEntities(entities, 'chapter-03', readingPackage.chapters),
-  )
-  assert.deepEqual(projected.map(({ id }) => id), ['place-real', 'place-area'])
-  assert.deepEqual(
-    projected.map(({ x, y }) => [x, y]),
-    [[8, 8], [92, 92]],
   )
 })
 
@@ -1442,8 +1429,6 @@ test('personal book preparation returns only bounded names and no generated fact
 test('current-reading questions quote supplied evidence and block obvious future-plot questions', async () => {
   assert.equal(readingQuestionLooksForward('这个制度是什么意思？'), false)
   assert.equal(readingQuestionLooksForward('这个人物最后怎么样？'), true)
-  assert.equal(readingAnswerLooksForward('这是一个历史时期。'), false)
-  assert.equal(readingAnswerLooksForward('后来他和某人结婚。'), true)
   let requestBody
   const result = await answerReadingQuestion({
     endpoint: 'https://question-model.example/v1/chat/completions',
@@ -1510,25 +1495,6 @@ test('identical model excerpt analysis reuses the temporary successful-result ca
   assert.equal(calls, 1)
 })
 
-test('model place translation returns only a bounded map query', async () => {
-  const translated = await translateReadingPlaceQuery({
-    endpoint: 'https://model.example/v1/chat/completions',
-    model: 'reader-test-model',
-    apiKey: 'test-key',
-    query: '弗吉尼亚大学，美国',
-    fetchImpl: async () => ({
-      ok: true,
-      json: async () => ({
-        choices: [{
-          message: {
-            content: '{"query":"University of Virginia, United States"}',
-          },
-        }],
-      }),
-    }),
-  })
-  assert.equal(translated, 'University of Virginia, United States')
-})
 
 test('model map-query suggestions include book context and preserve alternatives', async () => {
   let requestBody
@@ -1777,40 +1743,6 @@ test('book metadata OCR cleans repeated Chinese spaces from a real copyright pag
   })
 })
 
-test('spoiler risk defaults unknown boundaries to potential and preserves high risk', () => {
-  const chapters = readingPackage.chapters
-  assert.equal(
-    riskForDisclosure({
-      riskLevel: SPOILER_RISK.SAFE,
-      revealAt: { chapterId: 'chapter-03' },
-      currentChapterId: 'chapter-06',
-      chapters,
-    }),
-    SPOILER_RISK.SAFE,
-  )
-  assert.equal(
-    riskForDisclosure({
-      riskLevel: SPOILER_RISK.SAFE,
-      revealAt: { chapterId: 'chapter-07' },
-      currentChapterId: 'chapter-06',
-      chapters,
-    }),
-    SPOILER_RISK.POTENTIAL,
-  )
-  assert.equal(
-    riskForDisclosure({
-      riskLevel: SPOILER_RISK.HIGH,
-      revealAt: { chapterId: 'chapter-63' },
-      currentChapterId: 'chapter-06',
-      chapters,
-    }),
-    SPOILER_RISK.HIGH,
-  )
-  assert.equal(
-    riskForDisclosure({ riskLevel: 'unknown', revealAt: null, currentChapterId: '', chapters }),
-    SPOILER_RISK.POTENTIAL,
-  )
-})
 
 test('spoiler gate requires the matching one-time authorization level', () => {
   assert.equal(spoilerGateAction(SPOILER_RISK.SAFE), SPOILER_GATE_ACTION.DISPLAY)
@@ -1821,10 +1753,7 @@ test('spoiler gate requires the matching one-time authorization level', () => {
   assert.equal(canRevealRisk(SPOILER_RISK.POTENTIAL, SPOILER_RISK.POTENTIAL), true)
   assert.equal(canRevealRisk(SPOILER_RISK.HIGH, SPOILER_RISK.POTENTIAL), false)
   assert.equal(canRevealRisk(SPOILER_RISK.HIGH, SPOILER_RISK.HIGH), true)
-  assert.equal(
-    strongestSpoilerRisk([SPOILER_RISK.SAFE, SPOILER_RISK.POTENTIAL, SPOILER_RISK.HIGH]),
-    SPOILER_RISK.HIGH,
-  )
+
 })
 
 test('reading preview publishes only approved sources and keeps candidates pending', async () => {

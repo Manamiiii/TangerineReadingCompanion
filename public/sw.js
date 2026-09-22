@@ -1,13 +1,20 @@
-const STATIC_CACHE_PREFIX = 'tangerine-reading-companion-static-'
+const APP_ROOT = new URL('./', self.location.href)
+const LEGACY_CACHE_PREFIX = 'tangerine-reading-companion-static-'
+const STATIC_CACHE_PREFIX = `${LEGACY_CACHE_PREFIX}${encodeURIComponent(APP_ROOT.pathname)}:`
 const STATIC_CACHE = `${STATIC_CACHE_PREFIX}__BUILD_VERSION__`
 const PRECACHE = /* __PRECACHE__ */ []
-const APP_ROOT = new URL('./', self.location.href)
 const APP_URLS = new Set(PRECACHE.map(url => new URL(url, APP_ROOT).href))
 const ASSET_ROOT = new URL('assets/', APP_ROOT).href
 const DATA_ROOT = new URL('presets/reading-companion/', APP_ROOT).href
 
 async function buildCaches() {
-  return (await caches.keys()).filter(key => key.startsWith(STATIC_CACHE_PREFIX))
+  const keys = await caches.keys()
+  const legacy = []
+  for (const key of keys) {
+    if (key.startsWith(LEGACY_CACHE_PREFIX) && !key.slice(LEGACY_CACHE_PREFIX.length).includes(':')
+      && await caches.match(new URL('index.html', APP_ROOT), { cacheName: key, ignoreVary: true })) legacy.push(key)
+  }
+  return [...legacy, ...keys.filter(key => key.startsWith(STATIC_CACHE_PREFIX))]
 }
 
 async function offlineStatus(appAssets) {
@@ -68,7 +75,7 @@ self.addEventListener('message', event => {
 })
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
-    const keys = await buildCaches()
+    const keys = (await caches.keys()).filter(key => key.startsWith(STATIC_CACHE_PREFIX))
     const old = keys.slice(0, keys.indexOf(STATIC_CACHE))
     // Retain the previous build, excluding any newer build still installing.
     await Promise.all(old.slice(0, -1).map(key => caches.delete(key)))

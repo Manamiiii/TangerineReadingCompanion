@@ -555,33 +555,6 @@ export function visibleReadingFacts(facts, currentChapterId, chapters) {
   ))
 }
 
-export function projectReadingPlaces(entities) {
-  const places = (Array.isArray(entities) ? entities : [])
-    .filter((entity) => entity?.kind === 'place' && entity.geometry)
-    .map((entity) => ({
-      id: entity.id,
-      latitude: entity.geometry.latitude,
-      longitude: entity.geometry.longitude,
-    }))
-    .filter(({ latitude, longitude }) => Number.isFinite(latitude) && Number.isFinite(longitude))
-  if (places.length === 0) return []
-
-  const latitudes = places.map((place) => place.latitude)
-  const longitudes = places.map((place) => place.longitude)
-  const minLatitude = Math.min(...latitudes)
-  const maxLatitude = Math.max(...latitudes)
-  const minLongitude = Math.min(...longitudes)
-  const maxLongitude = Math.max(...longitudes)
-  const latitudeSpan = maxLatitude - minLatitude
-  const longitudeSpan = maxLongitude - minLongitude
-
-  return places.map((place) => ({
-    ...place,
-    x: longitudeSpan === 0 ? 50 : 8 + ((place.longitude - minLongitude) / longitudeSpan) * 84,
-    y: latitudeSpan === 0 ? 50 : 8 + ((maxLatitude - place.latitude) / latitudeSpan) * 84,
-  }))
-}
-
 function placeCoordinates(place) {
   const latitude = place?.geometry?.latitude
   const longitude = place?.geometry?.longitude
@@ -669,23 +642,6 @@ export function readingPlaceRelations(places, selectedPlaceId) {
     .sort((left, right) => left.distanceKm - right.distanceKm)
 }
 
-export function riskForDisclosure({ riskLevel, revealAt, currentChapterId, chapters }) {
-  const normalizedRisk = VALID_RISK_LEVELS.has(riskLevel) ? riskLevel : SPOILER_RISK.POTENTIAL
-  if (!isNonEmptyString(currentChapterId) || !Array.isArray(chapters) || chapters.length === 0) {
-    return normalizedRisk === SPOILER_RISK.HIGH ? SPOILER_RISK.HIGH : SPOILER_RISK.POTENTIAL
-  }
-
-  const currentIndex = chapterIndex(chapters, currentChapterId)
-  const revealIndex = revealAt?.chapterId ? chapterIndex(chapters, revealAt.chapterId) : -1
-  if (currentIndex < 0 || (revealAt?.chapterId && revealIndex < 0)) {
-    return normalizedRisk === SPOILER_RISK.HIGH ? SPOILER_RISK.HIGH : SPOILER_RISK.POTENTIAL
-  }
-  if (revealIndex > currentIndex) {
-    return normalizedRisk === SPOILER_RISK.HIGH ? SPOILER_RISK.HIGH : SPOILER_RISK.POTENTIAL
-  }
-  return normalizedRisk
-}
-
 export function spoilerGateAction(riskLevel) {
   if (riskLevel === SPOILER_RISK.SAFE) return SPOILER_GATE_ACTION.DISPLAY
   if (riskLevel === SPOILER_RISK.HIGH) return SPOILER_GATE_ACTION.CONFIRM_TWICE
@@ -698,12 +654,6 @@ export function canRevealRisk(riskLevel, authorization = 'none') {
     return authorization === SPOILER_RISK.POTENTIAL || authorization === SPOILER_RISK.HIGH
   }
   return riskLevel === SPOILER_RISK.HIGH && authorization === SPOILER_RISK.HIGH
-}
-
-export function strongestSpoilerRisk(risks) {
-  if (risks.includes(SPOILER_RISK.HIGH)) return SPOILER_RISK.HIGH
-  if (risks.includes(SPOILER_RISK.POTENTIAL)) return SPOILER_RISK.POTENTIAL
-  return SPOILER_RISK.SAFE
 }
 
 export function validateReadingPackage(pkg) {

@@ -34,7 +34,7 @@ Before code changes, inspect the current branch, working tree and latest commit,
 
 ## Verification
 
-Use Node.js `>=20.19.0`. Run checks relevant to the change:
+Use Node.js `^20.19.0 || >=22.12.0`. Run checks relevant to the change:
 
 ```bash
 npm run lint

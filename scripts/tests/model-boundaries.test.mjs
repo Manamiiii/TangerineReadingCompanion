@@ -54,7 +54,7 @@ test('request timeout remains active while reading the response body', async () 
       assert.equal(cleared, false)
       expire()
       return {}
-    } }) }), { name: 'AbortError' })
+    } }) }), { name: 'TimeoutError' })
     assert.equal(cleared, true)
   } finally {
     globalThis.setTimeout = originalSetTimeout

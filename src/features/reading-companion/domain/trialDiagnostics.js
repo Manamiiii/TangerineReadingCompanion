@@ -27,6 +27,8 @@ const VALID_PROVIDERS = new Set([
   'custom',
   'deepseek',
   'domestic',
+  'tianditu',
+  'openstreetmap',
   'international',
   'local',
   'minimax',
@@ -37,6 +39,7 @@ const VALID_PROVIDERS = new Set([
 
 const VALID_ERROR_CODES = new Set([
   'authentication',
+  'cancelled',
   'configuration',
   'empty-result',
   'network',
@@ -125,6 +128,7 @@ function writeEvents(storage, events) {
 }
 
 export function readingDiagnosticErrorCode(error) {
+  if (error?.name === 'AbortError') return 'cancelled'
   const status = Number(error?.status)
   const text = `${error?.name || ''} ${error?.message || ''}`.toLocaleLowerCase()
   if (status === 401 || status === 403) {

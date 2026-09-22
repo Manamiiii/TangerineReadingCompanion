@@ -1,4 +1,5 @@
-import { normalizeReadingInput } from '../../../platform/readingInput.js'
+import { FileButton } from '../../../components/common.jsx'
+import { scanBookMetadata, mergeScannedMetadata } from '../input/bookMetadataScan.js'
 import { useAsyncTask } from '../../../platform/useAsyncTask.js'
 import { clearModelSession } from '../../model/modelClient.js'
 import { useEffect, useRef, useState } from 'react'
@@ -20,8 +21,6 @@ import {
 import { analyzeReadingBookMetadata } from '../model/modelAdapter.js'
 import {
   PERSONAL_BOOK_COVER_THEMES,
-  extractPersonalBookMetadataDetails,
-  mergePersonalBookMetadata,
 } from '../domain/personalBooks.js'
 import { recordReadingTrialDiagnostic } from '../domain/trialDiagnostics.js'
 
@@ -119,7 +118,6 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
     setStatus('')
     const ticket = metadataTask.start()
     const editsAtStart = { ...fieldEdits.current }
-    const warnings = []
     clearModelSession()
     setMetadataScan({
       state: 'working',
@@ -130,87 +128,17 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
       correctedFields: [],
     })
     try {
-      normalizeReadingInput({ kind: 'image', source: 'file', blob: file, name: file.name })
-      let text = await recognizeImageText(
-        file,
-        (progress) => {
+      const { text, metadata, correctedFields, warnings, modelUsed } = await scanBookMetadata({
+        file, recognize: recognizeImageText, recognizeStructured: recognizeStructuredImageText,
+        analyze: analyzeReadingBookMetadata, modelConfig, signal: ticket.signal,
+        onProgress: progress => {
           if (ticket.isCurrent() && Number.isFinite(progress?.progress)) {
-            setMetadataScan((current) => ({
-              ...current,
-              progress: Math.round(progress.progress * 100),
-            }))
+            setMetadataScan(current => ({ ...current, progress: Math.round(progress.progress * 100) }))
           }
         },
-        { preserveLines: true, signal: ticket.signal },
-      )
-      if (!ticket.isCurrent()) return
-      if (!text) throw new Error('截图中没有识别出文字')
-      let localDetails = extractPersonalBookMetadataDetails(text)
-      if (
-        !localDetails.metadata.title
-        || !localDetails.metadata.translators?.length
-        || localDetails.uncertainFields.length > 0
-      ) {
-        try {
-        const retryText = await recognizeStructuredImageText(file, (progress) => {
-          if (ticket.isCurrent() && Number.isFinite(progress?.progress)) {
-            setMetadataScan((current) => ({
-              ...current,
-              progress: Math.round(progress.progress * 100),
-            }))
-          }
-        }, { signal: ticket.signal })
-        if (!ticket.isCurrent()) return
-        const retryDetails = extractPersonalBookMetadataDetails(retryText)
-        const quality = (details) => (
-          Object.keys(details.metadata).length * 2
-          - details.uncertainFields.length * 3
-          + (details.metadata.title ? 2 : 0)
-          + (details.metadata.translators?.length ? 2 : 0)
-        )
-        if (quality(retryDetails) > quality(localDetails)) {
-          text = retryText
-          localDetails = retryDetails
-        }
-      }
-        catch { ticket.signal.throwIfAborted(); warnings.push('增强识别失败，保留初次识别结果。') }
-      }
-      const localMetadata = localDetails.metadata
-      const configured = Boolean(
-        modelConfig.endpoint.trim()
-        && modelConfig.model.trim()
-        && modelConfig.apiKey.trim(),
-      )
-      let modelMetadata = {}
-      try {
-      modelMetadata = configured
-        ? await analyzeReadingBookMetadata({
-            endpoint: modelConfig.endpoint,
-            model: modelConfig.model,
-            apiKey: modelConfig.apiKey,
-            temperature: modelConfig.temperature,
-            ocrText: text,
-            signal: ticket.signal,
-            localMetadata,
-            uncertainFields: localDetails.uncertainFields,
-          })
-        : {}
-      } catch { ticket.signal.throwIfAborted(); warnings.push('模型整理失败，保留本机识别结果。') }
-      if (!ticket.isCurrent()) return
-      const metadata = mergePersonalBookMetadata(
-        localMetadata,
-        modelMetadata,
-        localDetails.uncertainFields,
-      )
-      const correctedFields = Object.keys(metadata).filter((key) => {
-        const localValue = localMetadata[key]
-        const finalValue = metadata[key]
-        return JSON.stringify(localValue ?? null) !== JSON.stringify(finalValue ?? null)
-          && finalValue
       })
-      setForm(current => ({ ...current, ...Object.fromEntries(Object.entries(metadata)
-        .filter(([key, value]) => value && (fieldEdits.current[key] || 0) === (editsAtStart[key] || 0))
-        .map(([key, value]) => [key, key === 'translators' ? value.join('、') : value])) }))
+      if (!ticket.isCurrent()) return
+      setForm(current => mergeScannedMetadata(current, metadata, editsAtStart, fieldEdits.current))
       setMetadataScan({
         state: 'done',
         fileName: file.name,
@@ -224,7 +152,7 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
         area: 'book',
         action: 'book-metadata-scan',
         outcome: 'success',
-        providerId: configured ? modelConfig.providerId : 'local',
+        providerId: modelUsed ? modelConfig.providerId : 'local',
       })
     } catch (error) {
       if (!ticket.isCurrent()) return
@@ -296,19 +224,12 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
               </small>
             </span>
           </div>
-          <label className="btn btn-sm">
+          <FileButton disabled={metadataScan.state === 'working'} onChange={chooseMetadataScreenshot}>
             <Upload size={13} />
             {metadataScan.state === 'working'
               ? `识别中 ${metadataScan.progress}%`
               : '选择截图并识别'}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={chooseMetadataScreenshot}
-              disabled={metadataScan.state === 'working'}
-              hidden
-            />
-          </label>
+          </FileButton>
         </div>
         {metadataScan.result && (
           <div className="reader-book-metadata-result">
@@ -351,10 +272,7 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
               ))}
             </div>
             <div className="reader-cover-image-actions">
-              <label className="btn btn-sm">
-                <Image size={13} /> 使用封面图片
-                <input type="file" accept="image/png,image/jpeg,image/webp" onChange={chooseCover} hidden />
-              </label>
+              <FileButton onChange={chooseCover} accept="image/png,image/jpeg,image/webp"><Image size={13} /> 使用封面图片</FileButton>
               {form.coverImage && (
                 <button type="button" className="btn btn-sm" onClick={() => change('coverImage', '')}>
                   恢复文字封面

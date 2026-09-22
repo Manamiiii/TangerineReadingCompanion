@@ -262,42 +262,6 @@
   font-size: 10px;
 }
 
-.reader-image-lightbox {
-  position: fixed;
-  inset: 0;
-  z-index: 1200;
-  display: grid;
-  place-items: center;
-  padding: 28px;
-  background: rgb(15 23 42 / 76%);
-}
-
-.reader-image-lightbox > div {
-  position: relative;
-  display: grid;
-  width: min(920px, 100%);
-  max-height: calc(100vh - 56px);
-  place-items: center;
-}
-
-.reader-image-lightbox img {
-  display: block;
-  max-width: 100%;
-  max-height: calc(100vh - 56px);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 24px 70px rgb(15 23 42 / 45%);
-  object-fit: contain;
-}
-
-.reader-image-lightbox .icon-btn {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  z-index: 1;
-  background: rgb(255 255 255 / 92%);
-  color: #0f172a;
-}
-
 .reader-model-panel {
   display: grid;
   gap: 10px;

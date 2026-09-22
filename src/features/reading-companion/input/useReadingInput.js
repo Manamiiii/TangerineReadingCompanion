@@ -1,3 +1,4 @@
+import { recordReadingTrialDiagnostic } from '../domain/trialDiagnostics.js'
 import { clearMapSearchCache } from '../map/geocoding.js'
 import { clearModelSession } from '../../model/modelClient.js'
 import { createAsyncTask } from '../../../platform/asyncTask.js'
@@ -139,9 +140,11 @@ export function useReadingInput(bookId) {
       setExcerpt(input.text)
       setSessionVersion((version) => version + 1)
       setOcrState(text ? 'done' : 'empty')
+      recordReadingTrialDiagnostic({ area: 'ocr', action: 'ocr-excerpt', providerId: 'local', outcome: text ? 'success' : 'error', error: text ? undefined : new Error('empty') })
       setInputStatus(text ? '本机识别完成，请核对文字后确认记录。' : '没有识别出文字，请换一张更清晰的截图。')
-    } catch {
+    } catch (error) {
       if (!revision.current.isCurrent(ticket)) return
+      recordReadingTrialDiagnostic({ area: 'ocr', action: 'ocr-excerpt', providerId: 'local', outcome: 'error', error })
       setOcrState('error')
       setInputStatus('本机 OCR 失败，请检查图片或稍后重试。')
     }

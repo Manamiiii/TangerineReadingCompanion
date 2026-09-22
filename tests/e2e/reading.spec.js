@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { readFile } from 'node:fs/promises'
+import { createPersonalReadingPackage, mergePersonalBookKnowledge } from '../../src/features/reading-companion/domain/personalBooks.js'
 
 const pkg = JSON.parse(await readFile(new URL('../../public/presets/reading-companion/gone-with-the-wind-zh-9787570202188.json', import.meta.url)))
 const bookHash = `/#book=${pkg.id}&tab=input`
@@ -122,6 +123,25 @@ test('blocked configuration storage does not prevent opening a book', async ({ p
   await expect(page.getByRole('tab', { name: /阅读输入/ })).toBeVisible()
 })
 
+test('tabs, image upload and modal preview support keyboard use and restore focus', async ({ page }) => {
+  await openBook(page)
+  await page.getByRole('tab', { name: '阅读输入', exact: true }).focus()
+  await page.keyboard.press('ArrowRight')
+  await expect(page.getByRole('tab', { name: /已遇到/ })).toBeFocused()
+  await page.keyboard.press('Home')
+  const chooser = page.waitForEvent('filechooser')
+  await page.getByRole('button', { name: /从截图提取/ }).focus()
+  await page.keyboard.press('Enter')
+  await (await chooser).setFiles({ name: 'test.png', mimeType: 'image/png', buffer: Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1sAAAAASUVORK5CYII=', 'base64') })
+  const trigger = page.getByRole('button', { name: '打开截图大图' })
+  await trigger.click()
+  await expect(page.getByRole('dialog', { name: '截图大图预览' })).toBeVisible()
+  for (let index = 0; index < 4; index++) await page.keyboard.press('Tab')
+  expect(await page.evaluate(() => Boolean(document.activeElement.closest('dialog')))).toBe(true)
+  await page.keyboard.press('Escape')
+  await expect(trigger).toBeFocused()
+})
+
 test('a malformed personal package is isolated without hiding the library', async ({ page }) => {
   await openBook(page)
   await seedRecords(page, [{ key: 'readerPersonalPackage:broken', value: { package: { id: 'broken', personal: true } } }])
@@ -129,6 +149,23 @@ test('a malformed personal package is isolated without hiding the library', asyn
   await expect(page.getByRole('heading', { name: '我的书架' })).toBeVisible()
   await expect(page.getByText(/一本个人书籍数据异常/)).toBeVisible()
   await openBook(page)
+})
+
+test('deleting a personal book in another tab returns its open reader to the library', async ({ page, context }) => {
+  await openBook(page)
+  const personal = createPersonalReadingPackage({ packageId: 'cross-tab', bookId: 'book', editionId: 'edition', title: '跨标签测试', author: '作者', chapterCount: 2 })
+  await seedRecords(page, [{ key: 'readerPersonalPackage:cross-tab', value: { package: personal } }])
+  await page.reload()
+  await page.goto('/#book=cross-tab&tab=input')
+  await expect(page.getByRole('heading', { name: '跨标签测试', exact: true })).toBeVisible()
+  await excerpt(page).fill('临时原文')
+  const second = await context.newPage()
+  await second.goto('/')
+  second.on('dialog', dialog => dialog.accept())
+  await second.getByRole('button', { name: '删除个人书籍“跨标签测试”' }).click()
+  await expect(page.getByRole('heading', { name: '我的书架' })).toBeVisible()
+  await expect(page.getByRole('button', { name: /跨标签测试/ })).toHaveCount(0)
+  await second.close()
 })
 
 test('backup preview requires a prior backup and merges old reading records without clearing local data', async ({ page }) => {
@@ -199,6 +236,30 @@ test.describe('formal spoiler gates with synthetic test facts', () => {
 test.describe('async and model boundaries', () => {
   test.use({ serviceWorkers: 'block' })
 
+  test('personal books remain available without the built-in catalog and prepared places can be located', async ({ page }) => {
+    await openBook(page)
+    const personal = mergePersonalBookKnowledge(createPersonalReadingPackage({ packageId: 'personal-map', bookId: 'b', editionId: 'e', title: '个人地图测试', author: '作者', chapterCount: 2 }), [
+      { name: 'Alpha', kind: 'place', placeKind: 'real' },
+      { name: 'Fantasy', kind: 'place', placeKind: 'fictional' },
+    ], (() => { let id = 0; return () => String(++id) })()).package
+    await seedRecords(page, [{ key: 'readerPersonalPackage:personal-map', value: { package: personal } }, {
+      key: 'readerState:e', value: { editionId: 'e', currentChapterId: 'chapter-01', observedEntities: personal.onDemandEntities.map(entity => ({
+        id: entity.name, name: entity.name, kind: 'place', placeKind: entity.placeKind, packageEntityId: entity.id, firstSeenChapterId: 'chapter-01',
+      })) },
+    }])
+    await page.route('**/presets/reading-companion/catalog*.json', route => route.abort())
+    await page.goto('/')
+    await expect(page.getByText(/内置阅读资料目录暂不可用/)).toBeVisible()
+    await page.goto('/#book=personal-map&tab=records')
+    for (const name of ['Alpha', 'Fantasy']) {
+      const record = page.locator('.reader-observed-item').filter({ hasText: name })
+      await record.getByRole('button', { name: '查看详情', exact: true }).click()
+      await page.getByRole('button', { name: '在地图中查看此地点' }).click()
+      await expect(page.getByLabel(name === 'Alpha' ? '现代地图搜索词' : '现实参考区域')).toHaveValue(name === 'Alpha' ? 'Alpha' : '')
+      await page.getByRole('tab', { name: /已遇到/ }).click()
+    }
+  })
+
   test('switching map targets discards a delayed result', async ({ page }) => {
     await openBook(page)
     await seedRecords(page, [{ key: `readerState:${pkg.edition.id}`, value: {
@@ -254,5 +315,14 @@ test.describe('async and model boundaries', () => {
     await page.getByRole('button', { name: '查找', exact: true }).click()
     await expect(page.locator('.reader-question-answer blockquote')).toContainText('Alice walked into the garden.')
     await expect(page.locator('.reader-question-answer blockquote')).toContainText('当前段落')
+    modelPayload = { candidates: [{ name: 'Alice', kind: 'person' }] }
+    await excerpt(page).fill('Alice walked into another garden.')
+    await page.getByRole('button', { name: '用模型发现新名称', exact: true }).click()
+    const nameInput = page.locator('.reader-model-candidate input').first()
+    await nameInput.fill('Alice')
+    await nameInput.press('End')
+    await nameInput.pressSequentially(' Smith')
+    await expect(nameInput).toHaveValue('Alice Smith')
+    await expect(nameInput).toBeFocused()
   })
 })

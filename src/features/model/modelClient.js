@@ -93,7 +93,7 @@ export async function requestModelJson({
   signal?.throwIfAborted()
   signal?.addEventListener('abort', cancel, { once: true })
   activeRequests.add(controller)
-  const timeout = setTimeout(() => controller.abort(), 45000)
+  const timeout = setTimeout(() => controller.abort(new DOMException('模型请求超时', 'TimeoutError')), 45000)
   let response
   try {
     response = await fetchImpl(requestUrl, {
@@ -112,13 +112,14 @@ export async function requestModelJson({
       signal: controller.signal,
     })
     if (!response.ok) {
-      throw new Error(`模型接口返回 ${response.status}`)
+      throw Object.assign(new Error(`模型接口返回 ${response.status}`), { status: response.status })
     }
     const body = await response.json()
     controller.signal.throwIfAborted()
     return parseJsonObject(body?.choices?.[0]?.message?.content)
   } catch (error) {
-    if (controller.signal.aborted || error?.name === 'AbortError') throw new DOMException('模型请求已取消或超时', 'AbortError')
+    if (controller.signal.aborted) throw controller.signal.reason
+    if (error?.name === 'AbortError') throw new DOMException('模型请求已取消', 'AbortError')
     // Provider/network messages can echo credentials or submitted text.
     if (/^模型接口返回 \d+$/.test(error?.message)) throw error
     throw new Error('模型请求失败，请检查网络、接口和返回格式')

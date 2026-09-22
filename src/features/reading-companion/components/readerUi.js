@@ -1,6 +1,7 @@
 import { OBSERVED_ENTITY_KIND, OBSERVED_PLACE_KIND, normalizeObservedEntityName, observedEntityEncounterChapterIds } from '../domain/readingCompanion.js'
 
 export const PLACE_KIND_LABELS = {
+  unknown: '不确定',
   real: '真实地点',
   fictional: '虚构地点',
   prototype: '原型地点',
@@ -100,4 +101,3 @@ export function observedRecordAction(
     existingChapter,
   }
 }
-

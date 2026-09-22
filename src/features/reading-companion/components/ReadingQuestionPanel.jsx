@@ -1,3 +1,4 @@
+import { modelConfigIsComplete } from '../../model/modelConfig.js'
 import { useAsyncTask } from '../../../platform/useAsyncTask.js'
 import { useEffect, useState } from 'react'
 import { Settings2, ShieldCheck } from 'lucide-react'
@@ -17,11 +18,7 @@ export function ReadingQuestionPanel({
   const [message, setMessage] = useState('')
   const [result, setResult] = useState(null)
   useEffect(() => { setResult(null); setRequestState('idle') }, [backgrounds])
-  const configured = Boolean(
-    modelConfig.endpoint.trim()
-    && modelConfig.model.trim()
-    && modelConfig.apiKey.trim(),
-  )
+  const configured = modelConfigIsComplete(modelConfig)
 
   useEffect(() => {
     if (selectedText) { task.cancel(); setRequestState('idle'); setResult(null) }

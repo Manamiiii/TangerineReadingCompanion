@@ -1,3 +1,4 @@
+import { assertReadingCatalog } from '../domain/readingCatalog.js'
 import { assertReadingPackage } from '../domain/readingCompanion.js'
 import readingDataUrls from 'virtual:reading-data-urls'
 import {
@@ -28,23 +29,7 @@ export async function loadReadingPackageCatalog(personalEntries) {
   let catalog
   try {
     catalog = await fetchJson(catalogUrl, '阅读资料目录')
-  if (catalog?.schemaVersion !== 1 || !Array.isArray(catalog.packages)) {
-    throw new Error('阅读资料目录格式无效')
-  }
-  for (const entry of catalog.packages) {
-    if (!entry?.id || !entry?.title || !entry?.editionLabel) {
-      throw new Error('阅读资料目录项缺少必要信息')
-    }
-    if (!/^presets\/reading-companion\/[a-z0-9]+(?:-[a-z0-9]+)*\.json$/.test(entry.path || '')) {
-      throw new Error(`阅读资料目录路径无效：${entry.id}`)
-    }
-    const summary = entry.preparedSummary
-    if (!summary
-      || !['entityCount', 'place', 'person', 'concept', 'event', 'factCount', 'sourceCount']
-        .every((key) => Number.isInteger(summary[key]) && summary[key] >= 0)) {
-      throw new Error(`阅读资料目录缺少有效的准备摘要：${entry.id}`)
-    }
-  }
+    assertReadingCatalog(catalog)
   } catch { catalog = { packages: [] }; warnings.push('内置阅读资料目录暂不可用，个人书籍仍可使用。') }
   const entries = [...catalog.packages, ...personalEntries]
   entries.warnings = warnings

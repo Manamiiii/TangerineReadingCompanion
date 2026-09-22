@@ -101,9 +101,9 @@ export function ReadingMapPanel({
     if (!isActive || !focus || handledFocus.current === focus) return
     const place = places.find(item => item.id === focus.packageEntityId || item.id === 'reader-map:' + focus.id || item.name === focus.name)
     const target = searchableObservedPlaces.find(item => item.id === focus.id)
-    if (place?.geometry) setSelectedPlaceId(place.id)
-    else if (target) beginLookup(target)
-    else return
+    if (place) setSelectedPlaceId(place.id)
+    if (!place?.geometry && target) beginLookup(target)
+    if (!place && !target) return
     handledFocus.current = focus
   }, [focus, isActive, places, searchableObservedPlaces])
   const selectedPlace = places.find((place) => place.id === selectedPlaceId) || places[0] || null
@@ -772,4 +772,3 @@ export function ReadingMapPanel({
     </section>
   )
 }
-
