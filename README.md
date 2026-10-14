@@ -27,6 +27,8 @@ npm run dev
 
 开发服务器固定使用 `http://localhost:5174/`；端口被占用时会直接报错，不会自动切换到其他端口。
 
+Windows 可双击 `TangerineReadingCompanion.vbs`（或指向它的桌面快捷方式）：在后台启动本地 Vite 服务，再用默认浏览器打开相同的 `http://localhost:5174/`，重复启动复用已有服务。需要已安装 Node.js 和项目依赖；启动器不会自动安装软件。关闭浏览器后本地服务仍运行，注销或重启 Windows 会结束它。启动失败信息写入 `artifacts/launcher-error.log`。这是本地 Web 启动入口，不是 Windows 原生安装包。
+
 ## 常用命令
 
 | 命令 | 用途 |
@@ -59,6 +61,8 @@ src/features/model/               # 供应商连接与本机配置
 src/features/ocr/                 # 本机 OCR
 scripts/reading-companion/        # 资料 staging、校验、审计与发布
 public/presets/reading-companion/ # 正式版本化资料包
+public/icons/                     # 网页与 PWA 图标
+assets/                           # 同系列图标原图、Windows ICO 与设计说明
 tests/e2e/                        # 独立浏览器端到端测试
 scripts/build-offline.mjs         # 生成资料内容指纹与离线缓存清单
 docs/                             # 产品、安全、模型、数据与多端交付规范
