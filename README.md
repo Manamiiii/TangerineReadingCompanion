@@ -29,6 +29,8 @@ npm run dev
 
 Windows 可双击 `TangerineReadingCompanion.vbs`（或指向它的桌面快捷方式）：在后台启动本地 Vite 服务，再用默认浏览器打开相同的 `http://localhost:5174/`，重复启动复用已有服务。需要已安装 Node.js 和项目依赖；启动器不会自动安装软件。关闭浏览器后本地服务仍运行，注销或重启 Windows 会结束它。启动失败信息写入 `artifacts/launcher-error.log`。这是本地 Web 启动入口，不是 Windows 原生安装包。
 
+启动状态窗口显示实际步骤、动态等待条和已等待秒数，就绪后自动打开页面；失败原因保留在窗口中，可选中复制。窗口可最小化；关闭或点击“停止等待”只停止等待和自动打开页面，已启动的服务继续运行。`scripts/startup_window.ps1` 随工程独立维护，原快捷方式直接生效。只检查服务、不显示窗口或打开浏览器可运行 `powershell -NoProfile -File scripts/launch-desktop.ps1 -NoOpenBrowser`。启动回归通过 `node --test scripts/tests/windows-launcher.test.mjs` 使用临时服务替身，不访问个人阅读数据。
+
 ## 常用命令
 
 | 命令 | 用途 |

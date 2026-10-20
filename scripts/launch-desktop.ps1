@@ -1,7 +1,20 @@
+param([switch]$NoOpenBrowser, [scriptblock]$OnProgress)
 $ErrorActionPreference = 'Stop'
 $projectRoot = [System.IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $artifacts = Join-Path $projectRoot 'artifacts'
 $url = 'http://localhost:5174/'
+if (-not $NoOpenBrowser -and -not $OnProgress) {
+    . (Join-Path $PSScriptRoot 'startup_window.ps1')
+    $opened = Show-TangerineStartup -AppName 'TangerineReadingCompanion' -ServiceLauncher $PSCommandPath `
+        -StartupParameters @{NoOpenBrowser=$true} -OnReady { Start-Process $url }
+    if (-not $opened) { exit 1 }
+    exit 0
+}
+function Report-StartupProgress([string]$Stage) {
+    if ($OnProgress) { & $OnProgress $Stage | Out-Null }
+    else { Write-Host "Startup: $Stage" }
+}
+Report-StartupProgress 'checking-files'
 $mutex = [System.Threading.Mutex]::new($false, 'Local\TangerineReadingCompanionLauncher')
 $locked = $false
 $startedServer = $null
@@ -15,10 +28,12 @@ function Test-ReaderServer {
 
 try {
     New-Item -ItemType Directory -Force -Path $artifacts | Out-Null
+    Report-StartupProgress 'waiting-lock'
     try { $locked = $mutex.WaitOne(30000) }
     catch [System.Threading.AbandonedMutexException] { $locked = $true }
     if (-not $locked) { throw 'Another launcher is still starting. Try again shortly.' }
 
+    Report-StartupProgress 'checking-service'
     if (-not (Test-ReaderServer)) {
         if (Get-NetTCPConnection -LocalPort 5174 -State Listen -ErrorAction SilentlyContinue) {
             throw 'Port 5174 belongs to another service. Close that service and try again; the reader will not change its data origin.'
@@ -26,7 +41,9 @@ try {
         $node = (Get-Command node.exe -ErrorAction Stop).Source
         $vite = Join-Path $projectRoot 'node_modules\vite\bin\vite.js'
         if (-not (Test-Path -LiteralPath $vite)) { throw 'Project dependencies are missing. Run npm install in the project folder first.' }
+        Report-StartupProgress 'starting-review'
         $startedServer = Start-Process -FilePath $node -ArgumentList @("`"$vite`"", '--host', 'localhost', '--port', '5174', '--strictPort') -WorkingDirectory $projectRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $artifacts 'launcher-server.log') -RedirectStandardError (Join-Path $artifacts 'launcher-server-error.log') -PassThru
+        Report-StartupProgress 'waiting-review'
         $ready = $false
         for ($attempt = 0; $attempt -lt 40; $attempt++) {
             if (Test-ReaderServer) { $ready = $true; break }
@@ -35,11 +52,11 @@ try {
         }
         if (-not $ready) { throw 'The local reader server did not become ready in time.' }
     }
-    Start-Process $url
+    Report-StartupProgress 'ready'
+    if (-not $NoOpenBrowser) { Start-Process $url }
 } catch {
-    if ($startedServer -and -not $startedServer.HasExited) { $startedServer.Kill() }
     $_.Exception.Message | Set-Content -LiteralPath (Join-Path $artifacts 'launcher-error.log') -Encoding UTF8
-    exit 1
+    throw
 } finally {
     if ($locked) { $mutex.ReleaseMutex() }
     $mutex.Dispose()
