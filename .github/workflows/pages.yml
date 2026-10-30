@@ -9,8 +9,6 @@ on:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -73,6 +71,9 @@ jobs:
 
   deploy:
     name: Deploy to GitHub Pages
+    permissions:
+      pages: write
+      id-token: write
     if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest

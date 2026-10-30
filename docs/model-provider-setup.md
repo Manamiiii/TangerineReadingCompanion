@@ -1,6 +1,6 @@
 # 模型供应商配置
 
-阅读伴侣的受限模型任务通过 OpenAI Chat Completions 兼容协议调用外部模型。模型可以发现当前段落名称、准备个人隐藏词典、解释当前内容、整理书目信息和地图检索词。各任务使用独立提示词和输出校验，模型不能自动改写正式资料或读者记录。
+阅读伴侣的受限模型任务通过 OpenAI Chat Completions 兼容协议调用外部模型。模型可以发现当前段落名称、准备个人隐藏词典、摘录当前内容依据、整理书目信息和地图检索词。各任务使用独立提示词和输出校验，模型不能自动改写正式资料或读者记录。
 
 ## 独立配置
 
@@ -20,13 +20,13 @@
 2. 从建议列表选择模型 ID，或手动填写供应商当前支持的模型 ID。
 3. 在供应商控制台创建 API Key 并粘贴。
 4. 点击“保存并切换到此模型”。
-5. 回到“阅读输入”，放入一段不敏感的短文字进行名称识别或当前内容答疑；创建个人书籍时也可以保留“创建后用 AI 准备基础资料”勾选。
+5. 回到“阅读输入”，放入一段不敏感的短文字进行名称识别或当前内容依据查找；创建个人书籍时也可以主动勾选“创建后用 AI 准备基础资料”。
 
-每个供应商的接口地址和模型 ID 分别保存在当前浏览器的 `localStorage`。各供应商的 API Key 分别保存在 `sessionStorage`，关闭浏览器会话后失效；Key 不进入 IndexedDB、数据导出或仓库。切换供应商时，本次会话内已经保存过的对应 Key 会自动恢复。
+每个供应商的接口地址和模型 ID 分别保存在当前浏览器的 `localStorage`。各供应商的 API Key 分别保存在 `sessionStorage`，Key 不进入 IndexedDB、数据导出或仓库。浏览器恢复会话可能恢复 sessionStorage；共用电脑上使用后请清空 Key 并保存。切换供应商时，本次会话内已经保存过的对应 Key 会自动恢复。
 
 ## 智谱 GLM
 
-推荐作为首次免费测试。
+预设仅供配置参考；先在服务商控制台核对模型可用性、额度和计费。无需配置模型也能使用核心记录功能。
 
 ```text
 供应商：智谱 GLM
@@ -34,14 +34,14 @@
 模型 ID：glm-4-flash-250414
 ```
 
-- `GLM-4-Flash-250414` 是智谱文档标明的免费 API 模型，适合名称提取和 JSON 输出。
-- 国内网络可以直接访问。
+- 示例模型为 `glm-4-flash-250414`，是否仍提供及是否收费以服务商当前控制台为准。
+- 实际网络和浏览器跨域可用性需在你的环境中验证。
 - 在[智谱 API Key 管理](https://bigmodel.cn/usercenter/proj-mgmt/apikeys)创建 Key。
 - 以[智谱免费模型说明](https://docs.bigmodel.cn/cn/guide/models/free/glm-4-flash-250414)和控制台当前状态为准。
 
 ## DeepSeek
 
-DeepSeek API 按 Token 计费，没有稳定的长期免费模型，但轻量模型费用较低。
+先在 DeepSeek 控制台核对账户额度、可用模型及价格；工具不保证预设模型始终可用。
 
 ```text
 供应商：DeepSeek
@@ -55,13 +55,13 @@ DeepSeek API 按 Token 计费，没有稳定的长期免费模型，但轻量模
 deepseek-v4-pro
 ```
 
-- 不使用已经弃用的 `deepseek-chat` 和 `deepseek-reasoner` 名称。
+- 如果示例模型不可用，请填写控制台实际支持的模型 ID。
 - 在[DeepSeek API Key 管理](https://platform.deepseek.com/api_keys)创建 Key。
 - 当前模型和价格以[DeepSeek 接入及模型说明](https://api-docs.deepseek.com/quick_start/pricing-details-usd/)为准。
 
 ## MiniMax
 
-MiniMax 当前属于付费测试路线。阅读伴侣会为该供应商使用 `0.1` 温度，以满足其文本 API 对温度必须大于 0 的要求。
+MiniMax 的费用和额度以控制台为准。阅读伴侣会为该供应商使用 `0.1` 温度，以满足其文本 API 对温度必须大于 0 的要求。
 
 ```text
 供应商：MiniMax

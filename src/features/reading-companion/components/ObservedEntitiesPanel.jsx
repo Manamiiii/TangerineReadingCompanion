@@ -172,9 +172,12 @@ export function ObservedEntitiesPanel({
   }
 
   async function removeObservedEntity(id) {
+    const entity = observedEntities.find(item => item.id === id)
+    if (!entity || !window.confirm(`删除“${entity.name}”的遇见记录？其全部出现章节、个人备注和地图位置也会删除，无法直接撤销。需要保留时请先从“数据管理”导出备份。`)) return
     setStatus('')
     try {
       await onChange(current => current.filter((entity) => entity.id !== id))
+      setStatus(`已删除“${entity.name}”的遇见记录。`)
     } catch (error) {
       setStatus(error?.message || '删除失败')
     }

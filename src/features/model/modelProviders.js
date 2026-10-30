@@ -11,11 +11,11 @@ export const READING_MODEL_PROVIDERS = Object.freeze({
   [READING_MODEL_PROVIDER.ZHIPU]: Object.freeze({
     id: READING_MODEL_PROVIDER.ZHIPU,
     label: '智谱 GLM',
-    description: '国内直连 · GLM-4-Flash 提供免费 API',
+    description: '可选模型服务 · 可用模型、额度与费用以控制台为准',
     endpoint: 'https://open.bigmodel.cn/api/paas/v4/chat/completions',
     defaultModel: 'glm-4-flash-250414',
     models: Object.freeze([
-      Object.freeze({ id: 'glm-4-flash-250414', label: 'GLM-4-Flash-250414 · 免费' }),
+      Object.freeze({ id: 'glm-4-flash-250414', label: 'GLM-4-Flash-250414' }),
     ]),
     temperature: 0,
     consoleUrl: 'https://bigmodel.cn/usercenter/proj-mgmt/apikeys',
@@ -24,7 +24,7 @@ export const READING_MODEL_PROVIDERS = Object.freeze({
   [READING_MODEL_PROVIDER.DEEPSEEK]: Object.freeze({
     id: READING_MODEL_PROVIDER.DEEPSEEK,
     label: 'DeepSeek',
-    description: '国内直连 · 按 Token 计费，价格较低',
+    description: '可选模型服务 · 可用模型、额度与费用以控制台为准',
     endpoint: 'https://api.deepseek.com/chat/completions',
     defaultModel: 'deepseek-v4-flash',
     models: Object.freeze([
@@ -38,7 +38,7 @@ export const READING_MODEL_PROVIDERS = Object.freeze({
   [READING_MODEL_PROVIDER.MINIMAX]: Object.freeze({
     id: READING_MODEL_PROVIDER.MINIMAX,
     label: 'MiniMax',
-    description: '国内直连 · 当前文本 API 按量或套餐计费',
+    description: '可选模型服务 · 可用模型、额度与费用以控制台为准',
     endpoint: 'https://api.minimaxi.com/v1/chat/completions',
     defaultModel: 'MiniMax-M2.7',
     models: Object.freeze([

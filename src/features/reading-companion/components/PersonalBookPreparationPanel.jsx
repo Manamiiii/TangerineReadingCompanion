@@ -66,11 +66,11 @@ export function PersonalBookPreparationPanel({
       <div>
         <Sparkles size={19} />
         <span>
-          <strong>AI 准备这本书</strong>
+          <strong>可选：AI 准备名称词典</strong>
           <small>
             {preparedCount > 0
               ? `已经准备 ${preparedCount} 个名称；重新运行只会补充，不会清空阅读记录。`
-              : '自动准备人物、地点和概念名称，不需要你提前了解或逐条审核。'}
+              : '也可以直接手动记录，无需配置模型。使用 AI 会发送书目和版本信息，可能产生 API 费用。'}
           </small>
         </span>
       </div>

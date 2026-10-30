@@ -60,7 +60,7 @@ export function ReadingInputSource({ excerpt, link, imageInput, ocrState, ocrPro
               </>
             )}
             <div className="reader-session-actions">
-              <span>当前会话临时输入</span>
+              <span>临时输入：刷新、切书或切换章节后清空</span>
               <button type="button" className="btn btn-sm" onClick={clearInput}>清空当前内容</button>
             </div>
             {link && <p className="reader-input-status">已接收链接（不自动访问）：{link}</p>}
@@ -71,11 +71,12 @@ export function ReadingInputSource({ excerpt, link, imageInput, ocrState, ocrPro
                 value={excerpt}
                 onChange={(event) => changeExcerpt(event.target.value)}
                 onSelect={captureExcerptSelection}
-                placeholder="从微信读书复制一小段文字，本机可以扫描其中已审计的名称…"
+                placeholder="粘贴正在读的一小段文字；本机会查找已有名称，也可选中文字手动记录…"
                 rows={7}
               />
               <small>{excerpt.length} 字</small>
             </label>
+            <p className="reader-input-help">没有匹配结果也可以记录：选中上方文字中的名称，或到“已遇到”手动添加。名称和备注确认保存后保留，段落与截图不保存。</p>
 
 </>
 }

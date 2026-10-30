@@ -59,6 +59,22 @@
   font-size: 13px;
 }
 
+.reader-start-guide {
+  margin-top: 16px;
+  color: var(--text);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.reader-start-guide summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.reader-start-guide ol {
+  padding-left: 22px;
+}
+
 .reader-library-panel {
   padding: 20px;
   background: var(--surface);

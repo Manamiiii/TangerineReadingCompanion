@@ -211,7 +211,7 @@ export function ReadingServiceSettings({
           )}
         </details>
         <p className="reader-settings-storage">
-          阅读伴侣配置独立保存。每个供应商的地址和模型名分别保存在本机 localStorage；各家 Key 分别存在 sessionStorage，关闭浏览器会话后失效。
+          阅读伴侣配置独立保存。供应商地址和模型名保存在本机；Key 只在当前浏览器会话中保存。浏览器恢复会话可能恢复 Key，共用电脑上请清空 Key 并保存。
           不同功能会发送书目信息，或当前问题、段落、书名和章节标签；只有点击功能或创建时保留 AI 准备选项才会调用。
         </p>
       </section>
@@ -280,7 +280,7 @@ export function ReadingServiceSettings({
             </a>
           </div>
         </details>
-        <p className="reader-settings-storage">天地图 Key 仅保存在当前浏览器会话，关闭会话后需重新填写。</p>
+        <p className="reader-settings-storage">天地图 Key 只在当前浏览器会话中保存；共用电脑上请清空 Key 并保存。</p>
       </section>
       <section className="reader-panel reader-settings-card reader-feedback-card">
         <div className="reader-panel-heading">
@@ -295,6 +295,7 @@ export function ReadingServiceSettings({
         </div>
         <p className="reader-settings-intro">
           只导出当前书的版本、进度、已遇到记录、备注、地图确认和脱敏运行诊断。不包含 API Key、段落、搜索词、截图或模型内容。
+          文件仍含你的个人备注与阅读记录，分享前请打开检查并移除不愿公开的信息。反馈文件不能用于恢复书架；备份请使用右上角“数据管理”。
         </p>
         <button type="button" className="btn reader-feedback-export" onClick={exportReadingFeedback}>
           <Download size={14} />

@@ -1,4 +1,5 @@
 import { FileButton } from '../../../components/common.jsx'
+import { modelConfigIsComplete } from '../../model/modelConfig.js'
 import { scanBookMetadata, mergeScannedMetadata } from '../input/bookMetadataScan.js'
 import { useAsyncTask } from '../../../platform/useAsyncTask.js'
 import { clearModelSession } from '../../model/modelClient.js'
@@ -67,7 +68,7 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
     chapterText: '',
     coverTheme: 'amber',
     coverImage: '',
-    prepareWithModel: true,
+    prepareWithModel: false,
   })
   const [status, setStatus] = useState('')
   const [saving, setSaving] = useState(false)
@@ -207,7 +208,7 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
       <div className="reader-personal-book-heading">
         <div>
           <strong>添加个人书籍</strong>
-          <span>填好书目和章节即可；模型可以自动准备阅读时会用到的基础名称。</span>
+          <span>填写书名、作者和章节数即可开始；其余信息可留空，不需要 API Key。</span>
         </div>
         <button type="button" className="icon-btn" onClick={onCancel} aria-label="关闭添加书籍">
           <X size={15} />
@@ -220,7 +221,7 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
             <span>
               <strong>从书籍详情截图自动填入</strong>
               <small>
-                {metadataScan.fileName || '支持类似微信读书详情、版权信息页面的截图'}
+                {metadataScan.fileName || '支持书籍详情、版权信息页面的截图'}
               </small>
             </span>
           </div>
@@ -231,6 +232,11 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
               : '选择截图并识别'}
           </FileButton>
         </div>
+        <p className="reader-input-help">
+          截图先在本机识别。{modelConfigIsComplete(modelConfig)
+            ? '已配置模型时，识别文字还会发送到所选接口校对书目；不希望外发时请手动填写。'
+            : '未配置模型时不会发送给模型服务；首次 OCR 可能需要联网加载引擎。'}
+        </p>
         {metadataScan.result && (
           <div className="reader-book-metadata-result">
             <div>
@@ -284,11 +290,11 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
         <div className="reader-personal-book-grid">
           <label>
             <span>书名 *</span>
-            <input value={form.title} onChange={(event) => change('title', event.target.value)} />
+            <input required value={form.title} onChange={(event) => change('title', event.target.value)} />
           </label>
           <label>
             <span>作者 *</span>
-            <input value={form.author} onChange={(event) => change('author', event.target.value)} />
+            <input required value={form.author} onChange={(event) => change('author', event.target.value)} />
           </label>
           <label>
             <span>译者</span>
@@ -352,7 +358,7 @@ function PersonalBookCreator({ onCreate, onCancel, modelConfig }) {
           <span>
             <strong>创建后用 AI 准备基础资料</strong>
             <small>
-              自动建立隐藏名称词典，不需要提前读过本书或逐条审核；名称以后在原文中出现时才会显示。
+              可选，需要在书内“设置”配置模型。勾选后会发送书目和版本信息，可能产生 API 费用；只准备隐藏名称词典，名称以后在原文中出现时才显示。
             </small>
           </span>
         </label>
@@ -416,6 +422,17 @@ export function ReadingLibrary({
       <section className="reader-library-hero">
         <span className="reader-eyebrow"><LibraryBig size={15} /> 经典文学阅读伴侣</span>
         <h2>选择一本书</h2>
+        <p>记住读过的人物和地点，按阅读进度回顾自己的笔记。这里不提供电子书正文。</p>
+        <details className="reader-start-guide" open={!continueEntry}>
+          <summary>第一次使用：不用 AI 也能开始</summary>
+          <ol>
+            <li>添加你正在读的书，或选择内置《飘》体验；先设置“我已经读到”的章节。</li>
+            <li>粘贴一小段文字，确认匹配到的名称；没有匹配时，可选中文字记录，或在“已遇到”中手动添加。</li>
+            <li>在“已遇到”查看详情、保存备注；结束后从右上角“数据管理”导出备份。</li>
+          </ol>
+          <p>书架与记录只在当前浏览器、当前网站地址中保存。更换设备或清理浏览器数据前请先备份。</p>
+          <p>内置《飘》只有指定译本的部分名称与背景，不含完整人物关系或逐章解读。</p>
+        </details>
         {continueEntry && (
           <button
             type="button"
@@ -432,7 +449,7 @@ export function ReadingLibrary({
         <div className="reader-library-heading">
           <div>
             <h3>我的书架</h3>
-            <span>{catalog.length} 本已准备</span>
+            <span>{catalog.length} 本书</span>
           </div>
           <button type="button" className="btn btn-sm" onClick={() => setCreating(true)}>
             <Plus size={13} /> 添加书籍
@@ -485,7 +502,7 @@ export function ReadingLibrary({
             ))}
           </div>
         ) : (
-          <div className="reader-observed-empty">还没有已发布的书籍资料包。</div>
+          <div className="reader-observed-empty">书架还是空的。点击“添加书籍”，填写书名、作者和章节数即可开始记录。</div>
         )}
       </section>
     </div>

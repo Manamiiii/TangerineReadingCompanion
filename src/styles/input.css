@@ -483,3 +483,8 @@
 
 .reader-session-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-block: 12px; color: var(--text-muted); }
 .reader-input-status { overflow-wrap: anywhere; }
+.reader-input-help {
+  color: var(--text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
