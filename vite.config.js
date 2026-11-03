@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { offlineBundlePlugin } from './scripts/build-offline.mjs'
+import { licenseBundlePlugin } from './scripts/build-licenses.mjs'
 
 // https://vite.dev/config/
 // base: './' keeps built asset URLs relative so the same dist/ output works
@@ -8,7 +9,7 @@ import { offlineBundlePlugin } from './scripts/build-offline.mjs'
 // project sub-path (GitHub Pages, e.g. https://user.github.io/repo/).
 export default defineConfig({
   base: './',
-  plugins: [react(), offlineBundlePlugin()],
+  plugins: [react(), licenseBundlePlugin(), offlineBundlePlugin()],
   server: {
     port: 5174,
     strictPort: true,

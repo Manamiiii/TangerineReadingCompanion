@@ -27,13 +27,13 @@
 | whatwg-url | 5.0.0 | MIT |
 | zlibjs | 0.3.1 | MIT |
 
-依赖来源与完整性由锁文件记录。运行 `npm ci` 后，可在对应 `node_modules/<包名>/` 中查看上游附带的 LICENSE、LICENCE、LICENSE.md、LICENSE.txt、NOTICE 或 README 中的声明；缺少全文时应从该版本的上游发布资料核实，不能仅凭包元数据补写版权人。
+依赖来源与完整性由锁文件记录。构建会从安装包收集完整 LICENSE / LICENCE / COPYING 和 NOTICE，生成 `dist/licenses/THIRD_PARTY_LICENSES.txt`，覆盖上述生产依赖（包括未必进入浏览器的 Node 辅助包）。它保留 Lucide 的 Feather/MIT 附加声明和 Dexie 的 NOTICE，不仅复制许可证名称。tr46 0.0.3 的包缺少全文，补充文本及来源见 [licenses/README.md](licenses/README.md)。缺少许可证或安装版本与锁文件不一致会使构建失败，避免静默漏带。
 
 MIT、BSD-2-Clause、ISC 与 Apache-2.0 可以用于 GPL v3 项目，但仍须履行各自的声明保留要求。参见 [GNU 兼容许可证说明](https://www.gnu.org/licenses/license-list.html)和 [Apache 的 GPL 兼容性说明](https://www.apache.org/licenses/GPL-compatibility.html)。构建工具与测试工具的许可同样以各自包内声明为准。
 
 ## OCR、图标与阅读资料
 
-- 随仓库保存的 OCR 语言文件来源、版本及校验值见 [OCR LICENSES.txt](public/reader-ocr/LICENSES.txt)。该文件记录的语言包许可为 MIT；分发这些二进制资源时仍需保留上游对应的完整许可和版权声明。
+- 随仓库保存的 OCR 语言文件来源、版本及校验值见 [OCR LICENSES.txt](public/reader-ocr/LICENSES.txt)。npm 包元数据声明 MIT，但不应据此重新授权底层训练数据；其上游 tessdata_best 使用 Apache-2.0，[完整文本](public/reader-ocr/LICENSE-Apache-2.0.txt)随数据保留。现有 gzip 文件与 npm 发布包的 `4.0.0_best_int` 文件逐字节一致，未作二次修改。
 - 项目图标的生成方式与参考来源见 [assets/README.md](assets/README.md)。第三方品牌或参考素材的权利不会因项目使用 GPL 而转让。
 - 正式书籍资料位于 `public/presets/reading-companion/`，引用与来源信息保留在资料包中。书名、书目元数据、外部链接或背景引用不构成对书籍正文、译文、封面或外部网站内容的再授权。
 - 地图瓦片、地名检索服务与地图数据适用其提供方的许可和使用政策。分发或修改应用时保留地图上的来源署名，不把项目 GPL 当成地图服务的使用许可。
@@ -44,7 +44,7 @@ MIT、BSD-2-Clause、ISC 与 Apache-2.0 可以用于 GPL v3 项目，但仍须�
 分发源码时保留根目录 LICENSE、本文件和已有第三方声明。分发 `dist/`、托管浏览器应用或今后的安装包时，还应：
 
 1. 按 GPL v3 提供与分发版本对应的完整源码、必要的构建脚本及许可证，不能只提供压缩 JavaScript 或指向不对应版本的源码。
-2. 整理实际包含的第三方组件、OCR 资源的完整许可证、版权及必要 NOTICE，并随分发物保留；本索引不能代替这些全文。
+2. 保留构建生成的整个 `licenses/` 目录及 `reader-ocr/` 下的许可文件；构建自动附带项目 GPL 全文、上述依赖的完整许可与必要 NOTICE，以及 OCR 来源与 Apache-2.0 文本。本索引不能代替这些全文。新增外部资源、原生组件或不同分发渠道时，应重新核对对应的声明要求。
 3. 核对地图署名与正式资料的引用范围；未经授权的正文、封面或其他素材不能随包加入。
 
-目前仓库尚未提供原生安装包；本次许可选择不表示已完成所有发布渠道的分发物许可打包检查。
+目前仓库尚未提供原生安装包；自动收集解决当前 npm 依赖和已核对 OCR 资源的文本随包问题，不代替书籍引用、地图服务使用条件或未来原生分发的独立审核。

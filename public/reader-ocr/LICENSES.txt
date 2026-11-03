@@ -2,12 +2,30 @@ Tangerine Reading Companion OCR assets
 
 - tesseract.js 7.0.0: Apache-2.0
   https://github.com/naptha/tesseract.js
-- chi_sim.traineddata.gz from @tesseract.js-data/chi_sim 1.0.0: MIT
+- chi_sim.traineddata.gz from @tesseract.js-data/chi_sim 1.0.0
   https://github.com/naptha/tessdata
-- eng.traineddata.gz from @tesseract.js-data/eng 1.0.0: MIT
+- eng.traineddata.gz from @tesseract.js-data/eng 1.0.0
   https://github.com/naptha/tessdata
 
 The traineddata files use the packages' 4.0.0_best_int variants.
+
+The npm wrapper packages declare MIT in their package metadata, but ship no
+MIT license text. This metadata does not replace the training data's upstream
+Apache-2.0 license. The data comes from Tesseract's tessdata_best, converted
+to integer models and gzip-compressed by the naptha/tessdata project.
+This repository has not modified the published .traineddata.gz files.
+
+Apache-2.0 full text: LICENSE-Apache-2.0.txt in this directory.
+Upstream training-data license at the submodule revision recorded by the
+language packages' published gitHead:
+https://github.com/tesseract-ocr/tessdata_best/blob/e9f15884bc503cf905c8a1dbbc9cb14458152628/LICENSE
+Language package gitHead:
+https://github.com/naptha/tessdata/tree/b86746569320a6103cea84cc2b8d9ee74f0f45d3
+Conversion script:
+https://github.com/naptha/tessdata/blob/b86746569320a6103cea84cc2b8d9ee74f0f45d3/gzip-integerize-traineddata.sh
+
+The package tarballs were integrity-checked against the npm registry; the
+4.0.0_best_int files match the committed binaries byte-for-byte.
 
 These committed binaries are the build inputs; npm language packages are not required.
 SHA-256 (verify after any intentional resource replacement):

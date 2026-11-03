@@ -35,6 +35,10 @@ npm run preview -- --host localhost --port 5174 --strictPort
 
 将 `npm run build` 生成的 `dist/` 交给 HTTPS 静态托管服务。无需部署 Node 服务或数据库，不要部署整个源码目录或将 Vite 开发端口开放到公网。
 
+构建自动生成 `dist/licenses/`：项目 GPL v3 全文、生产依赖的完整许可与 NOTICE，以及 OCR 来源和许可。不要在上传时删掉它或 `reader-ocr/` 下的许可文本。缺失依赖许可或安装版本与锁文件不一致时，构建会失败；先执行 `npm ci`，仍失败则核对该版本上游许可，不要关闭检查。补充材料来源见 [第三方许可说明](../THIRD_PARTY_NOTICES.md)。
+
+部署压缩 JavaScript 仍属于向浏览器分发程序。请在发布说明或站点可访问的说明中提供与该构建一致的源码提交链接或源码包，包括构建脚本；修改版不能只指向本项目上游最新分支。构建附带许可文本不替代相应源码的提供。
+
 GitHub Pages 配置位于 `.github/workflows/pages.yml`：
 
 1. 仓库维护者在 Settings → Pages 中选择 GitHub Actions 作为来源。
