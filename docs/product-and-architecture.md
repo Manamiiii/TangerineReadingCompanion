@@ -32,7 +32,7 @@
 
 ### 目标终端
 
-产品目标为多端可安装应用。Web/PWA 是访问入口和轻量安装版；Windows、Android、iOS 优先采用 Tauri 2 外壳，共享 React 核心，iOS 另配 Swift Share Extension。华为 Android 设备走 Android 版本，纯 HarmonyOS 在获得型号和系统版本后评估 ArkTS/ArkWeb。当前原生能力尚未交付，平台矩阵、统一输入契约与验收清单以 [多端路线](multiplatform-roadmap.md) 为准。多端数据独立，先用 JSON 迁移，不加入账号、后端或自动同步。
+产品目标为多端可安装应用。Web/PWA 是访问入口和轻量安装版；Windows 提供 Electron 最小安装候选，共享 React 核心，后续优先评估 macOS。移动端外壳、iOS Share Extension 和系统分享均未交付。华为 Android 设备走 Android 版本，纯 HarmonyOS 在获得型号和系统版本后评估 ArkTS/ArkWeb。平台矩阵、统一输入契约与验收清单以 [多端路线](multiplatform-roadmap.md) 为准。多端数据独立，先用 JSON 迁移，不加入账号、后端或自动同步。
 
 ### 内容入口
 
@@ -439,13 +439,14 @@ scanGeneratedContent
 └── 剧透确认与安全展示
 
 平台入口
-├── Windows：Tauri 托盘、快捷键和区域截图
-├── iOS：Swift Share Extension
-├── 华为 Android：Android Share Target
-└── 纯 HarmonyOS：ArkTS 分享入口
+├── Windows：Electron 包内页面与独立存储；托盘/全局快捷键/区域截图未实现
+├── macOS：计划复用 Electron，待构建与验收
+├── iOS：规划 Swift Share Extension
+├── 华为 Android：规划 Android Share Target
+└── 纯 HarmonyOS：按设备评估分享入口
 ```
 
-PWA 的粘贴和截图上传已经实现，下一步按多端路线完善共享核心与可靠性，然后交付 Windows Tauri 2 安装版。iOS App Group 临时文件如不可避免，须先提供严格清理方案并获得明确批准；不得自行放宽原文不持久化边界。
+Web 与 Windows 安装候选复用粘贴、图片 OCR 和 JSON 迁移；Windows 桌面权限与包内资源边界见 [桌面开发说明](native-development.md)。iOS App Group 临时文件如不可避免，须先提供严格清理方案并获得明确批准；不得自行放宽原文不持久化边界。
 
 ## 首本书验收范围
 
@@ -463,7 +464,7 @@ PWA 的粘贴和截图上传已经实现，下一步按多端路线完善共享�
 
 ## 建设顺序
 
-按 [多端路线验收清单](multiplatform-roadmap.md) 推进：统一平台入口 → 共享阅读核心 → 本地数据/离线可靠性 → Windows Tauri 2 →《飘》纵向体验 → Android → iOS → 按设备决定 HarmonyOS。内容证据不足只阻塞相关内容发布，不阻塞独立工程任务。自由剧情问答仍受既有双阶段门禁约束。
+按 [多端路线验收清单](multiplatform-roadmap.md) 推进：共享阅读核心与本地可靠性 → Windows 最小安装版验收 → macOS 评估 → 移动端后续决策。《飘》纵向体验按可核验内容证据独立推进，证据不足只阻塞相关内容发布，不阻塞独立工程任务。自由剧情问答仍受既有双阶段门禁约束。
 
 ## 待确认的产品选择
 

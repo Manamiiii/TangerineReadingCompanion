@@ -5,7 +5,7 @@ function unsupported(message) { throw new Error(message) }
 
 export function createWebPlatform(environment = globalThis) {
   return {
-    id: 'web',
+    id: environment.location?.protocol === 'app:' ? 'desktop' : 'web',
     capabilities: {
       clipboard: Boolean(environment.navigator?.clipboard?.readText),
       capture: false,

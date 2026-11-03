@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
+import { platform } from '../platform/index.js'
 
 export function OfflineStatus() {
+  const desktop = platform.id === 'desktop'
   const [status, setStatus] = useState('checking')
   const [online, setOnline] = useState(navigator.onLine)
   const [waiting, setWaiting] = useState(null)
@@ -9,6 +11,13 @@ export function OfflineStatus() {
   const reloadCleanup = useRef(null)
 
   useEffect(() => {
+    if (desktop) {
+      setStatus('bundled')
+      const network = () => setOnline(navigator.onLine)
+      window.addEventListener('online', network)
+      window.addEventListener('offline', network)
+      return () => { window.removeEventListener('online', network); window.removeEventListener('offline', network) }
+    }
     if (!import.meta.env.PROD || !('serviceWorker' in navigator)) {
       setStatus('unsupported')
       return
@@ -81,7 +90,7 @@ export function OfflineStatus() {
       document.removeEventListener('visibilitychange', foreground)
       reloadCleanup.current?.()
     }
-  }, [])
+  }, [desktop])
 
   function update() {
     // Another tab may already have activated the worker shown by this button.
@@ -95,10 +104,10 @@ export function OfflineStatus() {
   }
 
   return <aside className="reader-offline-status" aria-label="离线与更新状态">
-    <span>{status === 'ready' ? '离线阅读已准备' : status === 'checking' ? '正在准备离线阅读…' : status === 'expired' ? '当前页面的离线资源已失效，请联网后刷新' : status === 'error' ? '离线准备失败，请联网后刷新重试' : '开发环境或当前浏览器未启用离线缓存'}</span>
+    <span>{status === 'bundled' ? '阅读界面与资料已随应用安装' : status === 'ready' ? '离线阅读已准备' : status === 'checking' ? '正在准备离线阅读…' : status === 'expired' ? '当前页面的离线资源已失效，请联网后刷新' : status === 'error' ? '离线准备失败，请联网后刷新重试' : '开发环境或当前浏览器未启用离线缓存'}</span>
     {updateAvailable && status !== 'expired' && <span>新版已启用，当前页面继续使用原版本</span>}
     {!online && <span>当前离线；模型和在线地图不可用</span>}
-    <details><summary>离线范围</summary><p>包含阅读界面、已发布书籍资料与本机记录。OCR 引擎首次初始化可能需要联网，地图瓦片和模型不保证离线可用。清理浏览器数据可能移除离线缓存及本机数据，请保留 JSON 备份。</p></details>
+    <details><summary>离线范围</summary><p>{desktop ? '阅读界面、已发布书籍资料与本机记录可离线使用；地图和模型需要对应网络服务。安装版与网页版各自保存数据，通过 JSON 迁移。请定期备份；应用更新请使用帮助菜单中的版本与下载入口。' : '包含阅读界面、已发布书籍资料与本机记录。OCR 引擎首次初始化可能需要联网，地图瓦片和模型不保证离线可用。清理浏览器数据可能移除离线缓存及本机数据，请保留 JSON 备份。'}</p></details>
     {(waiting || updateAvailable || status === 'expired') && <button type="button" className="btn btn-sm" onClick={update}>{waiting ? '更新并刷新（清空当前临时输入）' : '刷新使用新版（清空当前临时输入）'}</button>}
   </aside>
 }

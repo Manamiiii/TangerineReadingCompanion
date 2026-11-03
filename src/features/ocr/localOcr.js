@@ -69,6 +69,11 @@ async function recognize(image, onProgress, options = {}, languages = ['chi_sim'
     signal?.throwIfAborted()
     return createWorker(languages, OEM.LSTM, {
       langPath: localLanguagePath(),
+      ...(import.meta.env.PROD ? {
+        workerPath: new URL('reader-ocr/worker.min.js', document.baseURI).href,
+        corePath: new URL('reader-ocr/', document.baseURI).href,
+        workerBlobURL: false,
+      } : {}),
       logger: message => { if (!signal?.aborted) onProgress?.(message) },
     })
   }, image, { signal, parameters })

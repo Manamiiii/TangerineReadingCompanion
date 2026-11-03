@@ -1,26 +1,49 @@
-# 原生安装版的构建边界
+# Windows 桌面构建与边界
 
-## 当前状态
+## 当前实现
 
-共享 React 核心和平台输入接口已建立。Windows Tauri 2 外壳、安装包、托盘、全局快捷键和区域截图尚未交付；不能把 PWA 安装或浏览器测试视为原生安装验收。
+Windows x64 使用 Electron 45.1.0 和 electron-builder 26.18.0，加载包内 Vite/React 核心。提供 NSIS 当前用户安装器，无后端、无常驻本地端口，不要求最终用户安装 Node、Python、Rust 或 WebView2。macOS 尚未构建或验收；移动端外壳另行设计。
 
-`npm run check:native` 只读检查 Node、Rust/Cargo、MSVC 与 WebView2 注册状态，附带 Android SDK、Java 和 Xcode 线索；生成忽略的 `artifacts/native/environment.json`，缺项时退出码为 1。它不安装软件、不修改 PATH、不申请系统权限，不取代实际编译和真机验证。
+最小版本提供独立窗口、开始菜单、Windows 卸载入口、手动版本下载入口、现有文字/图片输入与 JSON 导入导出。关闭窗口即退出；没有托盘、全局快捷键、系统区域截图或分享接收，不把这些规划能力描述为已实现。
 
-Windows 开发环境未找到 Rust/Cargo 与 MSVC C++ 构建工具，需要使用者批准安装后继续。[Tauri 官方前置要求](https://v2.tauri.app/start/prerequisites/)规定 Windows 需要 Rust、Microsoft C++ 构建工具和 WebView2。Android SDK/NDK、macOS/Xcode、签名账号和华为设备信息按各端阶段补齐。
+## 构建
 
-## Windows 后续交付顺序
+使用 README 指定 Node 版本和锁文件安装依赖。开发依赖仅安装在项目内，不需要 MSVC/Rust。若 npm 的安装脚本策略阻止 Electron 获取运行时，可明确执行已安装依赖的官方脚本 `node node_modules/electron/install.js`；不要全局放开所有依赖脚本。
 
-1. 批准并补齐 Rust stable MSVC 工具链、C++ 桌面开发工作负载和 Windows SDK；确认 WebView2。保留安装来源和版本记录，不在仓库保存凭据。
-2. 在现有仓库增加 Tauri 2 最小外壳，复用 Vite 的 5174 开发入口和 `dist/`，禁止加载远程页面作为应用核心。不预先开放 shell、任意文件读写或 HTTP 代理权限。
-3. 在平台组合入口注入原生适配器；先完成剪贴板和由用户选定的 JSON 导出，再接入托盘、固定全局快捷键和区域截图。每项插件/命令单独限定 capabilities；截图先以内存传入共享输入区，不写临时原文文件。
-4. 原生 WebView 数据与浏览器数据库独立。首次安装不扫描浏览器数据库，用户导出 JSON 后，在原生端预览、先备份再确认合并。
-5. Windows 本机执行开发构建和安装包构建；测试安装、首次启动、关闭到托盘/退出、快捷键冲突、拒绝剪贴板权限、截图取消、输入清空、卸载边界与 JSON 往返。安装包类型按 [Tauri Windows 分发文档](https://v2.tauri.app/distribute/windows-installer/)验证。
-6. 建立可复现的 Windows CI 构建，产物附版本、提交号和校验值。未签名包明确标记；公开发布或签名凭据接入另行确认，不声称已通过 SmartScreen 或商店审核。
+```sh
+npm run check:native
+npm run lint
+npm test
+npm run check:packages
+npm run dist:win
+npm run check:desktop-package
+npm run test:desktop
+npm run build:installer-fixture
+npm run test:installer
+```
 
-## 移动端隐私前置条件
+`check:native` 只读检查当前 Electron Windows 构建依赖，并生成忽略的 `artifacts/native/environment.json`，不安装任何工具。
 
-Android 分享接收须确认多 MIME、取消、重复分享、冷启动、切书及过期输入；尽量使用受限 content URI 流读入内存，不复制原文到持久收件箱。
+`pack:win` 只生成应用目录；`dist:win` 生成 `artifacts/desktop/release/TangerineReadingCompanion-<版本>-win-x64-Setup.exe` 和 SHA256SUMS.txt，不发布。安装器默认当前用户安装，不提权，不自动启动，不默认创建桌面图标。程序运行中拒绝安装、升级和卸载，不强杀临时阅读会话。
 
-iOS 需要 macOS/Xcode、主应用和 Swift Share Extension 真机验证。若跨进程交接必须依赖 App Group 临时文件，先提交访问范围、排除备份、最短 TTL、消费即删、错误/崩溃/冷启动清理及日志限制方案，获得明确批准后才能实现。当前未批准，也未创建这种持久化通道。
+## 安全、数据和离线
 
-纯 HarmonyOS 在获得型号和系统版本后判断 ArkTS/ArkWeb 路线，不假定兼容 APK。账号、后端和跨端自动同步保持非目标。
+- 固定应用 ID 为 `org.tangerine.readingcompanion`，页面地址为 `app://reading/index.html`，数据位于系统用户应用数据目录中的 `TangerineReadingCompanion`。不得因版本变化而修改这三项，避免升级后读到另一份数据库。
+- 页面沙箱、context isolation、webSecurity 保持开启，没有 Node 集成、preload 文件接口、shell IPC 或通用网络代理。包内协议限定路径，禁止跨目录读取；外部 HTTP(S) 链接交给系统浏览器，其他协议和带凭据链接拒绝。
+- 应用只申请现有剪贴板和持久存储所需权限。文件导出显示保存对话框；保存取消不改数据。共享前端仍把下载视为 requested，导入前要求用户确认文件已保存。
+- 数据库 schema、阅读备份格式与 merge-by-key 不变。安装版和浏览器存储独立，通过 JSON 显式迁移，不扫描日常浏览器数据。
+- 不注册网页 Service Worker，不用网页缓存覆盖安装文件。阅读页面、正式资料和 OCR worker/WASM/语言资源随包分发；在线地图、地名搜索和模型仍需要对应服务。HTTP 磁盘缓存禁用；原文、截图、OCR 与模型内容仍是临时会话状态。
+- 升级和默认卸载保留用户数据。API Key 不进入数据库、导出、日志、构建或源码。数据隔离不等于同一 OS 用户下的安全沙箱。
+- 产物只允许 dist、desktop、项目元数据和许可证；打包后检查文件白名单、源码一致性和常见隐私信息。OCR Emscripten 运行时的虚拟路径与编码内容采用严格的上游字节一致性核对，不能借此豁免自有代码。
+
+## 验证和发布边界
+
+桌面测试使用隔离 profile、合成书籍和空 PATH，覆盖实际打包 EXE、备份下载/导入、离线 OCR、面板、重启和临时状态。安装测试使用实际生产应用标识及静默安装，在临时安装目录验证升级、运行中保护、卸载和重装。发现已有安装登记、同名开始菜单快捷方式或真实应用进程时拒绝测试，不覆盖用户安装。
+
+0.0.9 是当前代码的低版本号 fixture，只用于安装器升级测试，不是历史业务数据迁移证据。测试会临时写入本测试应用的 HKCU 登记及开始菜单入口，并在结束时卸载；profile 留在系统临时目录供诊断。失败报告、截图和校验结果位于忽略的 artifacts，不能把含机器路径的原始报告公开上传。
+
+Windows CI 使用命令行构建和相同回归；其结果不能代替干净 Windows 普通账号和交互向导验收。用户步骤见 [Windows 安装与验收](windows-installation.md)。安装包当前未签名；发布 Release、采购签名、接入签名凭据均须另行授权，不能承诺 SmartScreen 信任。
+
+## 后续平台
+
+macOS 需要独立构建、签名/公证决策与真机验收。Android 系统分享只接收主动交付的内容；不绕过 DRM 或平台权限。iOS 若需 App Group 临时文件，必须先提供最短 TTL、消费即删、崩溃/冷启动清理、权限和排除备份方案，并取得明确批准。当前未批准这种通道。账号、后端和跨设备自动同步不属于首版。

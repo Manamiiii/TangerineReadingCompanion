@@ -8,11 +8,11 @@
 
 Tangerine Reading Companion 是一个中文阅读伴侣：你继续在纸书或原来的电子书应用里阅读，在这里记下名称、出现章节与备注。适合读人物较多的长篇、经常隔几天才继续阅读、希望减少搜索剧透的读者。
 
-**无需账号 · 核心记录无需 AI · 数据保存在当前浏览器 · JSON 备份与迁移**
+**无需账号 · 核心记录无需 AI · 数据保存在本机 · JSON 备份与迁移**
 
 [开始使用](#快速开始) · [第一次记录](#第一次使用) · [数据与隐私](#数据隐私与限制) · [反馈问题](https://github.com/Manamiiii/TangerineReadingCompanion/issues) · [GPL v3](LICENSE)
 
-> 当前提供可本地运行、自行部署的 Web/PWA 试用版。没有 EXE / APK / iOS 原生安装包；本页尚不提供已验证的在线演示入口。
+> 当前提供 Web/PWA 试用版及可从源码构建的 Windows x64 安装候选。Windows 包未签名，尚未完成干净机器验收，也未发布正式 Release；APK / iOS 安装包尚未实现。本页尚不提供已验证的在线演示入口。
 
 ![实际界面：按章节回顾读者确认的名称与备注，使用虚构测试书演示](docs/images/reading-memory.png)
 
@@ -32,6 +32,10 @@ Tangerine Reading Companion 是一个中文阅读伴侣：你继续在纸书或�
 工具不提供书籍正文，不连接或读取微信读书账号，也不自动掌握整本书的剧情。进度控制帮助限制展示范围，不能保证用户输入或外部内容绝不剧透。
 
 ## 快速开始
+
+**Windows 安装候选：** 如已取得维护者提供的 `TangerineReadingCompanion-<版本>-win-x64-Setup.exe`，核对 SHA-256 后双击安装，从开始菜单打开“橘子阅读伴侣”。无需 Node、Rust 或管理员权限。安装、迁移和验收见 [Windows 安装说明](docs/windows-installation.md)。安装版与网页版各自存储，通过 JSON 迁移，不会自动同步。正式下载以 [Releases](https://github.com/Manamiiii/TangerineReadingCompanion/releases) 的实际发布为准。
+
+**网页版源码运行：**
 
 需要 Node.js `^20.19.0 || >=22.12.0`，可使用 `.nvmrc` 指定的版本；用 Git 下载需要先安装 Git。首次安装依赖需要联网，不需要管理员权限或原生编译工具链。
 
@@ -70,7 +74,7 @@ Windows PowerShell 若提示不允许执行 `npm.ps1`，使用 `npm.cmd ci` 和 
 
 最需要记住的两点：**持续使用同一浏览器和地址，定期保存 JSON 备份。** 本地存储不等于永远不会丢失数据。
 
-本机安装路径在运行时确定，个人设置保存在浏览器，不提交到 GitHub。维护与发布时的隔离规则见[本机私有信息说明](docs/local-privacy.md)。
+本机安装路径在运行时确定，个人设置保存在当前使用环境的本机存储，不提交到 GitHub。维护与发布时的隔离规则见[本机私有信息说明](docs/local-privacy.md)。
 
 <details>
 <summary>展开查看存储、导入、OCR 和模型的具体边界</summary>
@@ -106,7 +110,7 @@ Windows PowerShell 若提示不允许执行 `npm.ps1`，使用 `npm.cmd ci` 和 
 
 ## 开发
 
-静态前端：Vite、React、Dexie、Leaflet。没有账号系统和后端。依赖与版本以 `package.json` 和锁文件为准。
+共享静态前端使用 Vite、React、Dexie、Leaflet；Windows 桌面壳使用 Electron，复用同一阅读核心。没有账号系统和后端。依赖与版本以 `package.json` 和锁文件为准。
 
 <details>
 <summary>开发命令与目录结构</summary>
@@ -121,13 +125,20 @@ Windows PowerShell 若提示不允许执行 `npm.ps1`，使用 `npm.cmd ci` 和 
 | `npm run build` | 生成 `dist/` |
 | `npm run preview -- --host localhost --port 5174 --strictPort` | 本机验证生产构建；先停止开发服务 |
 | `npm run check:packages` | 校验正式资料包 |
-| `npm run check:native` | 只读检查原生环境，不安装工具 |
+| `npm run check:native` | 只读检查当前 Electron Windows 构建依赖，不安装工具 |
+| `npm run desktop` | 构建并打开桌面窗口；使用本机安装版的数据目录 |
+| `npm run pack:win` / `npm run dist:win` | Windows 应用目录 / x64 Setup 与 SHA-256，不发布 |
+| `npm run check:desktop-package` | 检查打包白名单、源码一致性和常见隐私信息 |
+| `npm run test:desktop` | 隔离 profile 下验证实际打包 EXE，包含离线 OCR 和备份 |
+| `npm run build:installer-fixture` / `npm run test:installer` | 生成低版本号测试样本 / 安装升级卸载重装回归 |
 | `npm run audit:quality` / `npm run audit:links` | 资料覆盖与来源审计，后者访问来源链接 |
 | `npm run preview:data` / `npm run check:preset` | staging 生成预览 / dry-run 检查差异 |
 | `npm run apply:preset` | 仅在显式批准后发布正式资料 |
 
 ```text
 src/platform/                     # 平台输入与导出适配
+desktop/                          # Electron 外壳、资源安全规则与安装器保护
+scripts/desktop/                  # 打包核对、桌面与安装生命周期测试
 src/features/reading-companion/    # 阅读、书架、记录、地图与资料规则
 src/features/model/               # 可选模型连接与配置
 src/features/ocr/                 # 本机 OCR

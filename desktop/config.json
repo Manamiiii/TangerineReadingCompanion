@@ -1,0 +1,7 @@
+{
+  "productName": "橘子阅读伴侣",
+  "appId": "org.tangerine.readingcompanion",
+  "host": "reading",
+  "dataDirectory": "TangerineReadingCompanion",
+  "releases": "https://github.com/Manamiiii/TangerineReadingCompanion/releases"
+}

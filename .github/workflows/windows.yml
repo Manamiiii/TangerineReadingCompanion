@@ -1,0 +1,31 @@
+name: Validate Windows installer
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: node node_modules/electron/install.js
+      - run: npm run check:native
+      - run: npm run lint
+      - run: npm test
+      - run: npm run check:packages
+      - run: npm run dist:win
+      - run: npm run check:desktop-package
+      - run: npm run test:desktop
+      - run: npm run build:installer-fixture
+      - run: npm run test:installer
+      - run: git diff --check
+      # Build and verify only. Publishing candidate installers or a Release requires authorization.

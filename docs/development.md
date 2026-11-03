@@ -10,6 +10,8 @@
 
 ## Windows 快捷入口
 
+下面的 VBS 入口用于源码开发，不是安装版。Windows Setup 的构建、数据位置和验收分别见 [桌面开发](native-development.md) 与 [安装说明](windows-installation.md)。两种入口的数据独立，需 JSON 迁移。
+
 安装 Node.js 并执行 `npm ci` 后，双击根目录 `TangerineReadingCompanion.vbs`。启动器在后台运行 Vite，复用已就绪服务，在状态窗口中显示进度与错误，然后打开默认浏览器。它不安装依赖、不请求管理员权限，也不是 Windows 原生安装包。若系统禁用了 WScript，可直接使用终端方式。
 
 可以自己为该 VBS 创建快捷方式，并选用 `assets/tangerine-reading-companion.ico`。仓库不要求作者本机的桌面目录或绝对路径。
