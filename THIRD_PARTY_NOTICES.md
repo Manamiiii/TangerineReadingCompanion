@@ -29,6 +29,8 @@
 
 依赖来源与完整性由锁文件记录。构建会从安装包收集完整 LICENSE / LICENCE / COPYING 和 NOTICE，生成 `dist/licenses/THIRD_PARTY_LICENSES.txt`，覆盖上述生产依赖（包括未必进入浏览器的 Node 辅助包）。它保留 Lucide 的 Feather/MIT 附加声明和 Dexie 的 NOTICE，不仅复制许可证名称。tr46 0.0.3 的包缺少全文，补充文本及来源见 [licenses/README.md](licenses/README.md)。缺少许可证或安装版本与锁文件不一致会使构建失败，避免静默漏带。
 
+Windows 安装候选另外包含 Electron 45.1.0 及其 Chromium 等运行组件。应用目录保留运行时自带的 `LICENSE.electron.txt`（Electron 的 MIT 许可）和 `LICENSES.chromium.html`（运行组件的第三方声明）；它们不属于上表的前端 npm 生产依赖收集范围，重新打包时同样必须保留。
+
 MIT、BSD-2-Clause、ISC 与 Apache-2.0 可以用于 GPL v3 项目，但仍须履行各自的声明保留要求。参见 [GNU 兼容许可证说明](https://www.gnu.org/licenses/license-list.html)和 [Apache 的 GPL 兼容性说明](https://www.apache.org/licenses/GPL-compatibility.html)。构建工具与测试工具的许可同样以各自包内声明为准。
 
 ## OCR、图标与阅读资料
@@ -47,4 +49,4 @@ MIT、BSD-2-Clause、ISC 与 Apache-2.0 可以用于 GPL v3 项目，但仍须�
 2. 保留构建生成的整个 `licenses/` 目录及 `reader-ocr/` 下的许可文件；构建自动附带项目 GPL 全文、上述依赖的完整许可与必要 NOTICE，以及 OCR 来源与 Apache-2.0 文本。本索引不能代替这些全文。新增外部资源、原生组件或不同分发渠道时，应重新核对对应的声明要求。
 3. 核对地图署名与正式资料的引用范围；未经授权的正文、封面或其他素材不能随包加入。
 
-目前仓库尚未提供原生安装包；自动收集解决当前 npm 依赖和已核对 OCR 资源的文本随包问题，不代替书籍引用、地图服务使用条件或未来原生分发的独立审核。
+目前提供可构建的 Windows 安装候选，尚未正式发布；自动收集与运行时自带声明解决已核对组件的文本随包问题，不代替书籍引用、地图服务使用条件或其他平台分发的独立审核。
