@@ -34,6 +34,9 @@ jobs:
       - name: Lint
         run: npm run lint
 
+      - name: Check repository privacy
+        run: npm run check:privacy
+
       - name: Test
         run: npm test
 

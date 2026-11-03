@@ -16,6 +16,23 @@ artifacts/
 .env.*
 !.env.example
 
+# Machine-local configuration, credentials, shortcuts and reader exports.
+.private/
+*.local.*
+.npmrc
+.netrc
+.git-credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.lnk
+*.db
+*.sqlite
+*.sqlite3
+tangerine-reading-companion-[0-9]*.json
+reading-feedback-*.json
+
 # Codex credentials and local session state must never enter the repository.
 .codex/
 .codex-remote-attachments/

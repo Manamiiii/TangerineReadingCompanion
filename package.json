@@ -9,10 +9,11 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run check:privacy && vite build",
     "lint": "oxlint",
     "preview": "vite preview",
     "check:packages": "node scripts/reading-companion/validate-packages.mjs",
+    "check:privacy": "node scripts/check-repository-privacy.mjs",
     "audit:quality": "node scripts/reading-companion/audit-quality.mjs",
     "audit:links": "node scripts/reading-companion/audit-quality.mjs --check-links",
     "preview:data": "node scripts/reading-companion/build-preview.mjs",

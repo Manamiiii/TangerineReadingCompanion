@@ -31,6 +31,7 @@ Before code changes, inspect the current branch, working tree and latest commit,
 - Fictional or ambiguous places must not receive fabricated precise coordinates.
 - Runtime models may create bounded candidates and explanations only; they cannot publish formal facts.
 - API keys remain in session storage and must not enter exports, logs or source control.
+- Machine-specific paths, credentials, shortcuts, personal backups and local reports must not be committed. Resolve installation paths at runtime; keep optional local files in ignored `.private/`, never under `public/`. Run `npm run check:privacy` before committing; it reports locations without printing matched values. CI is a second check, not protection against secrets already pushed into history.
 
 ## Verification
 

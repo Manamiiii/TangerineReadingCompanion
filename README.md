@@ -70,6 +70,8 @@ Windows PowerShell 若提示不允许执行 `npm.ps1`，使用 `npm.cmd ci` 和 
 
 最需要记住的两点：**持续使用同一浏览器和地址，定期保存 JSON 备份。** 本地存储不等于永远不会丢失数据。
 
+本机安装路径在运行时确定，个人设置保存在浏览器，不提交到 GitHub。维护与发布时的隔离规则见[本机私有信息说明](docs/local-privacy.md)。
+
 <details>
 <summary>展开查看存储、导入、OCR 和模型的具体边界</summary>
 
@@ -113,6 +115,7 @@ Windows PowerShell 若提示不允许执行 `npm.ps1`，使用 `npm.cmd ci` 和 
 |---|---|
 | `npm run dev` | 本地开发，固定端口 5174 |
 | `npm run lint` | 静态检查 |
+| `npm run check:privacy` | 检查源码与发布资源中的常见私有信息；构建前自动执行 |
 | `npm test` | 领域、数据边界、迁移、离线及启动器测试 |
 | `npm run test:e2e` | 独立 Chromium 浏览器测试；首次先 `npx playwright install chromium` |
 | `npm run build` | 生成 `dist/` |

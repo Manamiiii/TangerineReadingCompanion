@@ -18,7 +18,8 @@ checks.push({ name: 'Rust compiler', available: command(rustc) })
 checks.push({ name: 'Cargo', available: command(cargo) })
 
 if (process.platform === 'win32') {
-  const vswhere = path.join(process.env['ProgramFiles(x86)'] || 'C:/Program Files (x86)', 'Microsoft Visual Studio/Installer/vswhere.exe')
+  const programFiles = process.env['ProgramFiles(x86)'] || process.env.ProgramFiles
+  const vswhere = programFiles ? path.join(programFiles, 'Microsoft Visual Studio/Installer/vswhere.exe') : ''
   const vs = existsSync(vswhere) ? spawnSync(vswhere, ['-latest', '-products', '*', '-requires', 'Microsoft.VisualStudio.Component.VC.Tools.x86.x64', '-property', 'installationPath'], { encoding: 'utf8', windowsHide: true }) : null
   checks.push({ name: 'MSVC x64 C++ build tools', available: Boolean(vs?.status === 0 && vs.stdout.trim()) })
   const registry = spawnSync('powershell.exe', ['-NoProfile', '-Command', "$roots = @('HKLM:\\SOFTWARE\\WOW6432Node\\Microsoft\\EdgeUpdate\\Clients', 'HKCU:\\SOFTWARE\\Microsoft\\EdgeUpdate\\Clients', 'HKLM:\\SOFTWARE\\Microsoft\\EdgeUpdate\\Clients'); foreach ($root in $roots) { if (Test-Path $root) { Get-ChildItem $root | ForEach-Object { Get-ItemProperty $_.PSPath } | Where-Object { $_.name -match 'WebView2' -and $_.pv } | ForEach-Object { 'WebView2 detected' } } }"], { encoding: 'utf8', windowsHide: true, timeout: 10000 })
