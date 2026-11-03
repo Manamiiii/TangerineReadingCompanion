@@ -112,6 +112,8 @@ docs/                             # 产品、安全与开发说明
 
 ## License
 
-当前尚未选择项目自身的开源许可证，不应把“可查看源码”理解为已授予任意修改、再分发或商用许可。维护者确定许可证后再完善此处。
+本项目原创代码与文档采用 **GNU General Public License v3.0 only**（`GPL-3.0-only`），完整条款见 [LICENSE](LICENSE)。Copyright (C) 2026 Tangerine Reading Companion contributors.
 
-第三方依赖、OCR 语言资源和书籍参考资料各自适用原有授权，不能由未来的项目许可证一并覆盖。OCR 资源来源见 [LICENSES.txt](public/reader-ocr/LICENSES.txt)，图标来源见 [assets/README.md](assets/README.md)。公开分发前还需核对随包许可证文本和资料引用范围。
+欢迎使用、学习、修改与分享，也允许商用。分发本项目或受 GPL 约束的修改版时，须保留许可与版权声明，并依 GPL v3 提供相应源码；仅公开压缩后的构建产物不足以履行源码义务。软件按原样提供，不作担保。以上为简要说明，以许可证全文为准。
+
+第三方依赖、OCR 语言资源、地图和书籍参考资料保留各自的授权条件，项目许可证不重新授权这些内容，也不要求你公开自己的阅读记录。来源与分发注意事项见 [第三方许可说明](THIRD_PARTY_NOTICES.md)；图标来源见 [assets/README.md](assets/README.md)。
