@@ -45,9 +45,9 @@ npm run preview -- --host localhost --port 5174 --strictPort
 
 GitHub Pages 配置位于 `.github/workflows/pages.yml`：
 
-1. 仓库维护者在 Settings → Pages 中选择 GitHub Actions 作为来源。
+1. 默认只验证，不上传 Pages 产物或部署。维护者决定发布后，在 Settings → Pages 中选择 GitHub Actions 作为来源，并在 Actions 仓库变量中设置 `ENABLE_GITHUB_PAGES=true`。
 2. 按工作流运行安装、lint、Node 测试、浏览器 E2E、资料校验与构建。
-3. 只有 `main` 的推送或手动工作流会进入部署；PR 仅检查。
+3. 只有部署开关开启时，`main` 的推送或手动工作流才会进入部署；PR 始终仅检查。关闭或删除该变量会停止后续自动部署，不会删除已经发布的网站。
 4. 检查 Actions 的部署结果与 `github-pages` 环境显示的网址，在独立浏览器验证首次打开、刷新、子路径资源和备份下载，再对外提供链接。
 
 工作流存在不代表仓库已公开、Pages 已启用或线上部署成功。发布与仓库可见性由维护者决定。

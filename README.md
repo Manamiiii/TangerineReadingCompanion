@@ -94,7 +94,7 @@ Windows PowerShell 若提示不允许执行 `npm.ps1`，使用 `npm.cmd ci` 和 
 
 **可以直接下载 EXE / APK 吗？** Windows x64 安装候选已完成本机自动回归与 Windows CI 验证，当前等待维护者实际体验验收，安装包尚未公开上传。验收完成后再安排 Release 下载；目前可按[桌面开发说明](docs/native-development.md)从源码构建。APK、macOS 和 iOS 安装包尚未提供。浏览器支持时，也可将生产站点安装为 PWA，它仍使用对应浏览器的数据与权限。
 
-**如何部署？** 运行 `npm ci`、`npm run build`，将生成的 `dist/` 部署到支持 HTTPS 的静态网站。不要把 `npm run dev` 暴露到公网，也不要直接双击 `dist/index.html`。仓库有 GitHub Pages 工作流，但不把它当作已经可用的在线演示：部署者需启用 Pages 的 GitHub Actions 来源，并检查工作流及最终网址。详见[部署说明](docs/development.md#部署)。
+**如何部署？** 运行 `npm ci`、`npm run build`，将生成的 `dist/` 部署到支持 HTTPS 的静态网站。不要把 `npm run dev` 暴露到公网，也不要直接双击 `dist/index.html`。仓库默认只进行网页验证；维护者决定发布 Pages 后，需启用 GitHub Actions 来源，并将仓库变量 `ENABLE_GITHUB_PAGES` 设置为 `true` 才会部署。工作流不代表已经可用的在线演示。详见[部署说明](docs/development.md#部署)。
 
 **能离线吗？** Windows 安装版随包提供阅读界面、内置资料和 OCR 资源，可离线记录与识别；更新需手动下载安装包。网页版生产站点显示“离线阅读已准备”后，阅读界面、内置资料与本机记录可离线使用，但首次 OCR 不在保证范围内。开发模式不启用网页离线缓存；网页新版就绪会提示手动更新，刷新前请处理好临时输入。两种版本的模型和在线地图都需要对应网络服务。
 
@@ -129,7 +129,7 @@ Windows PowerShell 若提示不允许执行 `npm.ps1`，使用 `npm.cmd ci` 和 
 | `npm run desktop` | 构建并打开桌面窗口；使用本机安装版的数据目录 |
 | `npm run pack:win` / `npm run dist:win` | Windows 应用目录 / x64 Setup 与 SHA-256，不发布 |
 | `npm run check:desktop-package` | 检查打包白名单、源码一致性和常见隐私信息 |
-| `npm run test:desktop` | 隔离 profile 下验证实际打包 EXE，包含离线 OCR 和备份 |
+| `npm run test:desktop` | 隔离 profile 下验证实际打包 EXE，包含离线 OCR、备份、本机模型请求和跨域保护 |
 | `npm run build:installer-fixture` / `npm run test:installer` | 生成低版本号测试样本 / 安装升级卸载重装回归 |
 | `npm run audit:quality` / `npm run audit:links` | 资料覆盖与来源审计，后者访问来源链接 |
 | `npm run preview:data` / `npm run check:preset` | staging 生成预览 / dry-run 检查差异 |

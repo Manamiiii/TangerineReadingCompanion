@@ -29,7 +29,7 @@
     "desktop": "npm run build && electron .",
     "pack:win": "npm run build && electron-builder --win --x64 --dir --publish never",
     "dist:win": "npm run build && electron-builder --win nsis --x64 --publish never && node scripts/desktop/checksums.mjs",
-    "test:desktop": "node scripts/desktop/smoke.mjs",
+    "test:desktop": "node scripts/desktop/smoke.mjs && node scripts/desktop/local-model.mjs",
     "test:installer": "node scripts/desktop/installer-smoke.mjs",
     "build:installer-fixture": "electron-builder --win nsis --x64 --publish never --config.extraMetadata.version=0.0.9 --config.directories.output=artifacts/desktop/upgrade-fixture",
     "check:desktop-package": "node scripts/desktop/audit-package.mjs"
