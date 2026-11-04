@@ -53,13 +53,6 @@ async function setup(file) {
   await fs.access(executable())
   const registered = await ps(`(Get-ItemPropertyValue 'HKCU:\\Software\\${guid}' InstallLocation)`)
   assert.equal(path.normalize(registered).toLowerCase(), installed.toLowerCase())
-  const link = shortcuts[0].replaceAll("'", "''")
-  const shortcut = JSON.parse(await ps(`$link = (New-Object -ComObject WScript.Shell).CreateShortcut('${link}'); @{ target = $link.TargetPath; icon = $link.IconLocation } | ConvertTo-Json -Compress`))
-  const identity = async file => (await fs.stat(file, { bigint: true })).ino
-  assert.equal(await identity(shortcut.target), await identity(executable()))
-  const icon = /^(.*),\s*0$/.exec(shortcut.icon)
-  assert.ok(icon, 'Shortcut must select the first application icon')
-  if (icon[1]) assert.equal(await identity(icon[1]), await identity(executable()))
 }
 async function remove() {
   assert.ok([legacy, fresh].includes(installed))
@@ -73,6 +66,13 @@ async function open() {
   const actual = await app.evaluate(({ app }) => ({ version: app.getVersion(), data: app.getPath('userData'), packaged: app.isPackaged }))
   assert.equal(actual.packaged, true)
   assert.equal(path.resolve(actual.data).toLowerCase(), path.join(env.APPDATA, 'TangerineReadingCompanion').toLowerCase())
+  await fs.access(shortcuts[0])
+  const link = await app.evaluate(({ shell }, file) => shell.readShortcutLink(file), shortcuts[0])
+  const identity = async file => (await fs.stat(file, { bigint: true })).ino
+  assert.equal(await identity(link.target), await identity(executable()))
+  assert.equal(link.iconIndex, 0)
+  assert.equal(await identity(link.icon || link.target), await identity(executable()))
+  assert.equal(link.appUserModelId, manifest.build.appId)
   const page = await app.firstWindow()
   return { page, version: actual.version }
 }
