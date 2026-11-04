@@ -4,7 +4,7 @@
 
 Windows x64 安装候选可由源码构建，尚未创建正式 GitHub Release，也未完成干净 Windows 普通账号验收。不要把 CI 通过或本机自动测试当成已经对外稳定发行。
 
-候选位于 `artifacts/desktop/release/TangerineReadingCompanion-0.1.0-win-x64-Setup.exe`，同目录提供 SHA256SUMS.txt。安装包未签名，Windows 可能提示未知发布者或阻止启动；记录具体提示，不要关闭安全软件或更改系统安全策略来完成验收。
+候选位于 `artifacts/desktop/release/0.1.1/TangerineReadingCompanion-0.1.1-win-x64-Setup.exe`，同目录提供 SHA256SUMS.txt。安装包未签名，Windows 可能提示未知发布者或阻止启动；记录具体提示，不要关闭安全软件或更改系统安全策略来完成验收。
 
 ## 安装和数据
 
@@ -13,7 +13,7 @@ Windows x64 安装候选可由源码构建，尚未创建正式 GitHub Release�
 3. 从开始菜单打开“橘子阅读伴侣”。Windows“已安装的应用”应显示对应名称、版本和卸载入口。
 4. 日常使用不需要 Node、npm、Git、Rust、开发服务器或终端。关闭窗口即退出，暂不提供托盘、全局快捷键和区域截图。
 
-程序默认安装到当前用户的程序目录，实际位置以 Windows 安装登记为准，不要手动把数据放进安装目录。书架和记录位于 `%APPDATA%/TangerineReadingCompanion` 下的应用存储，路径由系统解析，不硬编码用户名。
+新装程序位于 `%LOCALAPPDATA%\Programs\Tangerine\TangerineReadingCompanion`。升级核对当前用户的旧登记、卸载命令和程序文件，在原产品目录更新。安装器拒绝不匹配的路径和目录联接，共享 Tangerine 父目录保留，不要手动把数据放进安装目录。书架和记录位于 `%APPDATA%/TangerineReadingCompanion` 下的应用存储，路径由系统解析，不硬编码用户名。
 
 安装版与浏览器各自保存数据，不自动共享。若此前使用网页版或 VBS 快捷入口，先在原入口导出 JSON、确认文件保存，再在安装版“数据管理”中选择备份，查看预览、下载目标端备份并确认 merge-by-key 导入。备份未包含的本机记录保留，同 key 记录按导入内容覆盖；不要把来回导入当成双向同步。
 

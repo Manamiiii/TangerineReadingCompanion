@@ -18,13 +18,14 @@ npm run check:packages
 npm run dist:win
 npm run check:desktop-package
 npm run test:desktop
+# 以下安装步骤只在一次性 GitHub 托管 Windows runner 执行
 npm run build:installer-fixture
 npm run test:installer
 ```
 
 `check:native` 只读检查当前 Electron Windows 构建依赖，并生成忽略的 `artifacts/native/environment.json`，不安装任何工具。
 
-`pack:win` 只生成应用目录；`dist:win` 生成 `artifacts/desktop/release/TangerineReadingCompanion-<版本>-win-x64-Setup.exe` 和 SHA256SUMS.txt，不发布。安装器默认当前用户安装，不提权，不自动启动，不默认创建桌面图标。程序运行中拒绝安装、升级和卸载，不强杀临时阅读会话。
+`pack:win` 只生成应用目录；`dist:win` 生成 `artifacts/desktop/release/<版本>/TangerineReadingCompanion-<版本>-win-x64-Setup.exe` 和 SHA256SUMS.txt，不发布。安装器默认当前用户安装，不提权，不自动启动，不默认创建桌面图标。程序运行中拒绝安装、升级和卸载，不强杀临时阅读会话。
 
 ## 安全、数据和离线
 
@@ -40,9 +41,9 @@ npm run test:installer
 
 桌面测试使用隔离 profile、合成书籍和空 PATH，覆盖实际打包 EXE、备份下载/导入、离线 OCR、面板、重启和临时状态。另用临时 IPv4 回环 HTTP 服务通过真实设置及识别界面验证模型 POST、临时候选、CORS 预检阻止未授权 POST、脱敏错误与重试、重启保留地址但清空 Key。测试不替换应用权限处理器，不访问真实模型服务；证据位于忽略的 `artifacts/desktop/local-model-result.json`，不代表 IPv6 或所有模型服务商均已验证。
 
-安装测试使用实际生产应用标识及静默安装，在临时安装目录验证升级、运行中保护、卸载和重装。发现已有安装登记、同名开始菜单快捷方式或真实应用进程时拒绝测试，不覆盖用户安装。
+安装测试使用实际生产应用标识及静默安装，在一次性 GitHub 托管 Windows runner 验证旧目录原位升级、全新默认目录、开始菜单目标和图标、共享目录保留、运行中保护、卸载和重装。发现已有安装登记、同名开始菜单快捷方式或真实应用进程时拒绝测试，不覆盖用户安装。
 
-0.0.9 是当前代码的低版本号 fixture，只用于安装器升级测试，不是历史业务数据迁移证据。测试会临时写入本测试应用的 HKCU 登记及开始菜单入口，并在结束时卸载；profile 留在系统临时目录供诊断。失败报告、截图和校验结果位于忽略的 artifacts，不能把含机器路径的原始报告公开上传。
+0.0.9 是使用历史默认目录算法、当前业务代码和正式身份的低版本号 fixture，仅在 CI 安装，只用于安装器升级测试，不是历史业务数据迁移证据。测试会临时写入本测试应用的 HKCU 登记及开始菜单入口，并在结束时卸载；profile 留在系统临时目录供诊断。失败报告、截图和校验结果位于忽略的 artifacts，不能把含机器路径的原始报告公开上传。
 
 Windows CI 使用命令行构建和相同回归；其结果不能代替干净 Windows 普通账号和交互向导验收。用户步骤见 [Windows 安装与验收](windows-installation.md)。安装包当前未签名；发布 Release、采购签名、接入签名凭据均须另行授权，不能承诺 SmartScreen 信任。
 

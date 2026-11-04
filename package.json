@@ -1,7 +1,7 @@
 {
   "name": "tangerine-reading-companion",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "license": "GPL-3.0-only",
   "type": "module",
   "main": "desktop/main.mjs",
@@ -31,13 +31,13 @@
     "dist:win": "npm run build && electron-builder --win nsis --x64 --publish never && node scripts/desktop/checksums.mjs",
     "test:desktop": "node scripts/desktop/smoke.mjs && node scripts/desktop/local-model.mjs",
     "test:installer": "node scripts/desktop/installer-smoke.mjs",
-    "build:installer-fixture": "electron-builder --win nsis --x64 --publish never --config.extraMetadata.version=0.0.9 --config.directories.output=artifacts/desktop/upgrade-fixture",
-    "check:desktop-package": "node scripts/desktop/audit-package.mjs"
+    "build:installer-fixture": "electron-builder --win nsis --x64 --publish never --config.nsis.include=scripts/desktop/legacy-layout.nsh --config.extraMetadata.version=0.0.9 --config.directories.output=artifacts/desktop/upgrade-fixture",
+    "check:desktop-package": "node scripts/desktop/audit-package.mjs && node scripts/desktop/audit-icons.mjs"
   },
   "build": {
     "appId": "org.tangerine.readingcompanion",
     "productName": "橘子阅读伴侣",
-    "directories": { "output": "artifacts/desktop/release" },
+    "directories": { "output": "artifacts/desktop/release/${version}" },
     "files": ["dist/**/*", "desktop/**/*", "package.json", "LICENSE", "THIRD_PARTY_NOTICES.md", "!node_modules/**/*"],
     "asar": true,
     "npmRebuild": false,
@@ -60,6 +60,8 @@
       "createDesktopShortcut": false,
       "createStartMenuShortcut": true,
       "shortcutName": "橘子阅读伴侣",
+      "installerIcon": "assets/tangerine-reading-companion.ico",
+      "uninstallerIcon": "assets/tangerine-reading-companion.ico",
       "installerLanguages": ["zh_CN", "en_US"],
       "include": "desktop/installer.nsh"
     }

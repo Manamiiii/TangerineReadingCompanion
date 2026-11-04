@@ -128,9 +128,9 @@ Windows PowerShell 若提示不允许执行 `npm.ps1`，使用 `npm.cmd ci` 和 
 | `npm run check:native` | 只读检查当前 Electron Windows 构建依赖，不安装工具 |
 | `npm run desktop` | 构建并打开桌面窗口；使用本机安装版的数据目录 |
 | `npm run pack:win` / `npm run dist:win` | Windows 应用目录 / x64 Setup 与 SHA-256，不发布 |
-| `npm run check:desktop-package` | 检查打包白名单、源码一致性和常见隐私信息 |
+| `npm run check:desktop-package` | 检查包内白名单、源码一致性和隐私，提取 Setup 与主程序图标并比对载荷 |
 | `npm run test:desktop` | 隔离 profile 下验证实际打包 EXE，包含离线 OCR、备份、本机模型请求和跨域保护 |
-| `npm run build:installer-fixture` / `npm run test:installer` | 生成低版本号测试样本 / 安装升级卸载重装回归 |
+| `npm run build:installer-fixture` / `npm run test:installer` | 生成旧目录测试样本 / 在一次性 Windows CI 验证升级、卸载和重装 |
 | `npm run audit:quality` / `npm run audit:links` | 资料覆盖与来源审计，后者访问来源链接 |
 | `npm run preview:data` / `npm run check:preset` | staging 生成预览 / dry-run 检查差异 |
 | `npm run apply:preset` | 仅在显式批准后发布正式资料 |
@@ -151,7 +151,14 @@ scripts/reading-companion/        # 资料 staging、校验与发布
 scripts/build-offline.mjs          # 离线资源与内容指纹
 scripts/build-licenses.mjs         # 构建时收集依赖许可证与 NOTICE
 licenses/                         # npm 包未附带的上游许可补充文本
-scripts/launch-desktop.ps1         # Windows 本地启动器
+package.json                       # Windows 安装身份、NSIS 配置与正式构建命令
+TangerineReadingCompanion.vbs      # 兼容源码入口，按 VBS 自身位置寻找仓库
+scripts/launch-desktop.ps1         # 固定 localhost:5174，支持 -NoOpenBrowser / -OnProgress
+scripts/startup_window.ps1         # 源码启动进度窗口
+artifacts/desktop/release/<版本>/   # 忽略：正式身份 Setup、校验值和解包应用
+artifacts/desktop/upgrade-fixture/ # 忽略：仅升级测试的旧布局样本
+artifacts/desktop/*-result.json    # 忽略：桌面、安装及模型回归证据
+artifacts/launcher*.log            # 忽略：源码入口本机启动日志
 scripts/tests/、tests/e2e/         # Node 与浏览器测试
 docs/                             # 产品、安全与开发说明
 ```

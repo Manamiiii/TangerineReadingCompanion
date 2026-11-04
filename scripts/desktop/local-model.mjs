@@ -1,3 +1,4 @@
+import { appExecutable } from './release-paths.mjs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
@@ -8,7 +9,7 @@ import { _electron as electron, expect } from '@playwright/test'
 import { isolatedEnvironment, closeTestApp } from './environment.mjs'
 import { createBook, assertRecovered, readRecords } from './flows.mjs'
 
-const executable = path.resolve('artifacts/desktop/release/win-unpacked/TangerineReadingCompanion.exe')
+const executable = path.resolve(appExecutable)
 const root = await fs.mkdtemp(path.join(await fs.realpath(os.tmpdir()), 'reading-local-model-'))
 const env = await isolatedEnvironment(root)
 const report = 'artifacts/desktop/local-model-result.json'

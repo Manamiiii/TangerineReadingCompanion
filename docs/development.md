@@ -24,6 +24,8 @@
 powershell -NoProfile -File scripts/launch-desktop.ps1 -NoOpenBrowser
 ```
 
+VBS 从自身位置定位项目，不接收额外启动参数。PowerShell 入口以项目根目录作为 Vite 工作目录，从 PATH 查找 Node；`-OnProgress` 供启动窗口接收进度，`-NoOpenBrowser` 供后台或诊断使用。启动互斥锁保护并发启动，同一地址的阅读服务可复用，其他服务占用 5174 时显示失败。源码入口与安装器均不自动创建桌面快捷方式，已有指向 VBS 的快捷方式可继续使用原浏览器书架。
+
 ## 生产构建与离线
 
 ```bash

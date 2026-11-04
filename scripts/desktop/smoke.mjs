@@ -1,3 +1,4 @@
+import { appExecutable } from './release-paths.mjs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import os from 'node:os'
@@ -7,7 +8,7 @@ import { _electron as electron } from '@playwright/test'
 import { isolatedEnvironment, closeTestApp } from './environment.mjs'
 import { exerciseDesktop, assertRecovered } from './flows.mjs'
 
-const executable = path.resolve(process.argv[2] ?? 'artifacts/desktop/release/win-unpacked/TangerineReadingCompanion.exe')
+const executable = path.resolve(process.argv[2] ?? appExecutable)
 const root = await fs.mkdtemp(path.join(await fs.realpath(os.tmpdir()), 'reading-desktop-'))
 const env = await isolatedEnvironment(root)
 const report = 'artifacts/desktop/smoke-result.json'

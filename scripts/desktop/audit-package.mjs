@@ -1,3 +1,4 @@
+import { appDirectory } from './release-paths.mjs'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import assert from 'node:assert/strict'
@@ -6,7 +7,7 @@ import { createRequire } from 'node:module'
 import { listPackage, statFile, extractFile } from '@electron/asar'
 import { inspectPrivacyFile } from '../check-repository-privacy.mjs'
 
-const archive = 'artifacts/desktop/release/win-unpacked/resources/app.asar'
+const archive = path.join(appDirectory, 'resources/app.asar')
 const require = createRequire(import.meta.url)
 const coreRoot = path.dirname(require.resolve('tesseract.js-core'))
 let count = 0
@@ -37,6 +38,6 @@ for (const entry of listPackage(archive)) {
 assert.ok(count > 20, 'Expected complete application payload')
 for (const file of ['desktop/main.mjs', 'dist/index.html', 'dist/reader-ocr/worker.min.js', 'dist/reader-ocr/eng.traineddata.gz', 'dist/licenses/THIRD_PARTY_LICENSES.txt']) assert.ok(extractFile(archive, path.normalize(file)).length)
 for (const file of ['LICENSE.electron.txt', 'LICENSES.chromium.html']) {
-  assert.deepEqual(await fs.readFile(path.join('artifacts/desktop/release/win-unpacked', file)), await fs.readFile(path.join('node_modules/electron/dist', file === 'LICENSE.electron.txt' ? 'LICENSE' : file)), `Missing or modified Electron runtime notices: ${file}`)
+  assert.deepEqual(await fs.readFile(path.join(appDirectory, file)), await fs.readFile(path.join('node_modules/electron/dist', file === 'LICENSE.electron.txt' ? 'LICENSE' : file)), `Missing or modified Electron runtime notices: ${file}`)
 }
 console.log(`Package audit passed: ${count} allowlisted files, matching build, no detected private content.`)
