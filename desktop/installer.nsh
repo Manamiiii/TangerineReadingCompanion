@@ -20,10 +20,7 @@
 
 ; Reject aliases and junctions on the path before maintenance touches any files.
 !macro readerCheckPath DIRECTORY
-  GetFullPathName $0 "${DIRECTORY}"
-  ${If} $0 != "${DIRECTORY}"
-    !insertmacro readerRefuse
-  ${EndIf}
+  StrCpy $0 "${DIRECTORY}"
   ${Do}
     System::Call 'kernel32::GetFileAttributesW(w r0)i.r1'
     ${If} $1 != -1
@@ -44,6 +41,11 @@
 !macro readerRegisteredDirectory
   ; The root may have been redirected by Windows. Require the exact product leaf,
   ; executable, payload and matching uninstall registration before using an old path.
+  ; GetFullPathName needs an existing path; only registered destinations have one.
+  GetFullPathName $R6 "$INSTDIR"
+  ${If} $R6 != $INSTDIR
+    !insertmacro readerRefuse
+  ${EndIf}
   ${GetFileName} "$INSTDIR" $R6
   ${If} $R6 != "${PRODUCT_FILENAME}"
   ${OrIfNot} ${FileExists} "$INSTDIR\${APP_EXECUTABLE_FILENAME}"
