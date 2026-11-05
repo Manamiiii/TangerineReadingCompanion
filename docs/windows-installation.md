@@ -4,7 +4,7 @@
 
 Windows x64 安装候选可由源码构建，尚未创建正式 GitHub Release，也未完成干净 Windows 普通账号验收。不要把 CI 通过或本机自动测试当成已经对外稳定发行。
 
-候选位于 `artifacts/desktop/release/0.1.1/TangerineReadingCompanion-0.1.1-win-x64-Setup.exe`，同目录提供 SHA256SUMS.txt。安装包未签名，Windows 可能提示未知发布者或阻止启动；记录具体提示，不要关闭安全软件或更改系统安全策略来完成验收。
+候选位于 `artifacts/desktop/release/0.1.2/TangerineReadingCompanion-0.1.2-win-x64-Setup.exe`，同目录提供 SHA256SUMS.txt。安装包未签名，Windows 可能提示未知发布者或阻止启动；记录具体提示，不要关闭安全软件或更改系统安全策略来完成验收。
 
 ## 安装和数据
 
@@ -13,11 +13,39 @@ Windows x64 安装候选可由源码构建，尚未创建正式 GitHub Release�
 3. 从开始菜单打开“橘子阅读伴侣”。Windows“已安装的应用”应显示对应名称、版本和卸载入口。
 4. 日常使用不需要 Node、npm、Git、Rust、开发服务器或终端。关闭窗口即退出，暂不提供托盘、全局快捷键和区域截图。
 
-新装程序位于 `%LOCALAPPDATA%\Programs\Tangerine\TangerineReadingCompanion`。升级核对当前用户的旧登记、卸载命令和程序文件，在原产品目录更新。安装器拒绝不匹配的路径和目录联接，共享 Tangerine 父目录保留，不要手动把数据放进安装目录。书架和记录位于 `%APPDATA%/TangerineReadingCompanion` 下的应用存储，路径由系统解析，不硬编码用户名。
+新装程序位于 `%LOCALAPPDATA%\Tangerine\Apps\TangerineReadingCompanion`。升级核对当前用户的旧登记、卸载命令和程序文件，在原产品目录更新；包括原先 `Programs\TangerineReadingCompanion` 和上一批 `Programs\Tangerine\TangerineReadingCompanion`。不强制搬动已安装程序，不修改已有日常入口。安装器拒绝不匹配的路径和目录联接；卸载只维护本产品目录，保留共享父目录、兄弟应用和用户数据。
 
 安装版与浏览器各自保存数据，不自动共享。若此前使用网页版或 VBS 快捷入口，先在原入口导出 JSON、确认文件保存，再在安装版“数据管理”中选择备份，查看预览、下载目标端备份并确认 merge-by-key 导入。备份未包含的本机记录保留，同 key 记录按导入内容覆盖；不要把来回导入当成双向同步。
 
 升级和默认卸载保留用户数据，重装可重新读取。切换 Windows 账号不共享书架。应用不会读取日常浏览器数据库，也不会上传书架。原文、截图、OCR、模型内容与剧透授权不持久化；退出后需要重新输入会话 Key。
+
+## 数据目录与系统例外
+
+以下以 `%LOCALAPPDATA%\Tangerine\Data\TangerineReadingCompanion` 为数据根目录；所有路径由当前系统账号解析，不含作者机器配置。
+
+| 目录/入口 | 实际用途 |
+|---|---|
+| `Config/` | Electron `userData`，内核设置和内部状态；不放模型 Key |
+| `Storage/` | Electron `sessionData` 和默认 session 的 storagePath；IndexedDB 书籍、进度、备注，以及 localStorage 中的非密钥服务配置 |
+| `Cache/` | 指定给 Chromium 的 HTTP 磁盘缓存目录；HTTP 磁盘缓存仍禁用。Chromium 的 GPU/代码缓存等内部文件可能在 `Config/`、`Storage/` 内，仍属于本项目数据根，不手动拆分其内部数据库 |
+| `Logs/` | Electron 日志路径和指定的 electron.log；默认不开启详细日志、不记录请求内容；`CrashDumps/` 为内核崩溃文件位置，未启用上传 |
+| `Runtime/` | `storage-plan.json`、`storage-ready.json` 及中断时可能保留的 `pending-storage/`；用于确认数据来源、校验和恢复，不是用户配置 |
+| JSON 备份/反馈 | 用户在保存对话框选择的位置，可能是上次使用的目录；没有自动备份，因此不建立空的 `Backups/`。导出的文件仍需用户妥善保管 |
+| 源码 VBS / `npm run dev` | 工程内代码与构建资源，`localhost:5174`，数据归用户所选浏览器；启动日志在工程忽略的 `artifacts/launcher*.log` |
+| `npm run desktop` / 解包 EXE / 安装版 | 使用同一桌面数据布局和单实例身份，不在程序旁创建便携数据库；不扫描浏览器 profile |
+
+显式环境变量 `TANGERINE_READING_DATA_DIR` 可指定绝对、无目录联接的独立数据根（同样按上述子目录布局）。该设置优先，不自动寻找或合并默认旧库；不可用时停止，不回退到另一份书架。不支持用 Chromium `--user-data-dir` 绕过布局，传入会拒绝启动。更改显式根相当于选择另一套书架，须先通过 JSON 明确迁移。不要把该变量或个人路径写入公开源码。
+
+系统例外包括：为兼容旧版互斥而保留的 `%APPDATA%\TangerineReadingCompanion` 单实例锁身份、保留待核验的旧库、系统临时文件/安装解压、HKCU 安装与卸载登记、开始菜单、Windows 自身诊断，以及用户浏览器和主动选择的导出目录。运行时不依赖其他工程、共享服务器或本机父目录规则，不承诺 Windows 零痕迹。
+
+## 旧数据、冲突与恢复
+
+1. 启动先取得原 Roaming 路径的 Electron 单实例锁，整个进程期间持有，新旧版本不能同时打开书架；迁移前不打开旧 Chromium session。然后发现已知旧目录，只允许明确的 `app://reading` IndexedDB。发现多个旧库、其他来源、目录联接或目标已有无迁移记录的数据时停止，不选择“最新的一份”。
+2. 旧默认 `%APPDATA%\TangerineReadingCompanion\IndexedDB` 中的数据库先逐文件计算 SHA-256，复制到 `Runtime/pending-storage`，核对副本和原件，随后在同一数据根重命名到 `Storage`。原件不删除。新目录打开前检查数据库存在、物理版本和 `meta` 表可读，才写完成记录；Dexie schema v1（底层 IndexedDB 版本 10）及记录格式不变。
+3. 不复制旧 `Session Storage`、`Local Storage`、Cookies、缓存或整个 profile。书籍、章节、名称、备注与个人位置随 IndexedDB 保留；模型/地图供应商设置、上次界面位置和备份提示需重新设置，Key 必须重填。临时原文、截图、OCR、模型内容和授权不会因迁移重新保存。
+4. 完整且校验一致的中断副本可继续完成；不完整副本、损坏记录或无法读库时停止并保留现场。每次启动比较旧库与迁移时快照；旧版退出后被再次打开、改写或旧库被移除时，新版安全拒绝，不把旧内容覆盖到新版。
+5. 遇到拒绝，先关闭所有版本，保留整个新旧数据目录及 Runtime 记录，记录诊断代码。不要删 journal、反复覆盖目录或同时使用新旧版本。由维护者在隔离副本核对来源；多份有效书架通过应用 JSON 导出、目标端预览和 merge-by-key 合并，冲突需要读者选择。不得把原始库提交到公开 Issue。
+6. 如需回退程序，旧库仍是迁移时原件；新版后续新增记录不会自动倒灌。先从可用新版导出 JSON，再在旧版支持的导入流程预览合并；新版打不开时先保留副本进行恢复。单独降级程序不是数据回退方案，不提供自动覆盖回滚。
 
 ## 必要验收：只用临时测试书和测试备份
 

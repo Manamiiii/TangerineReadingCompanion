@@ -71,7 +71,11 @@
     ${If} $R6 != ""
       !insertmacro readerRefuse
     ${EndIf}
-    StrCpy $INSTDIR "$LOCALAPPDATA\Programs\Tangerine\${PRODUCT_FILENAME}"
+    !ifdef READER_PREVIOUS_LAYOUT
+      StrCpy $INSTDIR "$LOCALAPPDATA\Programs\Tangerine\${PRODUCT_FILENAME}"
+    !else
+      StrCpy $INSTDIR "$LOCALAPPDATA\Tangerine\Apps\${PRODUCT_FILENAME}"
+    !endif
     !insertmacro readerCheckPath "$INSTDIR"
     ${If} ${FileExists} "$INSTDIR\*.*"
     ${OrIf} ${FileExists} "$SMPROGRAMS\${SHORTCUT_NAME}.lnk"

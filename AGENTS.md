@@ -36,6 +36,9 @@ Before code changes, inspect the current branch, working tree and latest commit,
 
 ## Hard boundaries
 
+- Windows fresh installs use `%LOCALAPPDATA%\Tangerine\Apps\TangerineReadingCompanion`; app-managed runtime data uses `%LOCALAPPDATA%\Tangerine\Data\TangerineReadingCompanion`. Keep the application ID, `app://reading` origin and schema stable. Valid registered old installations upgrade in place. Do not remove shared parents or user data during uninstall.
+- Keep the legacy singleton identity while old binaries may coexist. Profile migration copies only the verified reading IndexedDB, retains originals and recovery journals, rejects ambiguous sources and later legacy writes, and never copies session storage or old raw settings. Explicit `TANGERINE_READING_DATA_DIR` roots take precedence and do not discover other libraries. Test changes with isolated synthetic data; never migrate real user data as a test.
+- The VBS/browser source entry stays on `localhost:5174` with browser-owned storage. Desktop source and unpacked entries share the desktop layout. Document system/browser/export exceptions; do not create cross-repository runtime dependencies. Candidate delivery does not authorize changing daily shortcuts, formal host installation or public binaries.
 - Do not change the Dexie schema version unless the user explicitly requests it.
 - Backup import is merge-by-key. Missing local records remain; do not implement clear-and-replace.
 - Do not persist pasted excerpts, screenshots, OCR text, model contents or spoiler authorization.

@@ -13,7 +13,7 @@ GitHub 中只提交通用代码、文档、合成测试数据、项目图标和�
 | Windows 桌面快捷方式 | 本机桌面；`.lnk` 不提交，通用 VBS 和图标可提交 |
 | 维护者额外保存的本机配置文件 | 仓库外，或 Git 忽略的根目录 `.private/`；应用不会自动读取该目录 |
 
-Web/PWA 无需建立包含本机绝对路径的配置文件。Windows 安装版通过系统 API 解析用户应用数据目录，使用其中的 `TangerineReadingCompanion` 子目录，不读取日常浏览器数据库。`.private/` 是维护者本机文件的保留位置，不是应用设置接口，也不是加密存储。安装路径、模型服务设置和凭据均不作为默认配置发布。
+Web/PWA 无需建立包含本机绝对路径的配置文件。Windows 安装版通过当前系统账号解析 `%LOCALAPPDATA%\Tangerine\Data\TangerineReadingCompanion`，不读取日常浏览器数据库。迁移来源与校验记录只保存在本机 Runtime，不能上传；完整位置和系统例外见 [Windows 安装说明](windows-installation.md#数据目录与系统例外)。`.private/` 是维护者本机文件的保留位置，不是应用设置接口，也不是加密存储。安装路径、模型服务设置和凭据均不作为默认配置发布。
 
 ## 提交与构建前检查
 

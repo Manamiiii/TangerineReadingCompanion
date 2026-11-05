@@ -35,10 +35,10 @@ await new Promise(resolve => server.listen(0, '127.0.0.1', resolve))
 const base = `http://127.0.0.1:${server.address().port}`
 let app
 async function launch() {
-  app = await electron.launch({ executablePath: executable, args: [], env, timeout: 30000 })
+  app = await electron.launch({ executablePath: executable, args: ['--reading-background-test'], env, timeout: 30000 })
   const info = await app.evaluate(({ app }) => ({ packaged: app.isPackaged, data: app.getPath('userData') }))
   assert.equal(info.packaged, true)
-  assert.equal(path.resolve(info.data).toLowerCase(), path.join(env.APPDATA, 'TangerineReadingCompanion').toLowerCase())
+  assert.equal(path.resolve(info.data).toLowerCase(), path.join(env.LOCALAPPDATA, 'Tangerine', 'Data', 'TangerineReadingCompanion', 'Config').toLowerCase())
   const page = await app.firstWindow()
   page.setDefaultTimeout(15000)
   return page

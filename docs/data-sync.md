@@ -2,6 +2,8 @@
 
 ## IndexedDB
 
+Windows 桌面使用集中目录，旧 profile 的复制校验、冲突与恢复见 [Windows 数据目录](windows-installation.md#数据目录与系统例外)。这是文件位置迁移，不升级 Dexie schema，不改变 JSON 合并契约；不复制会话存储、旧 localStorage 或浏览器 profile。网页源码仍使用原 `localhost:5174` 站点存储。
+
 数据库名为 `tangerine-reading-companion`。Dexie schema v1 仅包含：
 
 ```js

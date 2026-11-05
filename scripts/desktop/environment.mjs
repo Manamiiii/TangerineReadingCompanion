@@ -9,7 +9,7 @@ import electronPath from 'electron'
 export async function isolatedEnvironment(root) {
   assert.equal(process.platform, 'win32')
   const env = { ...process.env }
-  for (const key of Object.keys(env)) if (/^(PATH|NODE_OPTIONS|ELECTRON_RUN_AS_NODE|APPDATA|LOCALAPPDATA|USERPROFILE|HOMEDRIVE|HOMEPATH|TEMP|TMP)$/i.test(key)) delete env[key]
+  for (const key of Object.keys(env)) if (/^(PATH|NODE_OPTIONS|ELECTRON_RUN_AS_NODE|APPDATA|LOCALAPPDATA|USERPROFILE|HOMEDRIVE|HOMEPATH|TEMP|TMP|TANGERINE_READING_DATA_DIR|ELECTRON_LOG_FILE)$/i.test(key)) delete env[key]
   const home = path.join(root, 'home')
   const roaming = path.join(home, 'AppData', 'Roaming')
   const local = path.join(home, 'AppData', 'Local')

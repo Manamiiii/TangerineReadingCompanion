@@ -76,6 +76,8 @@ Windows PowerShell 若提示不允许执行 `npm.ps1`，使用 `npm.cmd ci` 和 
 
 本机安装路径在运行时确定，个人设置保存在当前使用环境的本机存储，不提交到 GitHub。维护与发布时的隔离规则见[本机私有信息说明](docs/local-privacy.md)。
 
+Windows 新装程序默认位于 `%LOCALAPPDATA%\Tangerine\Apps\TangerineReadingCompanion`，自管数据位于 `%LOCALAPPDATA%\Tangerine\Data\TangerineReadingCompanion`。旧安装原位升级；旧桌面书架经校验复制并保留原件，模型/地图设置需重新配置。发现多份库或旧版再次写入时停止启动，保留现场。完整目录、恢复步骤与系统例外见[Windows 数据目录](docs/windows-installation.md#数据目录与系统例外)。网页版地址及存储不变。
+
 <details>
 <summary>展开查看存储、导入、OCR 和模型的具体边界</summary>
 
@@ -129,7 +131,7 @@ Windows PowerShell 若提示不允许执行 `npm.ps1`，使用 `npm.cmd ci` 和 
 | `npm run desktop` | 构建并打开桌面窗口；使用本机安装版的数据目录 |
 | `npm run pack:win` / `npm run dist:win` | Windows 应用目录 / x64 Setup 与 SHA-256，不发布 |
 | `npm run check:desktop-package` | 检查包内白名单、源码一致性和隐私，提取 Setup 与主程序图标并比对载荷 |
-| `npm run test:desktop` | 隔离 profile 下验证实际打包 EXE，包含离线 OCR、备份、本机模型请求和跨域保护 |
+| `npm run test:desktop` | 隐藏窗口的实际 EXE 回归、回环模型替身，以及旧 profile 迁移、目录与单实例保护 |
 | `npm run build:installer-fixture` / `npm run test:installer` | 生成旧目录测试样本 / 在一次性 Windows CI 验证升级、卸载和重装 |
 | `npm run audit:quality` / `npm run audit:links` | 资料覆盖与来源审计，后者访问来源链接 |
 | `npm run preview:data` / `npm run check:preset` | staging 生成预览 / dry-run 检查差异 |
@@ -138,6 +140,7 @@ Windows PowerShell 若提示不允许执行 `npm.ps1`，使用 `npm.cmd ci` 和 
 ```text
 src/platform/                     # 平台输入与导出适配
 desktop/                          # Electron 外壳、资源安全规则与安装器保护
+desktop/storage.mjs               # 数据目录、复制校验、迁移恢复记录与冲突保护
 scripts/desktop/                  # 打包核对、桌面与安装生命周期测试
 src/features/reading-companion/    # 阅读、书架、记录、地图与资料规则
 src/features/model/               # 可选模型连接与配置
@@ -157,6 +160,7 @@ scripts/launch-desktop.ps1         # 固定 localhost:5174，支持 -NoOpenBrows
 scripts/startup_window.ps1         # 源码启动进度窗口
 artifacts/desktop/release/<版本>/   # 忽略：正式身份 Setup、校验值和解包应用
 artifacts/desktop/upgrade-fixture/ # 忽略：仅升级测试的旧布局样本
+artifacts/desktop/previous-layout-fixture/ # 忽略：上一批 Programs/Tangerine 布局样本
 artifacts/desktop/*-result.json    # 忽略：桌面、安装及模型回归证据
 artifacts/launcher*.log            # 忽略：源码入口本机启动日志
 scripts/tests/、tests/e2e/         # Node 与浏览器测试

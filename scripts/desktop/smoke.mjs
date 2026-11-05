@@ -17,10 +17,10 @@ await fs.rm(report, { force: true })
 let app
 const errors = []
 async function launch() {
-  app = await electron.launch({ executablePath: executable, args: [], env, timeout: 30000 })
+  app = await electron.launch({ executablePath: executable, args: ['--reading-background-test'], env, timeout: 30000 })
   const info = await app.evaluate(({ app }) => ({ packaged: app.isPackaged, data: app.getPath('userData') }))
   assert.equal(info.packaged, true)
-  assert.equal(path.resolve(info.data).toLowerCase(), path.join(env.APPDATA, 'TangerineReadingCompanion').toLowerCase())
+  assert.equal(path.resolve(info.data).toLowerCase(), path.join(env.LOCALAPPDATA, 'Tangerine', 'Data', 'TangerineReadingCompanion', 'Config').toLowerCase())
   const page = await app.firstWindow()
   page.on('pageerror', error => errors.push(error.message))
   page.setDefaultTimeout(20000)

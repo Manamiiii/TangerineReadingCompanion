@@ -10,6 +10,8 @@ jobs:
   windows:
     runs-on: windows-latest
     timeout-minutes: 25
+    env:
+      VITE_APP_BUILD: ${{ github.sha }}
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v6

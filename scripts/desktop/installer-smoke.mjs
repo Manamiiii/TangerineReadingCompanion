@@ -15,7 +15,8 @@ assert.ok(process.env.GITHUB_ACTIONS === 'true' && process.env.RUNNER_ENVIRONMEN
 const manifest = JSON.parse(await fs.readFile('package.json', 'utf8'))
 const candidate = setupPath
 const previous = path.resolve('artifacts/desktop/upgrade-fixture/TangerineReadingCompanion-0.0.9-win-x64-Setup.exe')
-await fs.access(candidate); await fs.access(previous)
+const previousFamily = path.resolve('artifacts/desktop/previous-layout-fixture/TangerineReadingCompanion-0.1.1-win-x64-Setup.exe')
+await fs.access(candidate); await fs.access(previous); await fs.access(previousFamily)
 const guid = manifest.build.nsis.guid
 assert.match(guid, /^[a-f0-9-]{36}$/)
 const run = promisify(execFile)
@@ -32,9 +33,10 @@ for (const shortcut of shortcuts) assert.equal(await fs.stat(shortcut).then(() =
 const root = await fs.mkdtemp(path.join(await fs.realpath(os.tmpdir()), 'reading-installer-'))
 const programs = path.join(process.env.LOCALAPPDATA, 'Programs')
 const legacy = path.join(programs, 'TangerineReadingCompanion')
-const family = path.join(programs, 'Tangerine')
+const legacyFamily = path.join(programs, 'Tangerine', 'TangerineReadingCompanion')
+const family = path.join(process.env.LOCALAPPDATA, 'Tangerine', 'Apps')
 const fresh = path.join(family, 'TangerineReadingCompanion')
-for (const dir of [legacy, family]) assert.equal(await fs.stat(dir).then(() => true, () => false), false, 'Runner installation directories must be unused')
+for (const dir of [legacy, legacyFamily, family]) assert.equal(await fs.stat(dir).then(() => true, () => false), false, 'Runner installation directories must be unused')
 await fs.mkdir(family, { recursive: true })
 const sibling = path.join(family, 'sibling-sentinel.txt')
 await fs.writeFile(sibling, 'preserve', { flag: 'wx' })
@@ -47,7 +49,7 @@ await fs.rm(report, { force: true })
 let app
 let installedByTest = false
 async function setup(file) {
-  assert.ok([legacy, fresh].includes(installed))
+  assert.ok([legacy, legacyFamily, fresh].includes(installed))
   await run(file, ['/S', '/currentuser'], { windowsHide: true, timeout: 120000 })
   installedByTest = true
   await fs.access(executable())
@@ -55,17 +57,17 @@ async function setup(file) {
   assert.equal(path.normalize(registered).toLowerCase(), installed.toLowerCase())
 }
 async function remove() {
-  assert.ok([legacy, fresh].includes(installed))
+  assert.ok([legacy, legacyFamily, fresh].includes(installed))
   await run(uninstaller(), ['/S', '/currentuser', `_?=${installed}`], { windowsHide: true, timeout: 120000 })
   installedByTest = false
   assert.equal(await ps(registryCheck), '', 'Installation registry keys remain.')
   assert.equal(await fs.stat(executable()).then(() => true, () => false), false)
 }
 async function open() {
-  app = await electron.launch({ executablePath: executable(), args: [], env, timeout: 30000 })
+  app = await electron.launch({ executablePath: executable(), args: ['--reading-background-test'], env, timeout: 30000 })
   const actual = await app.evaluate(({ app }) => ({ version: app.getVersion(), data: app.getPath('userData'), packaged: app.isPackaged }))
   assert.equal(actual.packaged, true)
-  assert.equal(path.resolve(actual.data).toLowerCase(), path.join(env.APPDATA, 'TangerineReadingCompanion').toLowerCase())
+  assert.equal(path.resolve(actual.data).toLowerCase(), path.join(env.LOCALAPPDATA, 'Tangerine', 'Data', 'TangerineReadingCompanion', 'Config').toLowerCase())
   await fs.access(shortcuts[0])
   const link = await app.evaluate(({ shell }, file) => shell.readShortcutLink(file), shortcuts[0])
   const identity = async file => (await fs.stat(file, { bigint: true })).ino
@@ -100,7 +102,18 @@ try {
   assert.deepEqual(await readRecords(upgraded.page), records)
   await close()
   await remove()
-  await fs.access(path.join(env.APPDATA, 'TangerineReadingCompanion', 'IndexedDB'))
+  await fs.access(path.join(env.LOCALAPPDATA, 'Tangerine', 'Data', 'TangerineReadingCompanion', 'Storage', 'IndexedDB'))
+  installed = legacyFamily
+  await setup(previousFamily)
+  assert.equal((await open()).version, '0.1.1')
+  await close()
+  await setup(candidate)
+  const familyUpgrade = await open()
+  assert.equal(familyUpgrade.version, manifest.version)
+  await assertRecovered(familyUpgrade.page, url)
+  assert.deepEqual(await readRecords(familyUpgrade.page), records)
+  await close()
+  await remove()
   installed = fresh
   await setup(candidate)
   const reinstalled = await open()
@@ -121,7 +134,7 @@ try {
   await remove()
   assert.equal(await fs.readFile(sibling, 'utf8'), 'preserve')
   for (const shortcut of allShortcuts) assert.equal(await fs.stat(shortcut).then(() => true, () => false), false)
-  await fs.writeFile(report, JSON.stringify({ passed: true, date: new Date().toISOString(), candidate: path.basename(candidate), sha256: createHash('sha256').update(await fs.readFile(candidate)).digest('hex'), checks: ['production identity: legacy in-place upgrade and fresh family default, shortcut target and icon verified, sibling preserved', 'running app blocks upgrade and uninstall without termination', '0.0.9 fixture to current version preserves reading records', 'uninstall removes executable and registration, preserves IndexedDB', 'reinstall restores books and progress; raw input and session keys remain absent'], limitation: 'Silent install on disposable hosted Windows with isolated application profile. Older version fixture uses current application code. Interactive wizard, clean machine and real historical data migration not verified.' }, null, 2))
+  await fs.writeFile(report, JSON.stringify({ passed: true, date: new Date().toISOString(), candidate: path.basename(candidate), sha256: createHash('sha256').update(await fs.readFile(candidate)).digest('hex'), checks: ['production identity: both legacy layouts upgrade in place and fresh Apps default, shortcut target and icon verified, sibling preserved', 'running app blocks upgrade and uninstall without termination', '0.0.9 and 0.1.1 layout fixtures to current version preserve reading records', 'uninstall removes executable and registration, preserves IndexedDB', 'reinstall restores books and progress; raw input and session keys remain absent'], limitation: 'Silent install on disposable hosted Windows with isolated application profile. Older version fixture uses current application code. Interactive wizard, clean machine and real historical data migration not verified.' }, null, 2))
   console.log('Installer acceptance passed: 5 lifecycle groups, production application identity.')
 } finally {
   await close()
