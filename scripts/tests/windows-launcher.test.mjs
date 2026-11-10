@@ -1,6 +1,6 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
-import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync } from 'node:fs'
+import { mkdtempSync, mkdirSync, readFileSync, writeFileSync, rmSync, realpathSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -14,7 +14,9 @@ const url = 'http://localhost:5174/'
 const quote = value => `'${value.replaceAll("'", "''")}'`
 
 function runFixture(state, interactive = false) {
-  const fixture = mkdtempSync(join(tmpdir(), 'tangerine launcher '))
+  // Hosted Windows can expose TEMP through an 8.3 alias; PowerShell resolves the
+  // script to its long path. The mock owner must describe that same physical path.
+  const fixture = realpathSync(mkdtempSync(join(tmpdir(), 'tangerine launcher ')))
   try {
     const script = join(fixture, launcher)
     mkdirSync(dirname(script), { recursive: true })
