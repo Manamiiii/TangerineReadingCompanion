@@ -25,6 +25,7 @@ function runFixture(state, interactive = false) {
     const source = readFileSync(join(root, launcher), 'utf8')
     const instrumented = source.split('\n').map((line, index) => line
       .replace('catch { return $false }', 'catch { Write-Host ("PROBE-ERROR:" + $_.Exception.Message); return $false }')
+      .replace("if (-not $owner -or", "Write-Host ('PROBE-OWNER:' + $owner.CommandLine + ' EXPECTED:' + $expectedScript); if (-not $owner -or")
       .replaceAll('return $false', `Write-Host 'PROBE-REJECT:${index + 1}'; return $false`)).join('\n')
     writeFileSync(script, instrumented)
     mkdirSync(join(fixture, 'artifacts/review'), { recursive: true })
