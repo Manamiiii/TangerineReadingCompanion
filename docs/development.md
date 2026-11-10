@@ -12,7 +12,7 @@
 
 下面的 VBS 入口用于源码开发，不是安装版。Windows Setup 的构建、数据位置和验收分别见 [桌面开发](native-development.md) 与 [安装说明](windows-installation.md)。两种入口的数据独立，需 JSON 迁移。
 
-安装 Node.js 并执行 `npm ci` 后，双击根目录 `TangerineReadingCompanion.vbs`。启动器在后台运行 Vite，复用已就绪服务，在状态窗口中显示进度与错误，然后打开默认浏览器。它不安装依赖、不请求管理员权限，也不是 Windows 原生安装包。若系统禁用了 WScript，可直接使用终端方式。
+完成下文桌面验收交付后，双击根目录 `TangerineReadingCompanion.vbs`。启动器在后台用 Vite 提供已验证的固定源码快照，仅复用快照标识、页面标识及进程归属一致的服务，在状态窗口中显示进度与错误，然后打开默认浏览器。首次克隆没有已选快照时会明确提示；普通开发继续使用 `npm run dev`。它不安装依赖、不请求管理员权限，也不是 Windows 原生安装包。若系统禁用了 WScript，可直接使用终端方式。
 
 可以自己为该 VBS 创建快捷方式，并选用 `assets/tangerine-reading-companion.ico`。仓库不要求作者本机的桌面目录或绝对路径。
 
@@ -24,7 +24,24 @@
 powershell -NoProfile -File scripts/launch-desktop.ps1 -NoOpenBrowser
 ```
 
-VBS 从自身位置定位项目，不接收额外启动参数。PowerShell 入口以项目根目录作为 Vite 工作目录，从 PATH 查找 Node；`-OnProgress` 供启动窗口接收进度，`-NoOpenBrowser` 供后台或诊断使用。启动互斥锁保护并发启动，同一地址的阅读服务可复用，其他服务占用 5174 时显示失败。源码入口与安装器均不自动创建桌面快捷方式，已有指向 VBS 的快捷方式可继续使用原浏览器书架。
+VBS 从自身位置定位项目，不接收额外启动参数。PowerShell 从 PATH 查找 Node，在工程内启动 `scripts/serve-review.mjs`；服务的 Vite 根目录是已选源码快照，依赖使用本仓库已校验的安装记录。`-OnProgress` 供启动窗口接收进度，`-NoOpenBrowser` 供后台或诊断使用。启动互斥锁保护并发启动，同一地址且来源、版本均匹配的阅读服务可复用；旧版或其他服务占用 5174 时显示失败，不停止或接管。源码入口与安装器均不自动创建桌面快捷方式，已有指向 VBS 的快捷方式可继续使用原浏览器书架。
+
+## 桌面验收交付
+
+桌面 `.lnk → TangerineReadingCompanion.vbs → scripts/launch-desktop.ps1 → scripts/serve-review.mjs → artifacts/review/releases/<提交>-<内容摘要>`，地址继续为 `http://localhost:5174/`。仍是开发模式的 Vite 网页，不注册新的 Service Worker；浏览器书架与 Key 不迁移。`npm run dev` 明确用于工作区开发，不能与桌面验收服务同时占用该端口。
+
+维护步骤（不在每次点击快捷方式时构建）：
+
+1. 核对本项目实际快捷方式目标、参数、工作目录、图标，以及 5174 的监听进程与启动命令。若有运行中、暂停、未保存或无法确认状态的会话，只做独立构建与隔离验证，保留当前实例；不自动刷新真实页面。
+2. 按项目规则完成 lint、测试、隐私、构建等检查并提交。工作区干净后运行 `npm run review:prepare`。它按已跟踪文件建立固定源码副本和 SHA-256 清单，不复制 `.env`、私有文件、真实数据或 node_modules。已有快照不覆盖；依赖仍来自本项目，启动时校验 npm 安装记录摘要，依赖变化须重新验证。该摘要不替代依赖审计，也不保证手工修改的第三方文件未变。
+3. 将输出的快照目录名传给 `npm run review:verify -- <快照目录名>`。使用临时端口及全新隐藏浏览器上下文验证实际 HTML 标识、设置页提交号、合成书籍/进度与临时原文清理。测试不会读取真实浏览器 profile，结果写在快照内 `verified.json`。需已有 Playwright Chromium；缺失时先按工具安装授权规则处理。
+4. 只有原端口无服务时，运行 `powershell -NoProfile -File scripts/select-review.ps1 -Snapshot <快照目录名>`。它与启动器共用互斥锁，要求验证记录匹配；端口占用则拒绝选择。旧选择记录和快照保留，不做资产清理。
+5. 在确认没有活动会话后，通过 `powershell -NoProfile -File scripts/launch-desktop.ps1 -NoOpenBrowser` 启动/核验，不打开用户浏览器。运行 `npm run review:check` 比较实际服务和 HTML 标识，再运行 `npm run review:verify -- --running`，用独立浏览器核验原地址的实际界面版本。快捷方式目标正确时保留原文件；仅纠正已证明属于本项目的错误目标。
+6. 交接记录源码提交、工作区状态、快照目录、源码摘要/manifest SHA-256、实际进程及页面验证范围。本机绝对路径、进程和快捷方式记录只写忽略的 artifacts。区分“源码完成”“入口选择完成”和“运行服务已核验”，用户已有标签页版本不可从服务状态推定。
+
+运行服务不自动跟随工作区修改，快照目录也不能手工编辑。当前服务不匹配时启动器会拒绝复用，不强杀、不重启。需要切换时先保存/处理临时输入、结束模型/OCR 操作，并由用户关闭相关会话后正常退出原服务；终端启动可用 Ctrl+C，后台服务可在正常注销或重启 Windows 后结束。没有安全退出条件时保留“待安全切换”，不能声称已更新实例。
+
+新服务已核验但原标签页仍旧时，用户先处理临时输入，再在同一浏览器、同一地址刷新，进入书内“设置”核对本次提交前七位。若已有旧 PWA 缓存控制页面导致版本不一致，先报告版本差异，使用页面已有的显式更新流程；不要通过清除站点数据、Key 或更换地址解决。安装候选、正式安装和桌面安装候选“当前”目录均不属于这条源码验收交付流程。
 
 ## 生产构建与离线
 

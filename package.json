@@ -32,7 +32,10 @@
     "test:desktop": "node scripts/desktop/smoke.mjs && node scripts/desktop/local-model.mjs && node scripts/desktop/storage-smoke.mjs",
     "test:installer": "node scripts/desktop/installer-smoke.mjs",
     "build:installer-fixture": "electron-builder --win nsis --x64 --publish never --config.nsis.include=scripts/desktop/legacy-layout.nsh --config.extraMetadata.version=0.0.9 --config.directories.output=artifacts/desktop/upgrade-fixture && electron-builder --win nsis --x64 --publish never --config.nsis.include=scripts/desktop/previous-layout.nsh --config.extraMetadata.version=0.1.1 --config.directories.output=artifacts/desktop/previous-layout-fixture",
-    "check:desktop-package": "node scripts/desktop/audit-package.mjs && node scripts/desktop/audit-icons.mjs"
+    "check:desktop-package": "node scripts/desktop/audit-package.mjs && node scripts/desktop/audit-icons.mjs",
+    "review:prepare": "node scripts/review-entry.mjs prepare",
+    "review:check": "node scripts/review-entry.mjs check",
+    "review:verify": "node scripts/verify-review.mjs"
   },
   "build": {
     "appId": "org.tangerine.readingcompanion",

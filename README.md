@@ -50,7 +50,7 @@ npm run dev
 
 打开 **http://localhost:5174/**，保持终端运行。按 `Ctrl+C` 停止服务。端口被占用会报错，不会悄悄换地址；如果已经运行本项目，直接打开原地址即可。
 
-Windows PowerShell 若提示不允许执行 `npm.ps1`，使用 `npm.cmd ci` 和 `npm.cmd run dev`，无需修改系统执行策略。安装依赖后，也可双击仓库根目录的 `TangerineReadingCompanion.vbs`，查看启动状态并打开浏览器。这个快捷入口启动的是本地开发服务，不是原生安装包，开发模式不启用离线缓存。详见[运行与开发说明](docs/development.md)。
+Windows PowerShell 若提示不允许执行 `npm.ps1`，使用 `npm.cmd ci` 和 `npm.cmd run dev`，无需修改系统执行策略。维护者完成[桌面验收交付](docs/development.md#桌面验收交付)后，也可双击仓库根目录的 `TangerineReadingCompanion.vbs`，打开已验证的源码快照。首次克隆尚无快照时使用上述 `npm run dev`。快捷入口仍为本地 Vite 网页，不是原生安装包，不启用离线缓存，也不随未验证的工作区改动更新。
 
 ## 第一次使用
 
@@ -129,6 +129,8 @@ Windows 新装程序默认位于 `%LOCALAPPDATA%\Tangerine\Apps\TangerineReading
 | `npm run check:packages` | 校验正式资料包 |
 | `npm run check:native` | 只读检查当前 Electron Windows 构建依赖，不安装工具 |
 | `npm run desktop` | 构建并打开桌面窗口；使用本机安装版的数据目录 |
+| `npm run review:prepare` / `npm run review:verify -- <快照名>` | 为已提交源码准备固定桌面验收快照，并用独立浏览器核验 |
+| `npm run review:check` | 只读比对原地址服务及 HTML 与已选快照；不读取用户书架 |
 | `npm run pack:win` / `npm run dist:win` | Windows 应用目录 / x64 Setup 与 SHA-256，不发布 |
 | `npm run check:desktop-package` | 检查包内白名单、源码一致性和隐私，提取 Setup 与主程序图标并比对载荷 |
 | `npm run test:desktop` | 隐藏窗口的实际 EXE 回归、回环模型替身，以及旧 profile 迁移、目录与单实例保护 |
@@ -157,12 +159,17 @@ licenses/                         # npm 包未附带的上游许可补充文本
 package.json                       # Windows 安装身份、NSIS 配置与正式构建命令
 TangerineReadingCompanion.vbs      # 兼容源码入口，按 VBS 自身位置寻找仓库
 scripts/launch-desktop.ps1         # 固定 localhost:5174，支持 -NoOpenBrowser / -OnProgress
+scripts/review-entry.mjs           # 准备、校验已提交的桌面验收源码快照
+scripts/serve-review.mjs           # 在原地址提供固定快照及只读版本标识
+scripts/verify-review.mjs           # 隔离浏览器验证实际页面及设置中的版本
+scripts/select-review.ps1          # 无运行服务时选择已验证快照，不重启服务
 scripts/startup_window.ps1         # 源码启动进度窗口
 artifacts/desktop/release/<版本>/   # 忽略：正式身份 Setup、校验值和解包应用
 artifacts/desktop/upgrade-fixture/ # 忽略：仅升级测试的旧布局样本
 artifacts/desktop/previous-layout-fixture/ # 忽略：上一批 Programs/Tangerine 布局样本
 artifacts/desktop/*-result.json    # 忽略：桌面、安装及模型回归证据
 artifacts/launcher*.log            # 忽略：源码入口本机启动日志
+artifacts/review/                  # 忽略：固定源码快照、选择记录和隔离验证证据
 scripts/tests/、tests/e2e/         # Node 与浏览器测试
 docs/                             # 产品、安全与开发说明
 ```

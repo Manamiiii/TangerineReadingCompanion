@@ -63,6 +63,8 @@ For package work also run `npm run check:packages`; use `npm run check:preset` b
 
 ## Documentation and delivery
 
+- For browser desktop acceptance, verify the actual shortcut, VBS/PowerShell chain, selected immutable source snapshot, served revision and owning process. Keep `localhost:5174` and browser storage; do not replace it with the Electron identity. A source commit or responding port alone is not delivery evidence.
+- Validate and select review snapshots through the documented local workflow, preserving old snapshots. Never switch a listening service, restart active/unknown sessions, clear browser storage, or force-refresh real tabs. Separate source completion, selected entry and running/page version in the handoff. Installation candidates and their desktop current directory require separate authorization.
 - README is the authoritative command and structure map.
 - Topic documents describe current behavior, provenance, active constraints and unresolved decisions.
 - Generated reports belong in ignored `artifacts/`.

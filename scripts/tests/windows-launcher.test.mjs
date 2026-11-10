@@ -19,6 +19,8 @@ function runFixture(state, interactive = false) {
     const script = join(fixture, launcher)
     mkdirSync(dirname(script), { recursive: true })
     writeFileSync(script, readFileSync(join(root, launcher)))
+    mkdirSync(join(fixture, 'artifacts/review'), { recursive: true })
+    writeFileSync(join(fixture, 'artifacts/review/selected.json'), JSON.stringify({ manifestHash: 'verified-fixture' }))
     mkdirSync(join(fixture, 'node_modules/vite/bin'), { recursive: true })
     writeFileSync(join(fixture, 'node_modules/vite/bin/vite.js'), '')
     // The window's dispatcher/worker is exercised by the shared WPF regression
@@ -39,15 +41,23 @@ $ErrorActionPreference='Stop'
 $global:starts=0
 function Invoke-WebRequest {
   param($Uri, $TimeoutSec, [switch]$UseBasicParsing)
-  if ($Uri -ne ${quote(url)}) { throw 'WrongOrigin' }
-  if ('${state}' -eq 'warm' -or ('${state}' -eq 'cold' -and $global:starts -gt 0)) {
-    return [pscustomobject]@{StatusCode=200;Content='<title>${title}</title>'}
+  if ($Uri -notin @(${quote(url)}, ${quote(url + '__reading_review')})) { throw 'WrongOrigin' }
+  if ('${state}' -in @('warm','stale','foreign-owner') -or ('${state}' -eq 'cold' -and $global:starts -gt 0)) {
+    if ($Uri -like '*__reading_review') {
+      return [pscustomobject]@{StatusCode=200;Content=(@{format='reading-review-v1';manifestHash=$(if('${state}' -eq 'stale'){'old-fixture'}else{'verified-fixture'});pid=1234}|ConvertTo-Json)}
+    }
+    return [pscustomobject]@{StatusCode=200;Content='<title>${title}</title><meta name="reading-review" content="verified-fixture">'}
   }
   throw 'NotReady'
 }
 function Get-NetTCPConnection {
   param($LocalPort, $State, $ErrorAction)
-  if ('${state}' -eq 'foreign') { return [pscustomobject]@{State='Listen'} }
+  if ('${state}' -in @('foreign','warm','stale','foreign-owner') -or $global:starts -gt 0) { return [pscustomobject]@{State='Listen';OwningProcess=1234} }
+}
+function Get-CimInstance {
+  param($ClassName,$Filter,$ErrorAction)
+  if ('${state}' -eq 'foreign-owner') { return [pscustomobject]@{CommandLine='other service'} }
+  return [pscustomobject]@{CommandLine=${quote('node "' + join(fixture, 'scripts/serve-review.mjs') + '"')}}
 }
 function Start-Process {
   param($FilePath, $ArgumentList, $WorkingDirectory, $WindowStyle, $RedirectStandardOutput, $RedirectStandardError, [switch]$PassThru)
@@ -57,7 +67,7 @@ function Start-Process {
     return
   }
   if ($WindowStyle -ne 'Hidden') { throw 'VisibleServer' }
-  if (($ArgumentList -join ' ') -notmatch '--strictPort') { throw 'OriginMayChange' }
+  if (($ArgumentList -join ' ') -notmatch 'serve-review.mjs') { throw 'WrongReviewEntry' }
   $global:starts++
   Write-Host 'SERVER'
   $process=[pscustomobject]@{HasExited=('${state}' -eq 'failed')}
@@ -103,4 +113,10 @@ test('server failure propagates to the status window', { skip: process.platform 
   assert.match(result.stdout, /STAGE:waiting-review/)
   assert.doesNotMatch(result.stdout, /BROWSER|STAGE:ready/)
   assert.doesNotMatch(result.stderr, /MustNotKillService/)
+})
+
+for (const state of ['stale', 'foreign-owner']) test(`a matching page title cannot reuse ${state} service`, { skip: process.platform !== 'win32' }, () => {
+  const result = runFixture(state)
+  assert.notEqual(result.status, 0)
+  assert.doesNotMatch(result.stdout, /SERVER|BROWSER|STAGE:ready/)
 })

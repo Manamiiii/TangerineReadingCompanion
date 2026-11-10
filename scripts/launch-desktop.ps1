@@ -18,11 +18,20 @@ Report-StartupProgress 'checking-files'
 $mutex = [System.Threading.Mutex]::new($false, 'Local\TangerineReadingCompanionLauncher')
 $locked = $false
 $startedServer = $null
+$selected = $null
 
 function Test-ReaderServer {
     try {
-        $response = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 2
-        return $response.Content -match '<title>Tangerine Reading Companion</title>'
+        $response = Invoke-WebRequest -Uri ($url + '__reading_review') -UseBasicParsing -TimeoutSec 2
+        $identity = $response.Content | ConvertFrom-Json
+        if ($identity.format -ne 'reading-review-v1' -or $identity.manifestHash -ne $selected.manifestHash) { return $false }
+        $owner = Get-CimInstance Win32_Process -Filter ("ProcessId=" + [int]$identity.pid) -ErrorAction Stop
+        $expectedScript = Join-Path $projectRoot 'scripts\serve-review.mjs'
+        if (-not $owner -or $owner.CommandLine -notlike ('*"' + $expectedScript + '"*')) { return $false }
+        $listeners = @(Get-NetTCPConnection -LocalPort 5174 -State Listen -ErrorAction Stop)
+        if (-not ($listeners | Where-Object OwningProcess -eq $identity.pid)) { return $false }
+        $page = Invoke-WebRequest -Uri $url -UseBasicParsing -TimeoutSec 2
+        return $page.Content.Contains('content="' + $selected.manifestHash + '"')
     } catch { return $false }
 }
 
@@ -34,15 +43,17 @@ try {
     if (-not $locked) { throw 'Another launcher is still starting. Try again shortly.' }
 
     Report-StartupProgress 'checking-service'
+    $selectionPath = Join-Path $artifacts 'review\selected.json'
+    if (-not (Test-Path -LiteralPath $selectionPath)) { throw 'No verified desktop review is selected. See docs/development.md; npm run dev remains available for development.' }
+    $selected = Get-Content -LiteralPath $selectionPath -Raw | ConvertFrom-Json
     if (-not (Test-ReaderServer)) {
         if (Get-NetTCPConnection -LocalPort 5174 -State Listen -ErrorAction SilentlyContinue) {
             throw 'Port 5174 belongs to another service. Close that service and try again; the reader will not change its data origin.'
         }
         $node = (Get-Command node.exe -ErrorAction Stop).Source
-        $vite = Join-Path $projectRoot 'node_modules\vite\bin\vite.js'
-        if (-not (Test-Path -LiteralPath $vite)) { throw 'Project dependencies are missing. Run npm install in the project folder first.' }
+        $server = Join-Path $projectRoot 'scripts\serve-review.mjs'
         Report-StartupProgress 'starting-review'
-        $startedServer = Start-Process -FilePath $node -ArgumentList @("`"$vite`"", '--host', 'localhost', '--port', '5174', '--strictPort') -WorkingDirectory $projectRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $artifacts 'launcher-server.log') -RedirectStandardError (Join-Path $artifacts 'launcher-server-error.log') -PassThru
+        $startedServer = Start-Process -FilePath $node -ArgumentList @("`"$server`"") -WorkingDirectory $projectRoot -WindowStyle Hidden -RedirectStandardOutput (Join-Path $artifacts 'launcher-server.log') -RedirectStandardError (Join-Path $artifacts 'launcher-server-error.log') -PassThru
         Report-StartupProgress 'waiting-review'
         $ready = $false
         for ($attempt = 0; $attempt -lt 40; $attempt++) {
