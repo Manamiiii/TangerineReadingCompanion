@@ -79,7 +79,9 @@ function Start-Process {
 }
 & ${quote(script)} ${interactive ? '' : '-NoOpenBrowser -OnProgress {param($Stage); Write-Host "STAGE:$Stage"}'}
 `
-    return spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command', command],
+    // Preserve embedded HTML and command-line quotes across Node/Windows argv
+    // versions, matching the encoded transport used by installer acceptance.
+    return spawnSync('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', Buffer.from(command, 'utf16le').toString('base64')],
       { encoding: 'utf8', windowsHide: true, timeout: 20000 })
   } finally {
     rmSync(fixture, { recursive: true, force: true })
@@ -88,7 +90,7 @@ function Start-Process {
 
 test('ready service is reused and the interactive entry opens after ready', { skip: process.platform !== 'win32' }, () => {
   const result = runFixture('warm', true)
-  assert.equal(result.status, 0, result.stderr)
+  assert.equal(result.status, 0, result.stderr + result.stdout)
   assert.match(result.stdout, /WINDOW/)
   assert.doesNotMatch(result.stdout, /SERVER/)
   assert.ok(result.stdout.indexOf('STAGE:ready') < result.stdout.indexOf('BROWSER'))
@@ -96,7 +98,7 @@ test('ready service is reused and the interactive entry opens after ready', { sk
 
 test('cold start reports waiting and starts only one hidden service', { skip: process.platform !== 'win32' }, () => {
   const result = runFixture('cold')
-  assert.equal(result.status, 0, result.stderr)
+  assert.equal(result.status, 0, result.stderr + result.stdout)
   assert.equal(result.stdout.match(/SERVER/g)?.length, 1)
   assert.match(result.stdout, /STAGE:waiting-review/)
   assert.match(result.stdout, /STAGE:ready/)
