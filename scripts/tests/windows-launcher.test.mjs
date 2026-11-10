@@ -20,7 +20,13 @@ function runFixture(state, interactive = false) {
   try {
     const script = join(fixture, launcher)
     mkdirSync(dirname(script), { recursive: true })
-    writeFileSync(script, readFileSync(join(root, launcher)))
+    // Keep readiness failures observable in mocked runs, where the real launcher
+    // deliberately treats probe exceptions as an unavailable service.
+    const source = readFileSync(join(root, launcher), 'utf8')
+    const instrumented = source.split('\n').map((line, index) => line
+      .replace('catch { return $false }', 'catch { Write-Host ("PROBE-ERROR:" + $_.Exception.Message); return $false }')
+      .replaceAll('return $false', `Write-Host 'PROBE-REJECT:${index + 1}'; return $false`)).join('\n')
+    writeFileSync(script, instrumented)
     mkdirSync(join(fixture, 'artifacts/review'), { recursive: true })
     writeFileSync(join(fixture, 'artifacts/review/selected.json'), JSON.stringify({ manifestHash: 'verified-fixture' }))
     mkdirSync(join(fixture, 'node_modules/vite/bin'), { recursive: true })
