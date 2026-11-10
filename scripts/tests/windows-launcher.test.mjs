@@ -15,19 +15,13 @@ const quote = value => `'${value.replaceAll("'", "''")}'`
 
 function runFixture(state, interactive = false) {
   // Hosted Windows can expose TEMP through an 8.3 alias; PowerShell resolves the
-  // script to its long path. The mock owner must describe that same physical path.
-  const fixture = realpathSync(mkdtempSync(join(tmpdir(), 'tangerine launcher ')))
+  // script to its long path. Only native realpath expands the Windows short name;
+  // the JavaScript realpath implementation preserves it when no symlink exists.
+  const fixture = realpathSync.native(mkdtempSync(join(tmpdir(), 'tangerine launcher ')))
   try {
     const script = join(fixture, launcher)
     mkdirSync(dirname(script), { recursive: true })
-    // Keep readiness failures observable in mocked runs, where the real launcher
-    // deliberately treats probe exceptions as an unavailable service.
-    const source = readFileSync(join(root, launcher), 'utf8')
-    const instrumented = source.split('\n').map((line, index) => line
-      .replace('catch { return $false }', 'catch { Write-Host ("PROBE-ERROR:" + $_.Exception.Message); return $false }')
-      .replace("if (-not $owner -or", "Write-Host ('PROBE-OWNER:' + $owner.CommandLine + ' EXPECTED:' + $expectedScript); if (-not $owner -or")
-      .replaceAll('return $false', `Write-Host 'PROBE-REJECT:${index + 1}'; return $false`)).join('\n')
-    writeFileSync(script, instrumented)
+    writeFileSync(script, readFileSync(join(root, launcher)))
     mkdirSync(join(fixture, 'artifacts/review'), { recursive: true })
     writeFileSync(join(fixture, 'artifacts/review/selected.json'), JSON.stringify({ manifestHash: 'verified-fixture' }))
     mkdirSync(join(fixture, 'node_modules/vite/bin'), { recursive: true })
